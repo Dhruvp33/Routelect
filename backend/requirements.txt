@@ -1,0 +1,13 @@
+fastapi
+uvicorn[standard]
+supabase
+pydantic
+requests
+python-dotenv
+python-multipart
+osmnx
+networkx
+scikit-learn
+numpy
+shapely
+geopandas
