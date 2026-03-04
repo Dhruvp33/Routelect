@@ -1,0 +1,41 @@
+{
+  "name": "Routelect — Smart EV Trip Planner for India",
+  "short_name": "Routelect",
+  "description": "Plan your EV trip across India without range anxiety. Real chargers, real battery maths.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#070B14",
+  "theme_color": "#00D4AA",
+  "orientation": "any",
+  "categories": ["travel", "navigation", "utilities"],
+  "lang": "en-IN",
+  "icons": [
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Plan a Route",
+      "short_name": "Plan Route",
+      "url": "/plan-route",
+      "description": "Jump straight to the route planner"
+    },
+    {
+      "name": "Select Car",
+      "short_name": "Select Car",
+      "url": "/select-brand",
+      "description": "Change your EV model"
+    }
+  ]
+}

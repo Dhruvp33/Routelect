@@ -5,68 +5,50 @@ let _toastId = 0
 
 export const useStore = create(
   persist(
-    (set, get) => ({
-      // ---- Backend Status ----
+    (set) => ({
+      // ── Backend ──────────────────────────────────────
       backendStatus: false,
-      setBackendStatus: (status) => set({ backendStatus: status }),
+      setBackendStatus: (s) => set({ backendStatus: s }),
 
-      // ---- Selected Vehicle ----
+      // ── Selected Vehicle ─────────────────────────────
       selectedCar: null,
       setSelectedCar: (car) => set({ selectedCar: car }),
 
-      // ---- User ----
-      user: null,
-      setUser: (user) => set({ user }),
-
-      // ---- Current Route ----
-      currentRoute: null,
-      setCurrentRoute: (route) => set({ currentRoute: route }),
-
-      // ---- Battery ----
+      // ── Battery ──────────────────────────────────────
       currentBatteryPercent: 80,
-      setCurrentBatteryPercent: (percent) =>
-        set({ currentBatteryPercent: Math.min(100, Math.max(5, percent)) }),
+      setCurrentBatteryPercent: (pct) =>
+        set({ currentBatteryPercent: Math.min(100, Math.max(5, pct)) }),
 
-      // ---- Trip History (last 10 trips) ----
+      // ── Trip History (persisted, last 20) ────────────
       tripHistory: [],
       addToHistory: (entry) =>
         set((state) => ({
           tripHistory: [
             { ...entry, id: Date.now() },
             ...state.tripHistory,
-          ].slice(0, 10),
+          ].slice(0, 20),
         })),
+      clearHistory: () => set({ tripHistory: [] }),
 
-      // ---- Toast Notifications ----
+      // ── Toast Notifications ───────────────────────────
       toasts: [],
       addToast: (type, message) =>
         set((state) => ({
-          toasts: [
-            ...state.toasts,
-            { id: ++_toastId, type, message },
-          ],
+          toasts: [...state.toasts, { id: ++_toastId, type, message }],
         })),
       removeToast: (id) =>
-        set((state) => ({
-          toasts: state.toasts.filter((t) => t.id !== id),
-        })),
+        set((state) => ({ toasts: state.toasts.filter((t) => t.id !== id) })),
 
-      // ---- Clear All ----
+      // ── Clear session data ─────────────────────────────
       clearData: () =>
-        set({
-          selectedCar: null,
-          user: null,
-          currentRoute: null,
-          currentBatteryPercent: 80,
-        }),
+        set({ selectedCar: null, currentBatteryPercent: 80 }),
     }),
     {
-      name: 'ev-planner-v2',
+      name: 'ev-route-v3',
       partialize: (state) => ({
-        selectedCar: state.selectedCar,
-        user: state.user,
+        selectedCar:           state.selectedCar,
         currentBatteryPercent: state.currentBatteryPercent,
-        tripHistory: state.tripHistory,
+        tripHistory:           state.tripHistory,
       }),
     }
   )

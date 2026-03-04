@@ -1,56 +1,41 @@
 """
-main.py  — EV Route Planner API (FastAPI + Supabase)
+main.py — EVRoute API v3.0 (FastAPI + Supabase)
 """
 
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from supabase import create_client, Client
-import os
+import os, math
 from dotenv import load_dotenv
-
 from routing_engine import EVRouter, EVSpecs
 
 load_dotenv()
 
-# ─── App Setup ──────────────────────────────────────────────
-
-app = FastAPI(
-    title="EVRoute API",
-    description="Intelligent EV Route Planner for Indian Roads",
-    version="2.0.0",
-)
+app = FastAPI(title="EVRoute API", version="3.0.0")
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "http://localhost:5173",
         "http://127.0.0.1:5173",
-        "http://localhost:4173",   # Vite preview
+        "http://localhost:4173",
     ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# ─── Supabase ────────────────────────────────────────────────
-
 SUPABASE_URL = os.environ.get("SUPABASE_URL")
 SUPABASE_KEY = os.environ.get("SUPABASE_KEY")
-
 if not SUPABASE_URL or not SUPABASE_KEY:
-    raise RuntimeError(
-        "❌ SUPABASE_URL and SUPABASE_KEY must be set in your .env file"
-    )
+    raise RuntimeError("❌ SUPABASE_URL and SUPABASE_KEY required in .env")
 
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
-# ─── Routing Engine ──────────────────────────────────────────
-
-print("🚀 Initialising EVRoute Engine v2.0…")
+print("🚀 EVRoute Engine v3.0 starting…")
 router_engine = EVRouter()
 
-# ─── Request Models ──────────────────────────────────────────
 
 class RouteRequest(BaseModel):
     start_lat:               float
@@ -60,130 +45,70 @@ class RouteRequest(BaseModel):
     current_battery_percent: float
     car_model_id:            int
 
-# ─── Root / Health ───────────────────────────────────────────
 
-@app.get("/", tags=["Health"])
+@app.get("/")
 def health():
-    return {
-        "status":  "healthy",
-        "version": "2.0.0",
-        "message": "EVRoute API is running",
-    }
+    return {"status": "healthy", "version": "3.0.0"}
 
-# ─── Brands ──────────────────────────────────────────────────
 
-@app.get("/api/brands", tags=["Vehicles"])
+@app.get("/api/brands")
 def get_brands():
-    try:
-        result = supabase.table("car_brands").select("*").order("name").execute()
-        return result.data
-    except Exception as e:
-        raise HTTPException(500, f"Database error: {e}")
+    return supabase.table("car_brands").select("*").order("name").execute().data
 
-# ─── Models (with brand name injected) ───────────────────────
 
-@app.get("/api/brands/{brand_id}/models", tags=["Vehicles"])
+@app.get("/api/brands/{brand_id}/models")
 def get_models(brand_id: int):
-    try:
-        # Fetch brand info so the frontend can show it in breadcrumb / model cards
-        brand_res = supabase.table("car_brands").select("*").eq("id", brand_id).execute()
-        if not brand_res.data:
-            raise HTTPException(404, "Brand not found")
+    brand = supabase.table("car_brands").select("*").eq("id", brand_id).execute().data
+    if not brand:
+        raise HTTPException(404, "Brand not found")
+    brand = brand[0]
 
-        brand = brand_res.data[0]
-
-        models_res = (
-            supabase.table("car_models")
-            .select("*")
-            .eq("brand_id", brand_id)
-            .order("range_km", desc=True)
-            .execute()
-        )
-
-        # Inject brand name into every model so the frontend doesn't need a join
-        enriched = []
-        for m in models_res.data:
-            enriched.append({
-                **m,
-                "brand":     brand["name"],
-                "brand_logo": brand.get("logo_url"),
-                # Convenience: consumption in Wh/km for display
-                "consumption_wh_per_km": round(
-                    (float(m["battery_capacity_kwh"]) / int(m["range_km"])) * 1000, 1
-                ),
-            })
-
-        return enriched
-    except HTTPException:
-        raise
-    except Exception as e:
-        raise HTTPException(500, f"Database error: {e}")
-
-# ─── Single Model ────────────────────────────────────────────
-
-@app.get("/api/models/{model_id}", tags=["Vehicles"])
-def get_model(model_id: int):
-    try:
-        res = (
-            supabase.table("car_models")
-            .select("*, car_brands(name, logo_url)")
-            .eq("id", model_id)
-            .execute()
-        )
-        if not res.data:
-            raise HTTPException(404, "Model not found")
-        return res.data[0]
-    except HTTPException:
-        raise
-    except Exception as e:
-        raise HTTPException(500, f"Database error: {e}")
-
-# ─── Nearby Chargers ─────────────────────────────────────────
-
-@app.get("/api/chargers/nearby", tags=["Chargers"])
-def nearby_chargers(
-    lat:       float = Query(..., description="Latitude"),
-    lng:       float = Query(..., description="Longitude"),
-    radius_km: int   = Query(50,  description="Search radius in km"),
-    limit:     int   = Query(20,  description="Max results"),
-):
-    """
-    Returns charging stations within radius_km of the given coordinates.
-    Uses a simple bounding-box filter on the Supabase table.
-    For production, replace with PostGIS ST_DWithin.
-    """
-    try:
-        deg = radius_km / 111.0   # 1° ≈ 111 km
-
-        res = (
-            supabase.table("charging_stations")
-            .select("*")
-            .gte("latitude",  lat - deg)
-            .lte("latitude",  lat + deg)
-            .gte("longitude", lng - deg)
-            .lte("longitude", lng + deg)
-            .eq("available", True)
-            .order("power_kw", desc=True)
-            .limit(limit)
-            .execute()
-        )
-
-        return {
-            "count":    len(res.data),
-            "stations": res.data,
+    models = (
+        supabase.table("car_models")
+        .select("*")
+        .eq("brand_id", brand_id)
+        .order("range_km", desc=True)
+        .execute().data
+    )
+    return [
+        {
+            **m,
+            "brand":      brand["name"],
+            "brand_logo": brand.get("logo_url"),
+            "consumption_wh_per_km": round(
+                (float(m["battery_capacity_kwh"]) / int(m["range_km"])) * 1000, 1
+            ),
         }
-    except Exception as e:
-        raise HTTPException(500, f"Database error: {e}")
+        for m in models
+    ]
 
-# ─── Route Calculation ───────────────────────────────────────
 
-@app.post("/api/route/calculate", tags=["Routing"])
+@app.get("/api/chargers/nearby")
+def nearby_chargers(
+    lat:       float = Query(...),
+    lng:       float = Query(...),
+    radius_km: int   = Query(50),
+    limit:     int   = Query(20),
+):
+    deg = radius_km / 111.0
+    data = (
+        supabase.table("charging_stations")
+        .select("*")
+        .gte("latitude",  lat - deg).lte("latitude",  lat + deg)
+        .gte("longitude", lng - deg).lte("longitude", lng + deg)
+        .eq("available", True)
+        .order("power_kw", desc=True)
+        .limit(limit)
+        .execute()
+    )
+    return {"count": len(data.data), "stations": data.data}
+
+
+@app.post("/api/route/calculate")
 def calculate_route(req: RouteRequest):
-    # 1. Validate battery percent
     if not (5 <= req.current_battery_percent <= 100):
-        raise HTTPException(400, "current_battery_percent must be between 5 and 100")
+        raise HTTPException(400, "Battery percent must be 5–100")
 
-    # 2. Fetch car from DB
     car_res = (
         supabase.table("car_models")
         .select("*, car_brands(name)")
@@ -192,45 +117,38 @@ def calculate_route(req: RouteRequest):
     )
     if not car_res.data:
         raise HTTPException(404, f"Car model {req.car_model_id} not found")
-
     car = car_res.data[0]
 
-    # 3. Build EVSpecs — consumption is auto-derived from real battery/range data
+    # EVSpecs auto-derives real-world consumption from battery/range
     specs = EVSpecs(
-        battery_capacity_kwh  = float(car["battery_capacity_kwh"]),
-        range_km              = int(car["range_km"]),
-        charging_speed_kw     = float(car.get("charging_speed_kw") or 50.0),
+        battery_capacity_kwh = float(car["battery_capacity_kwh"]),
+        range_km             = int(car["range_km"]),
+        charging_speed_kw    = float(car.get("charging_speed_kw") or 50.0),
     )
 
+    brand_name = car["car_brands"]["name"] if car.get("car_brands") else "Unknown"
     print(
-        f"🗺️  Route: ({req.start_lat:.4f},{req.start_lng:.4f}) → "
-        f"({req.end_lat:.4f},{req.end_lng:.4f}) | "
-        f"{car['car_brands']['name']} {car['name']} | "
-        f"Battery: {req.current_battery_percent}% | "
-        f"Consumption: {specs.consumption_kwh_per_km:.4f} kWh/km"
+        f"🗺️  {brand_name} {car['name']} | "
+        f"{req.current_battery_percent}% battery | "
+        f"consumption {specs.consumption_kwh_per_km:.4f} kWh/km | "
+        f"real-world range {specs.real_world_range_km:.0f} km"
     )
 
-    # 4. Fetch nearby DB chargers as fallback (in case OCM is offline)
-    import math
-    lat_mid = (req.start_lat + req.end_lat) / 2
-    lng_mid = (req.start_lng + req.end_lng) / 2
-    # radius covers half the trip distance plus 60 km buffer
-    trip_km  = math.hypot(req.end_lat - req.start_lat, req.end_lng - req.start_lng) * 111
-    deg_radius = (trip_km / 2 + 60) / 111.0
+    # Fetch DB chargers along the corridor as OCM fallback
+    lat_mid   = (req.start_lat + req.end_lat) / 2
+    lng_mid   = (req.start_lng + req.end_lng) / 2
+    trip_km   = math.hypot(req.end_lat - req.start_lat, req.end_lng - req.start_lng) * 111
+    deg_r     = (trip_km / 2 + 80) / 111.0
 
-    db_chargers_res = (
+    db_chargers = (
         supabase.table("charging_stations")
-        .select("name, latitude, longitude, power_kw")
-        .gte("latitude",  lat_mid - deg_radius)
-        .lte("latitude",  lat_mid + deg_radius)
-        .gte("longitude", lng_mid - deg_radius)
-        .lte("longitude", lng_mid + deg_radius)
+        .select("name, latitude, longitude, power_kw, charger_type, operator")
+        .gte("latitude",  lat_mid - deg_r).lte("latitude",  lat_mid + deg_r)
+        .gte("longitude", lng_mid - deg_r).lte("longitude", lng_mid + deg_r)
         .eq("available", True)
         .execute()
-    )
-    db_chargers = db_chargers_res.data or []
+    ).data or []
 
-    # 5. Call the routing engine
     result = router_engine.find_route_with_charging(
         req.start_lat, req.start_lng,
         req.end_lat,   req.end_lng,
@@ -241,7 +159,6 @@ def calculate_route(req: RouteRequest):
 
     if "error" in result:
         raise HTTPException(400, result["error"])
-
     return result
 
 
