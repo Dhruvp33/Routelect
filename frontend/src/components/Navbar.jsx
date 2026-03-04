@@ -99,7 +99,7 @@ export default function Navbar() {
   const navLinks = [
     {
       to: '/select-brand',
-      label: selectedCar ? 'Change Car' : 'Select Car',
+      label: selectedCar ? 'Change Car' : 'Choose Car',
       icon: <Car size={14} />,
     },
     ...(selectedCar ? [{
