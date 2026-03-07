@@ -584,7 +584,7 @@ export default function Navbar() {
                 <RoutelectMark />
               </div>
               <span className="rl-logo-text">
-                Route<span>lect</span>
+                ROUT<span>ELECT</span>
               </span>
             </Link>
 
