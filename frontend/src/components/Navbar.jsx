@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom'
-import { Navigation, Car, MapPin, Menu, X, LogOut, User, ChevronDown, Zap } from 'lucide-react'
+import { Navigation, Car, MapPin, Menu, X, LogOut, User, ChevronDown, Zap, LayoutDashboard, Sun, Moon } from 'lucide-react'
 import { useStore } from '../store/useStore'
 import { useAuth } from '../hooks/useAuth'
 import { useState, useRef, useEffect, useCallback } from 'react'
@@ -9,18 +9,7 @@ import AuthModal from './AuthModal'
    Routelect Logo Mark — custom SVG route icon
 ───────────────────────────────────────────── */
 const RoutelectMark = () => (
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <circle cx="5" cy="19" r="2.5" fill="#000" />
-    <circle cx="19" cy="5" r="2.5" fill="#000" />
-    <path
-      d="M5 16.5V11C5 8.79 6.79 7 9 7H15C17.21 7 19 5.21 19 3"
-      stroke="#000"
-      strokeWidth="2.2"
-      strokeLinecap="round"
-      fill="none"
-    />
-    <path d="M12 7L10 4.5L14 4.5L12 7Z" fill="#000" />
-  </svg>
+  <img src="/routelect-logo.svg" alt="Routelect Logo" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
 )
 
 /* ─────────────────────────────────────────────
@@ -28,22 +17,22 @@ const RoutelectMark = () => (
 ───────────────────────────────────────────── */
 export default function Navbar() {
   const location = useLocation()
-  const { selectedCar, backendStatus } = useStore()
+  const { selectedCar, backendStatus, theme, toggleTheme } = useStore()
   const { user, signOut } = useAuth()
 
-  const [mobileOpen,  setMobileOpen]  = useState(false)
-  const [showAuth,    setShowAuth]    = useState(false)
+  const [mobileOpen, setMobileOpen] = useState(false)
+  const [showAuth, setShowAuth] = useState(false)
   const [profileOpen, setProfileOpen] = useState(false)
-  const [visible,     setVisible]     = useState(true)
+  const [visible, setVisible] = useState(true)
 
-  const profileRef    = useRef(null)
+  const profileRef = useRef(null)
   const lastScrollRef = useRef(0)
-  const ticking       = useRef(false)
+  const ticking = useRef(false)
 
-  const avatarUrl   = user?.user_metadata?.avatar_url
+  const avatarUrl = user?.user_metadata?.avatar_url
   const displayName = user?.user_metadata?.full_name?.split(' ')[0]
-                   || user?.email?.split('@')[0]
-                   || 'You'
+    || user?.email?.split('@')[0]
+    || 'You'
 
   /* ── Hide / show on scroll ── */
   const handleScroll = useCallback(() => {
@@ -108,6 +97,16 @@ export default function Navbar() {
       icon: <MapPin size={14} />,
       primary: true,
     }] : []),
+    ...(user ? [{
+      to: '/dashboard',
+      label: 'Dashboard',
+      icon: <LayoutDashboard size={14} />,
+    }] : []),
+    {
+      to: '/chargers-map',
+      label: 'Chargers Map',
+      icon: <Zap size={14} />,
+    },
   ]
 
   return (
@@ -150,17 +149,14 @@ export default function Navbar() {
           flex-shrink: 0;
         }
         .rl-logo-mark {
-          width: 32px; height: 32px;
-          background: linear-gradient(135deg, #00D4AA 0%, #00B87A 100%);
-          border-radius: 10px;
+          width: 34px; height: 34px;
           display: flex; align-items: center; justify-content: center;
-          box-shadow: 0 0 18px rgba(0,212,170,0.3);
-          transition: transform 0.25s ease, box-shadow 0.25s ease;
+          transition: transform 0.25s ease, filter 0.25s ease;
           flex-shrink: 0;
         }
         .rl-logo:hover .rl-logo-mark {
-          transform: rotate(-8deg) scale(1.06);
-          box-shadow: 0 0 28px rgba(0,212,170,0.45);
+          transform: rotate(-4deg) scale(1.04);
+          filter: drop-shadow(0 0 12px rgba(0,212,170,0.3));
         }
         .rl-logo-text {
           font-family: 'Outfit', sans-serif;
@@ -606,6 +602,22 @@ export default function Navbar() {
 
               {/* Divider */}
               <div style={{ width: 1, height: 20, background: 'rgba(255,255,255,0.1)', flexShrink: 0 }} />
+
+              {/* Theme toggle */}
+              <button
+                onClick={toggleTheme}
+                title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+                style={{
+                  width: 34, height: 34, borderRadius: 8, flexShrink: 0,
+                  background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)',
+                  cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  transition: 'all 0.2s', color: 'var(--text-2)',
+                }}
+                onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.08)'; e.currentTarget.style.color = 'var(--accent)' }}
+                onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.04)'; e.currentTarget.style.color = 'var(--text-2)' }}
+              >
+                {theme === 'dark' ? <Sun size={15} /> : <Moon size={15} />}
+              </button>
 
               {/* Status pill */}
               <div className={`rl-status ${backendStatus ? 'live' : 'offline'}`}>

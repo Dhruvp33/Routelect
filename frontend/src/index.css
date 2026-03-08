@@ -30,10 +30,32 @@
   --transition: 0.2s ease;
 }
 
+/* ── Light mode overrides ── */
+:root[data-theme="light"] {
+  --bg: #F4F6FA;
+  --surface: #FFFFFF;
+  --surface-2: #F0F2F5;
+  --surface-3: #E5E8EE;
+  --border: rgba(0, 0, 0, 0.08);
+  --border-hover: rgba(0, 0, 0, 0.15);
+  --border-active: rgba(0, 180, 140, 0.45);
+  --text-1: #111827;
+  --text-2: #5B6478;
+  --text-3: #9CA3AF;
+  --accent: #00B894;
+  --accent-dim: rgba(0, 184, 148, 0.08);
+  --accent-glow: rgba(0, 184, 148, 0.25);
+  --error: #E53E5A;
+  --warning: #E8A317;
+  --info: #3B82F6;
+}
+
 /* ========================================
    BASE
    ======================================== */
-*, *::before, *::after {
+*,
+*::before,
+*::after {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
@@ -55,7 +77,11 @@ body {
   overflow-x: hidden;
 }
 
-h1, h2, h3, h4, h5 {
+h1,
+h2,
+h3,
+h4,
+h5 {
   font-family: 'Outfit', sans-serif;
   letter-spacing: -0.025em;
   line-height: 1.2;
@@ -75,16 +101,32 @@ h1, h2, h3, h4, h5 {
 /* ========================================
    SCROLLBAR
    ======================================== */
-::-webkit-scrollbar { width: 4px; height: 4px; }
-::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
 ::-webkit-scrollbar-thumb {
   background: rgba(255, 255, 255, 0.08);
   border-radius: 10px;
 }
-::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.16); }
 
-.no-scrollbar::-webkit-scrollbar { display: none; }
-.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.16);
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
 
 /* ========================================
    SURFACE & GLASS UTILITIES
@@ -164,7 +206,9 @@ h1, h2, h3, h4, h5 {
   box-shadow: 0 8px 28px rgba(0, 212, 170, 0.4);
 }
 
-.btn-primary:active:not(:disabled) { transform: translateY(0); }
+.btn-primary:active:not(:disabled) {
+  transform: translateY(0);
+}
 
 .btn-primary:disabled {
   opacity: 0.35;
@@ -235,7 +279,9 @@ h1, h2, h3, h4, h5 {
   transition: all var(--transition);
 }
 
-.input-field::placeholder { color: var(--text-3); }
+.input-field::placeholder {
+  color: var(--text-3);
+}
 
 .input-field:focus {
   border-color: var(--accent);
@@ -286,71 +332,154 @@ h1, h2, h3, h4, h5 {
    SKELETON LOADING
    ======================================== */
 .skeleton {
-  background: linear-gradient(
-    90deg,
-    var(--surface-2) 0%,
-    var(--surface-3) 40%,
-    var(--surface-2) 80%
-  );
+  background: linear-gradient(90deg,
+      var(--surface-2) 0%,
+      var(--surface-3) 40%,
+      var(--surface-2) 80%);
   background-size: 300% 100%;
   animation: shimmer 1.6s ease-in-out infinite;
   border-radius: var(--radius);
 }
 
 @keyframes shimmer {
-  0% { background-position: 100% 0; }
-  100% { background-position: -100% 0; }
+  0% {
+    background-position: 100% 0;
+  }
+
+  100% {
+    background-position: -100% 0;
+  }
 }
 
 /* ========================================
    ANIMATIONS
    ======================================== */
 @keyframes fade-up {
-  from { opacity: 0; transform: translateY(18px); }
-  to   { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 @keyframes fade-in {
-  from { opacity: 0; }
-  to   { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
 }
 
 @keyframes slide-up {
-  from { opacity: 0; transform: translateY(32px); }
-  to   { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(32px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 @keyframes slide-in-right {
-  from { opacity: 0; transform: translateX(20px); }
-  to   { opacity: 1; transform: translateX(0); }
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
 }
 
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 @keyframes pulse-dot {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50%       { opacity: 0.5; transform: scale(0.8); }
+
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  50% {
+    opacity: 0.5;
+    transform: scale(0.8);
+  }
 }
 
-.animate-fade-up   { animation: fade-up 0.5s cubic-bezier(0.22, 1, 0.36, 1) both; }
-.animate-fade-in   { animation: fade-in 0.4s ease both; }
-.animate-slide-up  { animation: slide-up 0.4s cubic-bezier(0.22, 1, 0.36, 1) both; }
-.animate-spin      { animation: spin 0.8s linear infinite; }
-.animate-pulse-dot { animation: pulse-dot 1.5s ease infinite; }
+.animate-fade-up {
+  animation: fade-up 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.animate-fade-in {
+  animation: fade-in 0.4s ease both;
+}
+
+.animate-slide-up {
+  animation: slide-up 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.animate-spin {
+  animation: spin 0.8s linear infinite;
+}
+
+.animate-pulse-dot {
+  animation: pulse-dot 1.5s ease infinite;
+}
 
 /* Stagger utility for child elements */
-.stagger > *:nth-child(1)  { animation-delay: 0ms; }
-.stagger > *:nth-child(2)  { animation-delay: 55ms; }
-.stagger > *:nth-child(3)  { animation-delay: 110ms; }
-.stagger > *:nth-child(4)  { animation-delay: 165ms; }
-.stagger > *:nth-child(5)  { animation-delay: 220ms; }
-.stagger > *:nth-child(6)  { animation-delay: 275ms; }
-.stagger > *:nth-child(7)  { animation-delay: 330ms; }
-.stagger > *:nth-child(8)  { animation-delay: 385ms; }
-.stagger > *:nth-child(9)  { animation-delay: 440ms; }
-.stagger > *:nth-child(10) { animation-delay: 495ms; }
+.stagger>*:nth-child(1) {
+  animation-delay: 0ms;
+}
+
+.stagger>*:nth-child(2) {
+  animation-delay: 55ms;
+}
+
+.stagger>*:nth-child(3) {
+  animation-delay: 110ms;
+}
+
+.stagger>*:nth-child(4) {
+  animation-delay: 165ms;
+}
+
+.stagger>*:nth-child(5) {
+  animation-delay: 220ms;
+}
+
+.stagger>*:nth-child(6) {
+  animation-delay: 275ms;
+}
+
+.stagger>*:nth-child(7) {
+  animation-delay: 330ms;
+}
+
+.stagger>*:nth-child(8) {
+  animation-delay: 385ms;
+}
+
+.stagger>*:nth-child(9) {
+  animation-delay: 440ms;
+}
+
+.stagger>*:nth-child(10) {
+  animation-delay: 495ms;
+}
 
 /* ========================================
    TOAST SYSTEM
@@ -385,10 +514,21 @@ h1, h2, h3, h4, h5 {
   max-width: 380px;
 }
 
-.toast.success { border-left: 3px solid var(--accent); }
-.toast.error   { border-left: 3px solid var(--error); }
-.toast.warning { border-left: 3px solid var(--warning); }
-.toast.info    { border-left: 3px solid var(--info); }
+.toast.success {
+  border-left: 3px solid var(--accent);
+}
+
+.toast.error {
+  border-left: 3px solid var(--error);
+}
+
+.toast.warning {
+  border-left: 3px solid var(--warning);
+}
+
+.toast.info {
+  border-left: 3px solid var(--info);
+}
 
 /* ========================================
    MODAL
@@ -485,8 +625,13 @@ h1, h2, h3, h4, h5 {
   border: 1px solid var(--border) !important;
 }
 
-.leaflet-control-attribution a { color: var(--text-3) !important; }
-.leaflet-attribution-flag { display: none !important; }
+.leaflet-control-attribution a {
+  color: var(--text-3) !important;
+}
+
+.leaflet-attribution-flag {
+  display: none !important;
+}
 
 /* ========================================
    RANGE SLIDER
@@ -533,13 +678,29 @@ h1, h2, h3, h4, h5 {
 }
 
 @keyframes pin-float {
-  0%, 100% { transform: translate(-50%, -100%) translateY(0); }
-  50%       { transform: translate(-50%, -100%) translateY(-5px); }
+
+  0%,
+  100% {
+    transform: translate(-50%, -100%) translateY(0);
+  }
+
+  50% {
+    transform: translate(-50%, -100%) translateY(-5px);
+  }
 }
 
 @keyframes pulse-ground {
-  0%, 100% { opacity: 0.3; transform: translate(-50%, 50%) rotateX(60deg) scale(1); }
-  50%       { opacity: 0.1; transform: translate(-50%, 50%) rotateX(60deg) scale(1.6); }
+
+  0%,
+  100% {
+    opacity: 0.3;
+    transform: translate(-50%, 50%) rotateX(60deg) scale(1);
+  }
+
+  50% {
+    opacity: 0.1;
+    transform: translate(-50%, 50%) rotateX(60deg) scale(1.6);
+  }
 }
 
 /* ========================================
@@ -555,8 +716,15 @@ h1, h2, h3, h4, h5 {
    PRINT STYLES (for trip summary export)
    ======================================== */
 @media print {
-  body { background: #fff !important; color: #000 !important; }
-  .no-print { display: none !important; }
+  body {
+    background: #fff !important;
+    color: #000 !important;
+  }
+
+  .no-print {
+    display: none !important;
+  }
+
   .modal-panel {
     position: static !important;
     max-height: none !important;
@@ -564,9 +732,137 @@ h1, h2, h3, h4, h5 {
     border: none !important;
     box-shadow: none !important;
   }
+
   .modal-overlay {
     position: static !important;
     background: none !important;
-    backdrop-filter: none !important;
+  }
+}
+
+/* ========================================
+   MAP THEME (DARK MODE VIA CSS INVERT)
+   ======================================== */
+.dark-tiles .leaflet-tile-pane {
+  filter: invert(100%) hue-rotate(180deg) brightness(95%) contrast(90%);
+}
+
+.dark-tiles .leaflet-marker-pane,
+.dark-tiles .leaflet-popup-pane,
+.dark-tiles .leaflet-control-container {
+  filter: none;
+}
+
+/* ========================================
+   ROUTE ACTIVE FOCUS EFFECT
+   Dims map background when route exists
+   ======================================== */
+.route-active .leaflet-tile-pane {
+  opacity: 0.55;
+  transition: opacity 0.6s ease;
+}
+
+.route-active .leaflet-marker-pane,
+.route-active .leaflet-popup-pane,
+.route-active .leaflet-control-container {
+  opacity: 1;
+}
+
+/* ========================================
+   ROAD LABELS — highway name shields
+   Styled like premium navigation highway tags.
+   ======================================== */
+.road-label-icon {
+  background: none !important;
+  border: none !important;
+  width: auto !important;
+  height: auto !important;
+}
+
+.road-label {
+  display: inline-block;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  padding: 3px 10px;
+  border-radius: 5px;
+  white-space: nowrap;
+  pointer-events: none;
+  line-height: 1.4;
+}
+
+.road-label.dark {
+  background: rgba(7, 11, 20, 0.88);
+  color: #00D4AA;
+  border: 1px solid rgba(0, 212, 170, 0.35);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+}
+
+.road-label.light {
+  background: rgba(255, 255, 255, 0.92);
+  color: #0E7660;
+  border: 1px solid rgba(14, 118, 96, 0.3);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* ========================================
+   SHARED UTILITY CLASSES
+   ======================================== */
+
+/* Glass sidebar panel */
+.glass-sidebar {
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+}
+
+/* Badge pills */
+.badge {
+  display: inline-block;
+  padding: 3px 9px;
+  border-radius: 100px;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.4;
+  border: 1px solid transparent;
+  background: transparent;
+}
+
+.badge-green {
+  background: rgba(0, 212, 170, 0.1);
+  color: var(--accent);
+  border-color: rgba(0, 212, 170, 0.25);
+}
+
+.badge-yellow {
+  background: rgba(255, 181, 71, 0.1);
+  color: #FFB547;
+  border-color: rgba(255, 181, 71, 0.25);
+}
+
+.badge-gray {
+  background: var(--surface-2);
+  color: var(--text-2);
+  border-color: var(--border);
+}
+
+/* Mono helper */
+.mono {
+  font-family: 'IBM Plex Mono', monospace;
+}
+
+/* Map layout mobile logic */
+@media (max-width: 768px) {
+  .map-layout-wrapper {
+    flex-direction: column-reverse !important;
+  }
+
+  .glass-sidebar {
+    width: 100% !important;
+    height: auto !important;
+    flex: 0 0 45% !important;
+    max-height: 45vh;
+    border-right: none !important;
+    border-top: 1px solid var(--border);
   }
 }

@@ -1,0 +1,111 @@
+# Restore Routelect V4 — Implementation Plan
+
+After a thorough audit of every file in the codebase against the V4 Implementation Guide, here are all the issues found and the fixes needed to bring the project back to the working V4 state.
+
+---
+
+## Proposed Changes
+
+### Backend — Routing Engine
+
+#### [MODIFY] [routing_engine.py](file:///c:/Users/scien/OneDrive/Desktop/Routelect/backend/routing_engine.py)
+
+1. **Add `steps=true` to OSRM request** (Section 2 of guide): The URL in `_osrm()` is missing `&steps=true`. Without this, road/highway names can't be extracted.
+2. **Add `_extract_road_names()` method** (Section 2 of guide): This method should parse the OSRM `steps` array, extract highway `ref`s (e.g. NH48, SH17), filter to segments >5km, deduplicate, and return `road_names` array with `{name, lat, lng}`.
+3. **Return `road_names` in the response** (Section 2 of guide): Both the direct-route and via-charger-route return dicts need to include `road_names`.
+
+---
+
+### Backend — API
+
+#### [MODIFY] [main.py](file:///c:/Users/scien/OneDrive/Desktop/Routelect/backend/main.py)
+
+No changes needed — the backend endpoint is `/api/route/calculate`. The **frontend** is the one calling the wrong path.
+
+---
+
+### Frontend — API Endpoint Fix
+
+#### [MODIFY] [RoutePlanner.jsx](file:///c:/Users/scien/OneDrive/Desktop/Routelect/frontend/src/pages/RoutePlanner.jsx)
+
+1. **Fix API endpoint path**: Line 728 calls `/api/v1/route/calculate` but the backend serves `/api/route/calculate` (no `v1`). This means **routing completely fails** right now.
+2. **Fix missing `history` and `theme` destructuring**: Line 610-611 destructures `history` and `theme` from `useStore`, but these don't exist in the store. Should use `tripHistory` instead of `history`, and remove `theme` (hardcode dark mode since the app is dark-only).
+
+---
+
+### Frontend — Zustand Store
+
+#### [MODIFY] [useStore.js](file:///c:/Users/scien/OneDrive/Desktop/Routelect/frontend/src/store/useStore.js)
+
+1. **Add `removeFromHistory` function** (Section 6 of guide): The `Dashboard.jsx` calls `removeFromHistory(trip.id)` but this function doesn't exist in the store. Need to add individual trip deletion.
+2. **Add `_carToastShown` guard** (Section 6 of guide): The toast for car model changes should only fire on explicit changes, not on every page load. Need to add `_carToastShown` tracking.
+
+---
+
+### Frontend — Routes & Navigation
+
+#### [MODIFY] [App.jsx](file:///c:/Users/scien/OneDrive/Desktop/Routelect/frontend/src/App.jsx)
+
+1. **Add Dashboard route**: The `Dashboard.jsx` page exists but there's no route for it in `App.jsx`.
+2. **Update Loading Screen to use brand logo**: The guide says to replace the SVG bolt with `<img src="/ROUTELECT LOGO.png">` with a scale animation. The logo file exists at `/public/ROUTELECT LOGO.png`.
+
+---
+
+### Frontend — CSS
+
+#### [MODIFY] [index.css](file:///c:/Users/scien/OneDrive/Desktop/Routelect/frontend/src/index.css)
+
+1. **Add dark-tiles CSS invert hack** (Section 3A of guide): Missing `.dark-tiles .leaflet-tile-pane { filter: invert(100%) hue-rotate(180deg) brightness(95%) contrast(90%); }` and exemption rules for markers/popups.
+2. **Add route-active dimming** (Section 3B of guide): Missing `.route-active .leaflet-tile-pane { opacity: 0.55; transition: opacity 0.6s ease; }`.
+3. **Add road-label styles** (Section 3C of guide): Missing `.road-label-icon` and `.road-label` CSS for highway name overlays.
+
+---
+
+### Frontend — HTML
+
+#### [MODIFY] [index.html](file:///c:/Users/scien/OneDrive/Desktop/Routelect/frontend/index.html)
+
+1. **Add viewport scale lock** (Section 5 of guide): Missing `maximum-scale=1.0, user-scalable=no` on the meta viewport tag.
+
+---
+
+## Summary of Critical Issues (by severity)
+
+| # | Issue | Impact | File |
+|---|-------|--------|------|
+| 1 | Wrong API endpoint `/api/v1/route/calculate` | **Routing completely broken** | `RoutePlanner.jsx` |
+| 2 | Missing `history`/`theme` in store | **App crashes on mount** | `RoutePlanner.jsx` |
+| 3 | Missing `removeFromHistory` in store | **Dashboard delete buttons crash** | `useStore.js` |
+| 4 | Missing dark-tiles CSS | Map lacks dark mode | `index.css` |
+| 5 | Missing road names extraction | No highway labels shown | `routing_engine.py` |
+| 6 | Missing OSRM `steps=true` | Road data not fetched | `routing_engine.py` |
+| 7 | Missing route-active dimming | Route blends into map | `index.css` |
+| 8 | Missing Dashboard route | Dashboard page unreachable | `App.jsx` |
+| 9 | Loading screen uses SVG not logo | Off-brand appearance | `App.jsx` |
+| 10 | No viewport scale lock | Mobile zoom issues | `index.html` |
+
+---
+
+## Verification Plan
+
+### Manual Verification (User)
+
+After the fixes are applied:
+
+1. **Run the backend**: `cd backend && python main.py`
+2. **Run the frontend**: `cd frontend && npm run dev`
+3. **Check route calculation**: Navigate to Plan Route → select a car → enter start/end locations → click "Find Best Route". Verify the route appears with charging stops if needed.
+4. **Check dark map tiles**: Verify the map appears in dark mode with tiles inverted.
+5. **Check highway labels**: Verify highway names like "NH48" appear along the route polyline.
+6. **Check route dimming**: When a route is displayed, map tiles should dim to 55% opacity.
+7. **Check Dashboard**: Navigate to `/dashboard` and verify it loads, shows trip history, and delete buttons work.
+8. **Check Loading Screen**: Refresh the app and verify the loading screen shows the Routelect logo image, not an SVG bolt icon.
+9. **Check mobile**: Test on mobile viewport — verify no zoom on tap, bottom sheet drag works correctly.
+
+### Automated Build Check
+
+```bash
+cd frontend && npm run build
+```
+
+This will catch any import errors, missing variables, or JSX syntax issues.

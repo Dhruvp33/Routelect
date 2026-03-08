@@ -3,9 +3,9 @@ import { supabase } from '../lib/supabase'
 import { useStore } from '../store/useStore'
 
 export function useAuth() {
-  const [user,        setUser]        = useState(null)
+  const [user, setUser] = useState(null)
   const [authLoading, setAuthLoading] = useState(true)
-  const { setSelectedCar, addToast }  = useStore()
+  const { setSelectedCar, addToast } = useStore()
 
   /* ── Boot: restore existing session ── */
   useEffect(() => {
@@ -39,7 +39,6 @@ export function useAuth() {
       if (data?.car_models) {
         const m = data.car_models
         setSelectedCar({ ...m, brand: m.car_brands?.name || '' })
-        addToast('success', `Welcome back! ${m.car_brands?.name} ${m.name} loaded`)
       }
     } catch { /* no saved preference — fine */ }
   }
@@ -81,7 +80,7 @@ export function useAuth() {
     if (!supabase) return
     await supabase.auth.signInWithOAuth({
       provider: 'google',
-      options:  { redirectTo: window.location.origin },
+      options: { redirectTo: window.location.origin },
     })
   }
 
@@ -105,14 +104,14 @@ export function useAuth() {
   const saveTrip = async (userId, tripData) => {
     if (!supabase || !userId) return
     await supabase.from('user_routes').insert({
-      user_id:        userId,
-      start_lat:      tripData.startCoords[0],
-      start_lng:      tripData.startCoords[1],
-      end_lat:        tripData.endCoords[0],
-      end_lng:        tripData.endCoords[1],
-      distance_km:    tripData.route.total_distance_km,
+      user_id: userId,
+      start_lat: tripData.startCoords[0],
+      start_lng: tripData.startCoords[1],
+      end_lat: tripData.endCoords[0],
+      end_lng: tripData.endCoords[1],
+      distance_km: tripData.route.total_distance_km,
       charging_stops: tripData.route.charging_stops,
-      route_result:   tripData.route,
+      route_result: tripData.route,
     })
   }
 

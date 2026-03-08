@@ -67,7 +67,7 @@ class EVRouter:
     def _osrm(self, waypoints: List[List[float]]) -> Optional[Dict]:
         """waypoints = [[lng, lat], ...]"""
         coords = ";".join(f"{lng},{lat}" for lng, lat in waypoints)
-        url    = f"{self.OSRM}/{coords}?overview=full&geometries=geojson"
+        url    = f"{self.OSRM}/{coords}?overview=full&geometries=geojson&steps=true"
         try:
             r = requests.get(url, timeout=12)
             r.raise_for_status()
@@ -76,6 +76,36 @@ class EVRouter:
         except Exception as e:
             print(f"  OSRM error: {e}")
             return None
+
+    # ── Road name extraction ─────────────────────────────────
+
+    @staticmethod
+    def _extract_road_names(osrm_route: Dict) -> list:
+        """Extract unique highway/road names from OSRM steps.
+        Returns [{name, lat, lng}, ...] for map labels."""
+        seen = set()
+        labels = []
+        try:
+            for leg in osrm_route.get("legs", []):
+                for step in leg.get("steps", []):
+                    ref  = step.get("ref", "").strip()
+                    name = step.get("name", "").strip()
+                    dist = step.get("distance", 0) / 1000.0  # metres → km
+
+                    # Only label segments > 5 km with a ref like NH48 / SH17
+                    label = ref or name
+                    if not label or dist < 5 or label in seen:
+                        continue
+                    seen.add(label)
+
+                    # Pick midpoint of this step's geometry for label placement
+                    coords = step.get("geometry", {}).get("coordinates", [])
+                    if coords:
+                        mid = coords[len(coords) // 2]
+                        labels.append({"name": label, "lat": mid[1], "lng": mid[0]})
+        except Exception:
+            pass
+        return labels
 
     # ── Open Charge Map ─────────────────────────────────────
 
@@ -248,6 +278,7 @@ class EVRouter:
                     "estimated_charge_cost_inr":    round(energy_needed * cost_per_kwh, 0),
                     "battery_at_arrival_pct":       max(15, arr_pct),
                     "real_world_range_km":          round(specs.real_world_range_km),
+                    "road_names":                   self._extract_road_names(direct),
                     "message": "Direct trip possible — no charging needed 🎉",
                 }
 
@@ -360,6 +391,7 @@ class EVRouter:
                 "estimated_charge_cost_inr":    round(final_kwh * cost_per_kwh, 0),
                 "battery_at_arrival_pct":       15.0,
                 "real_world_range_km":          round(specs.real_world_range_km),
+                "road_names":                   self._extract_road_names(via),
                 "message": f"Route via {len(stops)} charging stop(s) — safe &amp; optimised",
             }
 

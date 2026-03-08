@@ -3,52 +3,61 @@ import { persist } from 'zustand/middleware'
 
 let _toastId = 0
 
+/* ── Apply theme to <html> so CSS vars switch ── */
+export function applyTheme(theme) {
+  document.documentElement.setAttribute('data-theme', theme)
+}
+
 export const useStore = create(
   persist(
-    (set) => ({
-      // ── Backend ──────────────────────────────────────
-      backendStatus: false,
-      setBackendStatus: (s) => set({ backendStatus: s }),
-
-      // ── Selected Vehicle ─────────────────────────────
+    (set, get) => ({
+      // ── Car ──
       selectedCar: null,
       setSelectedCar: (car) => set({ selectedCar: car }),
 
-      // ── Battery ──────────────────────────────────────
-      currentBatteryPercent: 80,
-      setCurrentBatteryPercent: (pct) =>
-        set({ currentBatteryPercent: Math.min(100, Math.max(5, pct)) }),
+      // ── Backend status ──
+      backendStatus: false,
+      setBackendStatus: (s) => set({ backendStatus: s }),
 
-      // ── Trip History (persisted, last 20) ────────────
+      // ── Battery ──
+      currentBatteryPercent: 85,
+      setCurrentBatteryPercent: (v) => set({ currentBatteryPercent: v }),
+      _carToastShown: false,
+      setCarToastShown: () => set({ _carToastShown: true }),
+
+      // ── Theme ──
+      theme: 'dark',
+      toggleTheme: () => {
+        const next = get().theme === 'dark' ? 'light' : 'dark'
+        applyTheme(next)
+        set({ theme: next })
+      },
+
+      // ── Trip history ──
       tripHistory: [],
       addToHistory: (entry) =>
-        set((state) => ({
-          tripHistory: [
-            { ...entry, id: Date.now() },
-            ...state.tripHistory,
-          ].slice(0, 20),
-        })),
+        set((s) => ({ tripHistory: [...s.tripHistory, { ...entry, id: Date.now() }] })),
+      removeFromHistory: (id) =>
+        set((s) => ({ tripHistory: s.tripHistory.filter((t) => t.id !== id) })),
       clearHistory: () => set({ tripHistory: [] }),
 
-      // ── Toast Notifications ───────────────────────────
+      // ── Toasts ──
       toasts: [],
-      addToast: (type, message) =>
-        set((state) => ({
-          toasts: [...state.toasts, { id: ++_toastId, type, message }],
-        })),
+      addToast: (type, message) => {
+        const id = ++_toastId
+        set((s) => ({ toasts: [...s.toasts, { id, type, message }] }))
+      },
       removeToast: (id) =>
-        set((state) => ({ toasts: state.toasts.filter((t) => t.id !== id) })),
-
-      // ── Clear session data ─────────────────────────────
-      clearData: () =>
-        set({ selectedCar: null, currentBatteryPercent: 80 }),
+        set((s) => ({ toasts: s.toasts.filter((t) => t.id !== id) })),
     }),
     {
-      name: 'ev-route-v3',
+      name: 'routelect-store',
       partialize: (state) => ({
-        selectedCar:           state.selectedCar,
+        selectedCar: state.selectedCar,
         currentBatteryPercent: state.currentBatteryPercent,
-        tripHistory:           state.tripHistory,
+        _carToastShown: state._carToastShown,
+        tripHistory: state.tripHistory,
+        theme: state.theme,
       }),
     }
   )

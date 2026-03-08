@@ -1,12 +1,14 @@
 import { useState, useEffect } from 'react'
 import { Routes, Route, useLocation } from 'react-router-dom'
-import HomePage       from './pages/HomePage'
+import HomePage from './pages/HomePage'
 import BrandSelection from './pages/BrandSelection'
 import ModelSelection from './pages/ModelSelection'
-import RoutePlanner   from './pages/RoutePlanner'
-import Navbar         from './components/Navbar'
+import RoutePlanner from './pages/RoutePlanner'
+import Dashboard from './pages/Dashboard'
+import ChargersMap from './pages/ChargersMap'
+import Navbar from './components/Navbar'
 import { ToastContainer } from './components/Toast'
-import { useStore }   from './store/useStore'
+import { useStore } from './store/useStore'
 
 export const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000'
 
@@ -15,12 +17,14 @@ function LoadingScreen() {
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 24, background: 'var(--bg)' }}>
       <div style={{ position: 'relative' }}>
-        <div style={{ width: 52, height: 52, borderRadius: 16, background: 'var(--surface-2)', border: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <svg viewBox="0 0 24 24" fill="#00D4AA" className="w-7 h-7"><path d="M7 2v11h3v9l7-12h-4l4-8z"/></svg>
-        </div>
-        <svg className="animate-spin" style={{ position: 'absolute', inset: -8, animationDuration: '1.2s' }} viewBox="0 0 68 68" fill="none">
-          <circle cx="34" cy="34" r="30" stroke="var(--border)" strokeWidth="2"/>
-          <circle cx="34" cy="34" r="30" stroke="var(--accent)" strokeWidth="2" strokeDasharray="44 145" strokeLinecap="round"/>
+        <img
+          src="/routelect-logo.png"
+          alt="Routelect Logo"
+          style={{ width: 64, height: 64, objectFit: 'contain' }}
+        />
+        <svg className="animate-spin" style={{ position: 'absolute', inset: -12, animationDuration: '1.2s' }} viewBox="0 0 88 88" fill="none">
+          <circle cx="44" cy="44" r="40" stroke="var(--border)" strokeWidth="2.5" />
+          <circle cx="44" cy="44" r="40" stroke="var(--accent)" strokeWidth="2.5" strokeDasharray="60 190" strokeLinecap="round" />
         </svg>
       </div>
       <div style={{ textAlign: 'center' }}>
@@ -32,17 +36,16 @@ function LoadingScreen() {
     </div>
   )
 }
-
 export default function App() {
   const { setBackendStatus, toasts, removeToast, addToast } = useStore()
   const [appLoading, setAppLoading] = useState(true)
   const location = useLocation()
 
   useEffect(() => {
+    const minLoadTime = new Promise(resolve => setTimeout(resolve, 2000))
     const ctrl = new AbortController()
-    const tid  = setTimeout(() => ctrl.abort(), 5000)
 
-    fetch(`${API_URL}/`, { signal: ctrl.signal })
+    const backendCheck = fetch(`${API_URL}/`, { signal: ctrl.signal })
       .then(r => r.ok ? r.json() : Promise.reject())
       .then(() => { setBackendStatus(true); addToast('success', 'Backend connected — all systems ready') })
       .catch(err => {
@@ -51,7 +54,12 @@ export default function App() {
           addToast('warning', 'Backend offline — live features unavailable')
         }
       })
-      .finally(() => { clearTimeout(tid); setAppLoading(false) })
+
+    Promise.allSettled([minLoadTime, backendCheck]).then(() => {
+      setAppLoading(false)
+    })
+
+    return () => ctrl.abort()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
@@ -65,10 +73,12 @@ export default function App() {
 
       <div key={location.pathname} className="animate-fade-up">
         <Routes>
-          <Route path="/"                      element={<HomePage />}       />
-          <Route path="/select-brand"          element={<BrandSelection />} />
+          <Route path="/" element={<HomePage />} />
+          <Route path="/select-brand" element={<BrandSelection />} />
           <Route path="/select-model/:brandId" element={<ModelSelection />} />
-          <Route path="/plan-route"            element={<RoutePlanner />}   />
+          <Route path="/plan-route" element={<RoutePlanner />} />
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/chargers-map" element={<ChargersMap />} />
         </Routes>
       </div>
 

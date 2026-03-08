@@ -84,6 +84,20 @@ def get_models(brand_id: int):
     ]
 
 
+@app.get("/api/chargers/all")
+def all_chargers(
+    lat:       float = Query(...),
+    lng:       float = Query(...),
+    radius_km: int   = Query(150),
+    limit:     int   = Query(100),
+):
+    """
+    Fetch raw chargers from Open Charge Map (OCM) to populate the nationwide map.
+    This bypasses Supabase and goes direct to source.
+    """
+    ocm_data = router_engine._fetch_ocm(lat, lng, radius_km, limit)
+    return {"count": len(ocm_data), "stations": ocm_data}
+
 @app.get("/api/chargers/nearby")
 def nearby_chargers(
     lat:       float = Query(...),

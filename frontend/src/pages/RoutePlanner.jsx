@@ -1,16 +1,16 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { useNavigate }    from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from 'react-leaflet'
 import {
   Navigation, Battery, MapPin, Zap, Clock, ChevronLeft,
   X, Download, AlertTriangle, Car, Loader2, ChevronUp, ChevronRight,
   ExternalLink, Wifi, MapPin as MapPinIcon, Plug,
-  ChevronDown, Crosshair, ArrowUpDown, Share2,
+  ChevronDown, Crosshair, ArrowUpDown, Share2, Plus, Trash2,
 } from 'lucide-react'
-import { useStore }  from '../store/useStore'
-import { useAuth }   from '../hooks/useAuth'
-import { API_URL }   from '../App'
-import Navbar        from '../components/Navbar'
+import { useStore } from '../store/useStore'
+import { useAuth } from '../hooks/useAuth'
+import { API_URL } from '../App'
+import Navbar from '../components/Navbar'
 import 'leaflet/dist/leaflet.css'
 import L from 'leaflet'
 
@@ -35,23 +35,23 @@ const mkPin = (color, size = 40) => L.divIcon({
   html: `<div style="position:relative;width:${size}px;height:${size}px;color:${color}">
     <svg viewBox="0 0 24 24" fill="currentColor"
       style="position:absolute;top:50%;left:50%;transform:translate(-50%,-100%);
-             filter:drop-shadow(0 0 8px ${color});width:${size*.85}px;height:${size*.85}px">
+             filter:drop-shadow(0 0 8px ${color});width:${size * .85}px;height:${size * .85}px">
       <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
     </svg>
   </div>`,
-  iconSize: [size, size], iconAnchor: [size/2, size], popupAnchor: [0, -size],
+  iconSize: [size, size], iconAnchor: [size / 2, size], popupAnchor: [0, -size],
 })
 
 const mkChargerPin = (clickable = false) => L.divIcon({
   className: '',
-  html: `<div style="width:36px;height:36px;background:rgba(7,11,20,0.95);border:1.5px solid #FFB547;border-radius:10px;display:flex;align-items:center;justify-content:center;box-shadow:0 0 14px rgba(255,181,71,0.55);cursor:${clickable?'pointer':'default'}">
+  html: `<div style="width:36px;height:36px;background:rgba(7,11,20,0.95);border:1.5px solid #FFB547;border-radius:10px;display:flex;align-items:center;justify-content:center;box-shadow:0 0 14px rgba(255,181,71,0.55);cursor:${clickable ? 'pointer' : 'default'}">
     <svg viewBox="0 0 24 24" fill="#FFB547" width="18" height="18"><path d="M7 2v11h3v9l7-12h-4l4-8z"/></svg>
   </div>`,
   iconSize: [36, 36], iconAnchor: [18, 18], popupAnchor: [0, -24],
 })
 
-const startIcon   = mkPin('#00D4AA', 44)
-const endIcon     = mkPin('#FF4D6D', 44)
+const startIcon = mkPin('#00D4AA', 44)
+const endIcon = mkPin('#FF4D6D', 44)
 const chargerIcon = mkChargerPin(true)
 
 /* ═══════════════════════════════════════════════════════
@@ -76,9 +76,9 @@ function FitBounds({ start, end }) {
    ═══════════════════════════════════════════════════════ */
 function usePhotonAutocomplete(query, active) {
   const [suggestions, setSuggestions] = useState([])
-  const [loading,     setLoading]     = useState(false)
+  const [loading, setLoading] = useState(false)
   const timer = useRef(null)
-  const ctrl  = useRef(null)
+  const ctrl = useRef(null)
 
   useEffect(() => {
     clearTimeout(timer.current)
@@ -94,11 +94,11 @@ function usePhotonAutocomplete(query, active) {
           q: query.trim(), limit: 8,
           bbox: '68.7,6.5,97.25,35.5', lang: 'en',
         })
-        const res  = await fetch(`https://photon.komoot.io/api/?${params}`, { signal: ctrl.current.signal })
+        const res = await fetch(`https://photon.komoot.io/api/?${params}`, { signal: ctrl.current.signal })
         const data = await res.json()
         const seen = new Set(); const results = []
         for (const f of (data.features || [])) {
-          const p      = f.properties || {}
+          const p = f.properties || {}
           const coords = f.geometry?.coordinates
           if (!coords) continue
           const parts = [p.name, p.locality || p.suburb || p.district, p.city || p.town || p.county, p.state].filter(Boolean)
@@ -141,12 +141,12 @@ function Highlight({ text, q }) {
    LOCATION INPUT
    ═══════════════════════════════════════════════════════ */
 function LocationInput({ value, onChange, onSelect, placeholder, accent = '#00D4AA' }) {
-  const [open,    setOpen]    = useState(false)
-  const [cursor,  setCursor]  = useState(-1)
+  const [open, setOpen] = useState(false)
+  const [cursor, setCursor] = useState(-1)
   const [touched, setTouched] = useState(false)
-  const wrapRef  = useRef(null)
+  const wrapRef = useRef(null)
   const inputRef = useRef(null)
-  const listRef  = useRef(null)
+  const listRef = useRef(null)
 
   const { suggestions, loading, clear } = usePhotonAutocomplete(value, touched && open)
 
@@ -205,12 +205,12 @@ function LocationInput({ value, onChange, onSelect, placeholder, accent = '#00D4
             ? <Loader2 style={{ width: 13, height: 13, color: 'var(--text-3)', animation: 'spin 0.8s linear infinite' }} />
             : value
               ? <button onMouseDown={e => e.preventDefault()}
-                  onClick={() => { onChange(''); onSelect(null); clear(); setTouched(false); inputRef.current?.focus() }}
-                  style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-3)', padding: 2, borderRadius: 4, display: 'flex', alignItems: 'center', transition: 'color 0.15s' }}
-                  onMouseEnter={e => e.currentTarget.style.color = 'var(--text-1)'}
-                  onMouseLeave={e => e.currentTarget.style.color = 'var(--text-3)'}>
-                  <X style={{ width: 12, height: 12 }} />
-                </button>
+                onClick={() => { onChange(''); onSelect(null); clear(); setTouched(false); inputRef.current?.focus() }}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-3)', padding: 2, borderRadius: 4, display: 'flex', alignItems: 'center', transition: 'color 0.15s' }}
+                onMouseEnter={e => e.currentTarget.style.color = 'var(--text-1)'}
+                onMouseLeave={e => e.currentTarget.style.color = 'var(--text-3)'}>
+                <X style={{ width: 12, height: 12 }} />
+              </button>
               : null
           }
         </div>
@@ -263,10 +263,10 @@ function LocationInput({ value, onChange, onSelect, placeholder, accent = '#00D4
    ═══════════════════════════════════════════════════════ */
 function ChargerDetailModal({ stop, stopIndex, batteryAtArrival = 10, onClose }) {
   if (!stop) return null
-  const chargeFrom  = Math.round(batteryAtArrival)
-  const chargeTo    = 80
-  const chargePct   = chargeTo - chargeFrom
-  const gmapsUrl    = stop.lat && stop.lng ? `https://maps.google.com/?q=${stop.lat},${stop.lng}` : null
+  const chargeFrom = Math.round(batteryAtArrival)
+  const chargeTo = 80
+  const chargePct = chargeTo - chargeFrom
+  const gmapsUrl = stop.lat && stop.lng ? `https://maps.google.com/?q=${stop.lat},${stop.lng}` : null
   const statusColor = stop.status === 'Operational' ? '#00D4AA' : stop.status === 'Unknown' ? '#FFB547' : '#FF4D6D'
 
   return (
@@ -326,11 +326,11 @@ function ChargerDetailModal({ stop, stopIndex, batteryAtArrival = 10, onClose })
           <div style={{ background: 'var(--surface-2)', border: '1px solid var(--border)', borderRadius: 12, padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: 10 }}>
             <p style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--text-2)', fontFamily: 'IBM Plex Mono, monospace' }}>Station Details</p>
             {[
-              { label: 'Power output',   value: `${stop.charger_power_kw || 50} kW`,               show: true },
-              { label: 'Connector type', value: stop.connector_type || 'CCS Type 2',                show: true },
-              { label: 'No. of points',  value: stop.num_points ? `${stop.num_points} plugs` : 'N/A', show: true },
-              { label: 'Network',        value: stop.operator || 'Independent',                     show: !!stop.operator },
-              { label: 'Cost per unit',  value: stop.usage_cost || 'Contact operator',              show: true },
+              { label: 'Power output', value: `${stop.charger_power_kw || 50} kW`, show: true },
+              { label: 'Connector type', value: stop.connector_type || 'CCS Type 2', show: true },
+              { label: 'No. of points', value: stop.num_points ? `${stop.num_points} plugs` : 'N/A', show: true },
+              { label: 'Network', value: stop.operator || 'Independent', show: !!stop.operator },
+              { label: 'Cost per unit', value: stop.usage_cost || 'Contact operator', show: true },
             ].filter(r => r.show).map((row, i) => (
               <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 13 }}>
                 <span style={{ color: 'var(--text-2)' }}>{row.label}</span>
@@ -364,7 +364,7 @@ function ChargerDetailModal({ stop, stopIndex, batteryAtArrival = 10, onClose })
    ═══════════════════════════════════════════════════════ */
 function BatteryGauge({ percent, maxRangeKm }) {
   const r = 34, circ = 2 * Math.PI * r, arc = 0.75
-  const fill  = (percent / 100) * circ * arc
+  const fill = (percent / 100) * circ * arc
   const color = percent > 50 ? 'var(--accent)' : percent > 20 ? '#FBBF24' : '#FF4D6D'
   const estKm = Math.round(maxRangeKm * percent / 100 * 0.78)
 
@@ -372,8 +372,8 @@ function BatteryGauge({ percent, maxRangeKm }) {
     <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
       <div style={{ position: 'relative', width: 84, height: 84, flexShrink: 0 }}>
         <svg width="84" height="84" viewBox="0 0 84 84" style={{ transform: 'rotate(135deg)' }}>
-          <circle cx="42" cy="42" r={r} fill="none" strokeWidth="5" stroke="rgba(255,255,255,0.06)" strokeDasharray={`${circ*arc} ${circ*(1-arc)}`} strokeLinecap="round"/>
-          <circle cx="42" cy="42" r={r} fill="none" strokeWidth="5" stroke={color} strokeDasharray={`${fill} ${circ-fill}`} strokeLinecap="round" style={{ transition: 'stroke-dasharray 0.45s ease, stroke 0.3s ease', filter: `drop-shadow(0 0 5px ${color})` }}/>
+          <circle cx="42" cy="42" r={r} fill="none" strokeWidth="5" stroke="rgba(255,255,255,0.06)" strokeDasharray={`${circ * arc} ${circ * (1 - arc)}`} strokeLinecap="round" />
+          <circle cx="42" cy="42" r={r} fill="none" strokeWidth="5" stroke={color} strokeDasharray={`${fill} ${circ - fill}`} strokeLinecap="round" style={{ transition: 'stroke-dasharray 0.45s ease, stroke 0.3s ease', filter: `drop-shadow(0 0 5px ${color})` }} />
         </svg>
         <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
           <span className="mono" style={{ fontSize: 18, fontWeight: 700, color, lineHeight: 1 }}>{percent}</span>
@@ -401,14 +401,14 @@ function BatteryGauge({ percent, maxRangeKm }) {
    ═══════════════════════════════════════════════════════ */
 function TripSummaryModal({ route, car, onClose }) {
   if (!route || !car) return null
-  const kwh100  = (car.battery_capacity_kwh / car.range_km) * 100
-  const energy  = route.energy_kwh_used ?? +((route.total_distance_km / 100 * kwh100).toFixed(1))
-  const cost    = route.estimated_charge_cost_inr ?? Math.round(energy * 8.5)
-  const petrol  = Math.round(route.total_distance_km * 7)
+  const kwh100 = (car.battery_capacity_kwh / car.range_km) * 100
+  const energy = route.energy_kwh_used ?? +((route.total_distance_km / 100 * kwh100).toFixed(1))
+  const cost = route.estimated_charge_cost_inr ?? Math.round(energy * 8.5)
+  const petrol = Math.round(route.total_distance_km * 7)
   const savings = Math.max(0, petrol - cost)
-  const hrs     = Math.floor(route.estimated_total_time_minutes / 60)
-  const mins    = route.estimated_total_time_minutes % 60
-  const co2     = (route.total_distance_km * 0.12).toFixed(1)
+  const hrs = Math.floor(route.estimated_total_time_minutes / 60)
+  const mins = route.estimated_total_time_minutes % 60
+  const co2 = (route.total_distance_km * 0.12).toFixed(1)
 
   return (
     <div className="modal-overlay" onClick={e => e.target === e.currentTarget && onClose()}>
@@ -427,9 +427,9 @@ function TripSummaryModal({ route, car, onClose }) {
         <div className="no-scrollbar" style={{ overflowY: 'auto', padding: '16px 22px', flex: 1 }}>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, marginBottom: 14 }}>
             {[
-              { e: '📍', l: 'Distance',   v: `${route.total_distance_km} km` },
+              { e: '📍', l: 'Distance', v: `${route.total_distance_km} km` },
               { e: '⏱️', l: 'Total Time', v: `${hrs}h ${mins}m` },
-              { e: '⚡', l: 'Stops',      v: `${route.charging_stops?.length || 0}` },
+              { e: '⚡', l: 'Stops', v: `${route.charging_stops?.length || 0}` },
             ].map((m, i) => (
               <div key={i} style={{ background: 'var(--surface-2)', border: '1px solid var(--border)', borderRadius: 11, padding: '14px 10px', textAlign: 'center' }}>
                 <div style={{ fontSize: 20, marginBottom: 5 }}>{m.e}</div>
@@ -442,10 +442,10 @@ function TripSummaryModal({ route, car, onClose }) {
           <div style={{ background: 'var(--surface-2)', border: '1px solid var(--border)', borderRadius: 12, padding: '16px', marginBottom: 14 }}>
             <p style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--text-2)', marginBottom: 14 }}>Cost Analysis</p>
             {[
-              { l: 'Energy consumed',         v: `${energy} kWh` },
-              { l: 'Estimated charging cost',  v: `₹${cost}` },
-              { l: 'Equivalent petrol cost',   v: `₹${petrol}`, s: true },
-              { l: 'CO₂ saved',               v: `${co2} kg`,   g: true },
+              { l: 'Energy consumed', v: `${energy} kWh` },
+              { l: 'Estimated charging cost', v: `₹${cost}` },
+              { l: 'Equivalent petrol cost', v: `₹${petrol}`, s: true },
+              { l: 'CO₂ saved', v: `${co2} kg`, g: true },
             ].map((row, i) => (
               <div key={i}>
                 {i === 3 && <div style={{ height: 1, background: 'var(--border)', margin: '10px 0' }} />}
@@ -490,9 +490,32 @@ function StatCard({ icon, label, value }) {
    Visual Start → Stop → Destination flow
    ═══════════════════════════════════════════════════════ */
 function JourneyTimeline({ route, startLoc, endLoc, onStopClick }) {
-  const stops      = route?.charging_stops || []
-  const segments   = stops.length + 1
-  const distPerSeg = Math.round(route.total_distance_km / segments)
+  const stops = route?.charging_stops || []
+
+  // Compute real distances between consecutive points (start → stop1 → stop2 → ... → end)
+  const haversine = (lat1, lng1, lat2, lng2) => {
+    const R = 6371
+    const dLat = (lat2 - lat1) * Math.PI / 180
+    const dLng = (lng2 - lng1) * Math.PI / 180
+    const a = Math.sin(dLat / 2) ** 2 + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLng / 2) ** 2
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+  }
+
+  // Build waypoint list: start → each stop → end
+  const routeCoords = route?.route_coords || []
+  const startPt = routeCoords[0] || [0, 0]
+  const endPt = routeCoords[routeCoords.length - 1] || [0, 0]
+
+  const points = [
+    { lat: startPt[0], lng: startPt[1] },
+    ...stops.map(s => ({ lat: s.latitude || s.lat, lng: s.longitude || s.lng })),
+    { lat: endPt[0], lng: endPt[1] },
+  ]
+
+  const segDistances = []
+  for (let i = 0; i < points.length - 1; i++) {
+    segDistances.push(Math.round(haversine(points[i].lat, points[i].lng, points[i + 1].lat, points[i + 1].lng)))
+  }
 
   const nodeDot = (color) => ({
     width: 10, height: 10, borderRadius: '50%',
@@ -501,13 +524,13 @@ function JourneyTimeline({ route, startLoc, endLoc, onStopClick }) {
     marginTop: 2,
   })
 
-  const Connector = () => (
+  const Connector = ({ dist }) => (
     <div style={{ display: 'flex', gap: 12, alignItems: 'stretch', margin: '4px 0' }}>
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', paddingLeft: 4, flexShrink: 0 }}>
         <div style={{ width: 2, flex: 1, minHeight: 22, background: 'var(--border)', borderRadius: 2 }} />
       </div>
       <span style={{ fontSize: 11, color: 'var(--text-3)', alignSelf: 'center', fontFamily: 'IBM Plex Mono, monospace' }}>
-        ~{distPerSeg} km
+        ~{dist} km
       </span>
     </div>
   )
@@ -525,7 +548,7 @@ function JourneyTimeline({ route, startLoc, endLoc, onStopClick }) {
 
       {stops.map((stop, i) => (
         <div key={i}>
-          <Connector />
+          <Connector dist={segDistances[i] || '?'} />
           <button
             onClick={() => onStopClick({ stop, index: i })}
             style={{ display: 'flex', alignItems: 'center', gap: 10, width: '100%', textAlign: 'left', background: 'rgba(255,181,71,0.05)', border: '1px solid rgba(255,181,71,0.18)', borderRadius: 10, padding: '9px 11px', cursor: 'pointer', transition: 'background 0.15s', fontFamily: 'Outfit, sans-serif' }}
@@ -536,15 +559,17 @@ function JourneyTimeline({ route, startLoc, endLoc, onStopClick }) {
               <Zap style={{ width: 13, height: 13, color: '#FFB547' }} />
             </div>
             <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-1)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{stop.station_name}</div>
-              <div style={{ fontSize: 11, color: 'var(--text-3)', marginTop: 1 }}>{stop.charging_time_minutes} min · Stop #{i + 1}</div>
+              <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-1)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{stop.station_name || stop.name}</div>
+              <div style={{ fontSize: 11, color: 'var(--text-3)', marginTop: 1 }}>
+                {stop.charger_power_kw || stop.power_kw || '?'} kW · {stop.charging_time_minutes} min · Stop #{i + 1}
+              </div>
             </div>
             <ChevronRight style={{ width: 13, height: 13, color: 'var(--text-3)', flexShrink: 0 }} />
           </button>
         </div>
       ))}
 
-      <Connector />
+      <Connector dist={segDistances[segDistances.length - 1] || '?'} />
 
       {/* END */}
       <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
@@ -576,40 +601,59 @@ const LOADING_MSGS = [
    MAIN PAGE
    ═══════════════════════════════════════════════════════ */
 export default function RoutePlanner() {
-  const navigate   = useNavigate()
-  const isMobile   = useIsMobile()
+  const navigate = useNavigate()
+  const isMobile = useIsMobile()
   const {
     selectedCar,
     currentBatteryPercent, setCurrentBatteryPercent,
     addToast, addToHistory,
-    history,
+    tripHistory,
   } = useStore()
   const { user, saveTrip } = useAuth()
+  const isDark = useStore((s) => s.theme) === 'dark'
 
-  const [startLoc,      setStartLoc]      = useState('Ahmedabad')
-  const [endLoc,        setEndLoc]        = useState('')
-  const [startCoords,   setStartCoords]   = useState(null)
-  const [endCoords,     setEndCoords]     = useState(null)
-  const [mapCenter,     setMapCenter]     = useState([22.97, 78.66])
-  const [route,         setRoute]         = useState(null)
-  const [loading,       setLoading]       = useState(false)
-  const [loadingMsg,    setLoadingMsg]    = useState(LOADING_MSGS[0])
-  const [showSummary,   setShowSummary]   = useState(false)
-  const [routeKey,      setRouteKey]      = useState(0)
-  const [sheetOpen,     setSheetOpen]     = useState(true)
-  const [selectedStop,  setSelectedStop]  = useState(null)
+  const [startLoc, setStartLoc] = useState('')
+  const [endLoc, setEndLoc] = useState('')
+  const [startCoords, setStartCoords] = useState(null)
+  const [endCoords, setEndCoords] = useState(null)
+  const [mapCenter, setMapCenter] = useState([22.97, 78.66])
+  const [route, setRoute] = useState(null)
+  const [loading, setLoading] = useState(false)
+  const [loadingMsg, setLoadingMsg] = useState(LOADING_MSGS[0])
+  const [showSummary, setShowSummary] = useState(false)
+  const [routingErr, setRoutingErr] = useState(null)
+
+  // Mobile Bottom Sheet
+  const [sheetOpen, setSheetOpen] = useState(true)
+  const [touchStartY, setTouchStartY] = useState(0)
+  const [touchEndY, setTouchEndY] = useState(0)
+
+  const handleTouchStart = (e) => setTouchStartY(e.targetTouches[0].clientY)
+  const handleTouchMove = (e) => setTouchEndY(e.targetTouches[0].clientY)
+  const handleTouchEnd = () => {
+    if (!touchStartY || !touchEndY) return
+    const distance = touchStartY - touchEndY
+    if (distance > 40) setSheetOpen(true)
+    if (distance < -40) setSheetOpen(false)
+    setTouchStartY(0)
+    setTouchEndY(0)
+  }
+
+  /* ═══ INITIALIZATION & SYNC ═══ */
+  const [selectedStop, setSelectedStop] = useState(null)
   const [gaugeExpanded, setGaugeExpanded] = useState(true)
-  const [locating,      setLocating]      = useState(false)
+  const [locating, setLocating] = useState(false)
+  const [waypoints, setWaypoints] = useState([])
 
   useEffect(() => { if (!selectedCar) navigate('/select-brand') }, [selectedCar, navigate])
 
   /* ── Parse shared URL params + geocode default start ── */
   useEffect(() => {
-    const params   = new URLSearchParams(window.location.search)
-    const fromStr  = params.get('from')
+    const params = new URLSearchParams(window.location.search)
+    const fromStr = params.get('from')
     const fromName = params.get('fromName')
-    const toStr    = params.get('to')
-    const toName   = params.get('toName')
+    const toStr = params.get('to')
+    const toName = params.get('toName')
 
     if (fromStr && fromName) {
       const [lat, lng] = fromStr.split(',').map(Number)
@@ -622,14 +666,7 @@ export default function RoutePlanner() {
         return
       }
     }
-
-    // Default geocode
-    fetch('https://photon.komoot.io/api/?q=Ahmedabad,Gujarat&limit=1&bbox=68.7,6.5,97.25,35.5&lang=en')
-      .then(r => r.json())
-      .then(d => {
-        const f = d.features?.[0]
-        if (f) { const c = [f.geometry.coordinates[1], f.geometry.coordinates[0]]; setStartCoords(c); setMapCenter(c) }
-      }).catch(() => {})
+    // No hardcoded default — user picks their own start location
   }, [])
 
   /* ── Cycle loading messages ── */
@@ -658,9 +695,9 @@ export default function RoutePlanner() {
     navigator.geolocation.getCurrentPosition(
       async ({ coords: { latitude: lat, longitude: lng } }) => {
         try {
-          const res  = await fetch(`https://photon.komoot.io/reverse?lat=${lat}&lon=${lng}&lang=en`)
+          const res = await fetch(`https://photon.komoot.io/reverse?lat=${lat}&lon=${lng}&lang=en`)
           const data = await res.json()
-          const p    = data.features?.[0]?.properties || {}
+          const p = data.features?.[0]?.properties || {}
           const label = [p.name, p.city || p.town, p.state].filter(Boolean).slice(0, 2).join(', ')
             || `${lat.toFixed(3)}, ${lng.toFixed(3)}`
           setStartLoc(label); setStartCoords([lat, lng]); setMapCenter([lat, lng])
@@ -680,7 +717,7 @@ export default function RoutePlanner() {
   const handleSwap = () => {
     const [sl, sc, el, ec] = [startLoc, startCoords, endLoc, endCoords]
     setStartLoc(el); setStartCoords(ec)
-    setEndLoc(sl);   setEndCoords(sc)
+    setEndLoc(sl); setEndCoords(sc)
     if (ec) setMapCenter(ec)
   }
 
@@ -689,7 +726,7 @@ export default function RoutePlanner() {
     if (!startCoords || !endCoords) { addToast('warning', 'Plan a route first to share it'); return }
     const params = new URLSearchParams({
       from: startCoords.join(','), fromName: startLoc,
-      to:   endCoords.join(','),   toName:   endLoc,
+      to: endCoords.join(','), toName: endLoc,
     })
     const url = `${window.location.origin}/plan-route?${params}`
     if (navigator.clipboard) {
@@ -710,7 +747,7 @@ export default function RoutePlanner() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           start_lat: startCoords[0], start_lng: startCoords[1],
-          end_lat:   endCoords[0],   end_lng:   endCoords[1],
+          end_lat: endCoords[0], end_lng: endCoords[1],
           current_battery_percent: currentBatteryPercent,
           car_model_id: selectedCar.id,
         }),
@@ -728,10 +765,10 @@ export default function RoutePlanner() {
 
   if (!selectedCar) return null
 
-  const recentRoutes    = (history || []).filter(h => h.startLoc && h.endLoc).slice(-3).reverse()
-  const batteryColor    = currentBatteryPercent > 50 ? 'var(--accent)' : currentBatteryPercent > 20 ? '#FBBF24' : '#FF4D6D'
-  const estKmCompact    = Math.round((selectedCar.range_km || 300) * currentBatteryPercent / 100 * 0.78)
-  const ctaReady        = !!(startCoords && endCoords && !route && !loading)
+  const recentRoutes = (tripHistory || []).filter(h => h.startLoc && h.endLoc).slice(-3).reverse()
+  const batteryColor = currentBatteryPercent > 50 ? 'var(--accent)' : currentBatteryPercent > 20 ? '#FBBF24' : '#FF4D6D'
+  const estKmCompact = Math.round((selectedCar.range_km || 300) * currentBatteryPercent / 100 * 0.78)
+  const ctaReady = !!(startCoords && endCoords && !route && !loading)
 
   /* ════════════════════════════════════════════════════
      SIDEBAR CONTENT
@@ -809,20 +846,48 @@ export default function RoutePlanner() {
           </button>
         </div>
 
-        {/* Swap button */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        {/* Swap + Add stop buttons */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
           <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
           <button
             onClick={handleSwap}
             title="Swap start and destination"
             style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '4px 12px', borderRadius: 20, background: 'var(--surface-3)', border: '1px solid var(--border)', cursor: 'pointer', transition: 'all 0.15s', fontSize: 11, color: 'var(--text-2)', fontFamily: 'Outfit, sans-serif' }}
-            onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.2)'; e.currentTarget.style.color = 'var(--text-1)' }}
-            onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.color = 'var(--text-2)' }}
           >
             <ArrowUpDown style={{ width: 11, height: 11 }} />Swap
           </button>
+          {waypoints.length < 5 && (
+            <button
+              onClick={() => setWaypoints(w => [...w, { label: '', coords: null }])}
+              title="Add intermediate stop"
+              style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '4px 12px', borderRadius: 20, background: 'rgba(0,212,170,0.06)', border: '1px solid rgba(0,212,170,0.2)', cursor: 'pointer', transition: 'all 0.15s', fontSize: 11, color: 'var(--accent)', fontFamily: 'Outfit, sans-serif' }}
+            >
+              <Plus style={{ width: 11, height: 11 }} />Add stop
+            </button>
+          )}
           <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
         </div>
+
+        {/* Waypoints */}
+        {waypoints.map((wp, idx) => (
+          <div key={idx} style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+            <div style={{ flex: 1 }}>
+              <LocationInput
+                value={wp.label}
+                onChange={(v) => setWaypoints(w => w.map((item, i) => i === idx ? { ...item, label: v } : item))}
+                onSelect={(coords) => setWaypoints(w => w.map((item, i) => i === idx ? { ...item, coords } : item))}
+                placeholder={`Stop ${idx + 1} — city or place`}
+                accent="#FFB547"
+              />
+            </div>
+            <button
+              onClick={() => setWaypoints(w => w.filter((_, i) => i !== idx))}
+              style={{ width: 34, height: 34, borderRadius: 8, flexShrink: 0, background: 'rgba(255,77,109,0.06)', border: '1px solid rgba(255,77,109,0.2)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+            >
+              <Trash2 style={{ width: 13, height: 13, color: 'var(--error)' }} />
+            </button>
+          </div>
+        ))}
 
         {/* Destination */}
         <LocationInput value={endLoc} onChange={setEndLoc} onSelect={handleEndSelect} placeholder="Destination — where to?" accent="#FF4D6D" />
@@ -833,34 +898,6 @@ export default function RoutePlanner() {
           </p>
         )}
 
-        {/* Recent routes */}
-        {recentRoutes.length > 0 && !endCoords && (
-          <div style={{ paddingTop: 6, borderTop: '1px solid var(--border)' }}>
-            <p style={{ fontSize: 10, color: 'var(--text-3)', fontFamily: 'IBM Plex Mono, monospace', letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: 7 }}>Recent</p>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-              {recentRoutes.map((h, i) => (
-                <button key={i}
-                  onClick={() => {
-                    setStartLoc(h.startLoc || ''); setEndLoc(h.endLoc || '')
-                    setStartCoords(h.startCoords || null); setEndCoords(h.endCoords || null)
-                    if (h.startCoords) setMapCenter(h.startCoords)
-                  }}
-                  style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '7px 10px', borderRadius: 8, background: 'none', border: '1px solid var(--border)', cursor: 'pointer', transition: 'background 0.12s', fontFamily: 'Outfit, sans-serif', textAlign: 'left' }}
-                  onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.04)'}
-                  onMouseLeave={e => e.currentTarget.style.background = 'none'}
-                >
-                  <Clock style={{ width: 11, height: 11, color: 'var(--text-3)', flexShrink: 0 }} />
-                  <span style={{ fontSize: 12, color: 'var(--text-2)', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                    {h.startLoc?.split(',')[0]} → {h.endLoc?.split(',')[0]}
-                  </span>
-                  <span style={{ fontSize: 11, color: 'var(--text-3)', fontFamily: 'IBM Plex Mono, monospace', flexShrink: 0 }}>
-                    {h.route?.total_distance_km} km
-                  </span>
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
       </div>
 
       {/* ── Route results ── */}
@@ -870,7 +907,7 @@ export default function RoutePlanner() {
           <p style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--text-2)', fontFamily: 'IBM Plex Mono, monospace' }}>Route Results</p>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
             <StatCard icon={<MapPin className="w-3 h-3" />} label="Distance" value={`${route.total_distance_km} km`} />
-            <StatCard icon={<Clock className="w-3 h-3" />}  label="Total Time" value={`${Math.floor(route.estimated_total_time_minutes/60)}h ${route.estimated_total_time_minutes%60}m`} />
+            <StatCard icon={<Clock className="w-3 h-3" />} label="Total Time" value={`${Math.floor(route.estimated_total_time_minutes / 60)}h ${route.estimated_total_time_minutes % 60}m`} />
           </div>
 
           {route.needs_charging ? (
@@ -919,7 +956,7 @@ export default function RoutePlanner() {
 
   /* ── CTA footer ── */
   const footerCTA = (
-    <div style={{ padding: '14px 16px', borderTop: '1px solid var(--border)', background: 'rgba(7,11,20,0.98)', flexShrink: 0 }}>
+    <div style={{ padding: '14px 16px', borderTop: '1px solid var(--border)', background: 'var(--surface)', flexShrink: 0 }}>
       <button
         className={`btn-primary${ctaReady ? ' pulse-cta' : ''}`}
         style={{ width: '100%', padding: '13px', fontSize: 15 }}
@@ -928,9 +965,9 @@ export default function RoutePlanner() {
       >
         {loading
           ? <>
-              <span style={{ width: 16, height: 16, borderRadius: '50%', border: '2px solid rgba(0,0,0,0.3)', borderTopColor: '#000', animation: 'spin 0.7s linear infinite', display: 'inline-block', flexShrink: 0 }} />
-              {loadingMsg}
-            </>
+            <span style={{ width: 16, height: 16, borderRadius: '50%', border: '2px solid rgba(0,0,0,0.3)', borderTopColor: '#000', animation: 'spin 0.7s linear infinite', display: 'inline-block', flexShrink: 0 }} />
+            {loadingMsg}
+          </>
           : <><Navigation className="w-4 h-4" />Find Best Route</>
         }
       </button>
@@ -945,35 +982,35 @@ export default function RoutePlanner() {
   return (
     <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', background: 'var(--bg)', overflow: 'hidden' }}>
 
-      {/* ── Dark Leaflet popup overrides + pulse CTA ── */}
+      {/* ── Leaflet popup overrides + pulse CTA ── */}
       <style>{`
         .leaflet-popup-content-wrapper {
-          background: rgba(8,13,22,0.97) !important;
-          border: 1px solid rgba(255,255,255,0.1) !important;
+          background: var(--surface) !important;
+          border: 1px solid var(--border) !important;
           border-radius: 14px !important;
-          box-shadow: 0 14px 44px rgba(0,0,0,0.75) !important;
+          box-shadow: 0 14px 44px rgba(0,0,0,0.5) !important;
           backdrop-filter: blur(16px) !important;
           -webkit-backdrop-filter: blur(16px) !important;
-          color: #fff !important;
+          color: var(--text-1) !important;
           padding: 0 !important;
         }
         .leaflet-popup-content {
           margin: 12px 16px !important;
-          color: #fff !important;
+          color: var(--text-1) !important;
           font-family: 'Outfit', sans-serif !important;
         }
         .leaflet-popup-tip {
-          background: rgba(8,13,22,0.97) !important;
+          background: var(--surface) !important;
           box-shadow: none !important;
         }
         .leaflet-popup-close-button {
-          color: rgba(255,255,255,0.35) !important;
+          color: var(--text-3) !important;
           font-size: 18px !important;
           top: 8px !important; right: 10px !important;
           width: 22px !important; height: 22px !important;
           line-height: 22px !important;
         }
-        .leaflet-popup-close-button:hover { color: #fff !important; }
+        .leaflet-popup-close-button:hover { color: var(--text-1) !important; }
 
         @keyframes pulse-cta {
           0%,100% { box-shadow: 0 0 0 0 rgba(0,212,170,0.45); }
@@ -984,7 +1021,7 @@ export default function RoutePlanner() {
 
       <Navbar />
 
-      <div style={{ flex: 1, display: 'flex', overflow: 'hidden', position: 'relative' }}>
+      <div style={{ flex: 1, display: 'flex', overflow: 'hidden', position: 'relative', marginTop: 56 }}>
 
         {/* ═══ DESKTOP SIDEBAR ═══ */}
         {!isMobile && (
@@ -1010,14 +1047,13 @@ export default function RoutePlanner() {
         )}
 
         {/* ═══ MAP ═══ */}
-        <div style={{ flex: 1, position: 'relative', zIndex: 0, height: '100%' }}>
+        <div className={`${isDark ? 'dark-tiles' : ''}${route?.route_coords ? ' route-active' : ''}`} style={{ flex: 1, position: 'relative', zIndex: 0, height: '100%' }}>
           <MapContainer center={mapCenter} zoom={6} zoomControl style={{ width: '100%', height: '100%' }}>
-            {/* CartoDB Dark Matter — free, no API key, perfect for dark UIs */}
+            {/* Standard OSM tiles — maximum detail; dark mode via CSS invert */}
             <TileLayer
-              attribution='&copy; <a href="https://carto.com/">CARTO</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-              url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-              subdomains="abcd"
-              maxZoom={20}
+              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+              url='https://tile.openstreetmap.org/{z}/{x}/{y}.png'
+              maxZoom={19}
             />
             <FlyTo center={mapCenter} />
             {startCoords && endCoords && <FitBounds start={startCoords} end={endCoords} />}
@@ -1045,7 +1081,7 @@ export default function RoutePlanner() {
                   eventHandlers={{ click: () => setSelectedStop({ stop, index: i }) }}>
                   <Popup>
                     <div style={{ fontWeight: 700, fontSize: 13 }}>⚡ {stop.station_name}</div>
-                    <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.45)', marginTop: 3 }}>Stop #{i+1} · {stop.charging_time_minutes} min</div>
+                    <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.45)', marginTop: 3 }}>Stop #{i + 1} · {stop.charging_time_minutes} min</div>
                     <button onClick={() => setSelectedStop({ stop, index: i })} style={{ marginTop: 7, fontSize: 11, color: '#00D4AA', background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontFamily: 'Outfit' }}>
                       View details →
                     </button>
@@ -1056,9 +1092,24 @@ export default function RoutePlanner() {
 
             {/* Dual polyline: white glow + teal on top */}
             {route?.route_coords && <>
-              <Polyline key={`glow-${routeKey}`}  positions={route.route_coords} pathOptions={{ color: '#ffffff', weight: 9,   opacity: 0.07, lineCap: 'round', lineJoin: 'round' }} />
-              <Polyline key={`line-${routeKey}`}  positions={route.route_coords} pathOptions={{ color: '#00D4AA', weight: 3.5, opacity: 0.9,  lineCap: 'round', lineJoin: 'round' }} />
+              <Polyline key={`glow-${routeKey}`} positions={route.route_coords} pathOptions={{ color: '#ffffff', weight: 9, opacity: 0.07, lineCap: 'round', lineJoin: 'round' }} />
+              <Polyline key={`line-${routeKey}`} positions={route.route_coords} pathOptions={{ color: '#00D4AA', weight: 3.5, opacity: 0.9, lineCap: 'round', lineJoin: 'round' }} />
             </>}
+
+            {/* Road/highway name labels along the route */}
+            {route?.road_names?.map((road, i) => (
+              <Marker
+                key={`road-label-${i}`}
+                position={[road.lat, road.lng]}
+                icon={L.divIcon({
+                  className: 'road-label-icon',
+                  html: `<span class="road-label ${isDark ? 'dark' : 'light'}">${road.name}</span>`,
+                  iconSize: null,
+                  iconAnchor: [0, 12],
+                })}
+                interactive={false}
+              />
+            ))}
           </MapContainer>
 
           {/* Map hint */}
@@ -1098,7 +1149,10 @@ export default function RoutePlanner() {
             {/* Drag handle + header */}
             <div
               onClick={() => setSheetOpen(o => !o)}
-              style={{ flexShrink: 0, padding: '10px 16px 12px', cursor: 'pointer', userSelect: 'none' }}
+              onTouchStart={handleTouchStart}
+              onTouchMove={handleTouchMove}
+              onTouchEnd={handleTouchEnd}
+              style={{ flexShrink: 0, padding: '10px 16px 12px', cursor: 'grab', userSelect: 'none', touchAction: 'none' }}
             >
               <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 10 }}>
                 <div style={{ width: 36, height: 4, borderRadius: 10, background: 'var(--border)' }} />
@@ -1115,7 +1169,7 @@ export default function RoutePlanner() {
                       <span style={{ fontSize: 11, color: 'var(--text-3)' }}>·</span>
                       <span style={{ fontSize: 11, color: 'var(--text-2)', fontFamily: 'IBM Plex Mono, monospace' }}>{route.charging_stops?.length || 0} stop{route.charging_stops?.length !== 1 ? 's' : ''}</span>
                       <span style={{ fontSize: 11, color: 'var(--text-3)' }}>·</span>
-                      <span style={{ fontSize: 11, color: 'var(--text-2)', fontFamily: 'IBM Plex Mono, monospace' }}>{Math.floor(route.estimated_total_time_minutes/60)}h {route.estimated_total_time_minutes%60}m</span>
+                      <span style={{ fontSize: 11, color: 'var(--text-2)', fontFamily: 'IBM Plex Mono, monospace' }}>{Math.floor(route.estimated_total_time_minutes / 60)}h {route.estimated_total_time_minutes % 60}m</span>
                     </div>
                   ) : (
                     <p style={{ fontSize: 11, color: 'var(--text-2)' }}>
@@ -1123,11 +1177,19 @@ export default function RoutePlanner() {
                     </p>
                   )}
                 </div>
-                <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                  <button className="btn-ghost" style={{ padding: '5px 8px', marginRight: -8 }} onClick={e => { e.stopPropagation(); navigate('/select-brand') }}>
-                    <ChevronLeft className="w-3.5 h-3.5" />
+                <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                  <button
+                    onClick={e => { e.stopPropagation(); navigate('/select-brand') }}
+                    style={{ width: 40, height: 40, borderRadius: 10, background: 'var(--surface-2)', border: '1px solid var(--border)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
+                  >
+                    <ChevronLeft style={{ width: 18, height: 18, color: 'var(--text-1)' }} />
                   </button>
-                  <ChevronUp style={{ width: 16, height: 16, color: 'var(--text-2)', transition: 'transform 0.3s', transform: sheetOpen ? 'none' : 'rotate(180deg)' }} />
+                  <button
+                    onClick={e => { e.stopPropagation(); setSheetOpen(o => !o) }}
+                    style={{ width: 40, height: 40, borderRadius: 10, background: 'var(--surface-2)', border: '1px solid var(--border)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
+                  >
+                    <ChevronDown style={{ width: 18, height: 18, color: 'var(--text-1)', transition: 'transform 0.3s', transform: sheetOpen ? 'none' : 'rotate(180deg)' }} />
+                  </button>
                 </div>
               </div>
             </div>

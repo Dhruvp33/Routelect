@@ -1,0 +1,76 @@
+# Routelect v4.0 Comprehensive Implementation Guide & Architecture Document
+
+This document contains a highly detailed, precise breakdown of every feature, logic change, and UI polish implemented to the Routelect EV Route Planner project. **You can paste this entire document into any AI assistant to instantly bring them up to speed on the current state and logic of the project.**
+
+---
+
+## 1. Core Routing Engine Hardening (Backend - `routing_engine.py`)
+The Python routing engine (`routing_engine.py`) was completely overhauled to be robust, production-ready, and optimized for real-world Indian EV conditions.
+
+### A. Real-World EV Math and Safety Features
+* **Efficiency Factor**: Lab-certified battery ranges are highly optimistic. An absolute `REAL_WORLD_FACTOR = 0.78` was applied to all range calculations.
+* **15% Safety Buffer**: Hard-coded safety margin (`battery_capacity * 0.15`). The engine will *never* let the simulated battery dip below this threshold.
+* **15km Charger Search Reserve**: If a charger is needed mid-route, the engine stops simulated driving 15km *before* hitting the safety buffer to ensure enough power remains to find off-highway chargers.
+* **Charge to 80% Rule**: Implemented real-world fast-charging economics; the engine schedules stops to charge up to exactly 80% (the fastest charging curve phase) rather than 100%.
+
+### B. Dynamic Charging Stop Logic
+* Completely removed the raw static cap of "max 5 stops". Stops are now determined dynamically based on `total_distance_km / real_world_range_km`.
+* Loop simulates driving along the OSRM geometric linestring point-by-point, accumulating `kWh` consumed. Once `(current_kwh - buffer) < reserve`, it breaks and searches for a charger at that precise coordinate.
+
+### C. Advanced Charger Selection & Fallbacks
+* **Primary Source**: Uses the Open Charge Map (OCM) API (`https://api.openchargemap.io/v3/poi`) fetching the nearest 30 chargers within an 80km radius.
+* **Fallback Source**: If OCM times out or returns empty, the engine gracefully falls back to querying the Supabase `charging_stations` table (a local snapshot of 50+ handpicked reliable Indian stations).
+* **Scoring Algorithm**: The `_find_charger_near_route` method ranks stations using a weighted formula: `Distance from route midpoint (70%) + Charger Power Speed (30%)`.
+* **Duplicate Prevention**: A `Set` tracks used station coordinates (`"lat,lng"`) so the router never routes back to the same charger.
+
+---
+
+## 2. API Data Structure Upgrades
+* **OSRM `steps=true` Integration**: OSRM API call updated to request step geometries.
+* **Highway & Road Label Extraction**: The new `_extract_road_names` method parses the `steps` array, looks for highway `ref`s (e.g., NH48, SH17) and defaults to `name` if `ref` is missing.
+    * Only extracts labels for road segments longer than 5km.
+    * Deduplicates labels so "NH48" only appears once.
+    * Uses semicoloned string cleaning (e.g. `NH48; 64` becomes `NH48`) and finds the exact midpoint latitude/longitude coordinate for each label so it can be drawn precisely over the map.
+    * Added `road_names` array to the returned JSON response.
+
+---
+
+## 3. UI/UX Polish: Map Enhancements & Theming
+### A. The CSS Invert Dark Mode Map Hack
+* Bypassed rate-limited providers by using standard, highly-detailed OpenStreetMap base tiles (`https://tile.openstreetmap.org/{z}/{x}/{y}.png`).
+* Implemented a zero-latency Dark Mode via CSS hardware filtering: `.dark-tiles .leaflet-tile-pane { filter: invert(100%) hue-rotate(180deg) brightness(95%) contrast(90%); }`. 
+* Selectively excluded map markers, polylines, popups, and UI overlays from inversion using `.leaflet-marker-pane`, `.leaflet-popup-pane { filter: none; }` rules.
+
+### B. Focus Mode Dimming Effect
+* When a route is actively displayed, added a `route-active` conditional class to the Map container.
+* CSS applies `.route-active .leaflet-tile-pane { opacity: 0.55; transition: opacity 0.6s ease; }`, significantly dimming the map background grid, while keeping the bright `#00D4AA` teal route polyline at 100% opacity for maximum contrast and emphasis.
+
+### C. Premium Highway Labels
+* Replaced standard leaflet popups with custom `L.divIcon` HTML overlays.
+* Using `.road-label-icon { width: auto !important; border: none !important; }` to override Leaflet container defaults and prevent 0x0 clipping issues.
+* Using `.road-label` with Google Maps-style padding, `border-radius: 5px`, dropping a subtle `box-shadow`, and using the `IBM Plex Mono` font to emulate authentic highway shields floating cleanly along the travel route.
+
+---
+
+## 4. Branding & Visual Architecture
+* Integrated official brand assets (png) globally across the app.
+* App Loading Screen: Replaced the hardcoded R-shaped SVG with the `<img src="/ROUTELECT LOGO.png">`, scaling from 0.6 to 1 with an ease-out opacity transition.
+* Global Navbar (`Navbar.jsx`): Removed the legacy green gradient wrapper box, sizing the logo exactly to `36x36px` with `objectFit: cover` and adding an 8px border-radius.
+* Theme-aware typography setup spanning `.rl-logo-text` and CSS variables (`--nav-logo-text`, `--accent`, `--surface`) making the glass-sidebar aware of OS level preferences.
+
+---
+
+## 5. Mobile & Responsive Layout Bug Fixes
+* **Meta Viewport Scale Lock**: Added `maximum-scale=1.0, user-scalable=no` to the document header to permanently eradicate the issue of elements resizing/zooming awkwardly on mobile taps.
+* **Navbar Layout Overlap Fix**: Adjusted sticky layouts and injected `marginTop: 56px` onto main content wrappers (e.g., `ChargersMap.jsx`) so content slides respectfully under the absolute navigation bar.
+* **Bottom Sheet Logic**: Adjusted `RoutePlanner` mobile `isMobile` bottom sheet interactions, enlarging drag handle areas and fixing chevron states: Chevron now dynamically points *up* when the drawer is minimized and *down* when maximizing/expanded.
+* **Model Selection Expansion**: Mobile interface now allows users to cleanly tap to expand to see `charging_speed_kw`, `consumption_wh_per_km` analytics without requiring mouse hover interactions.
+
+---
+
+## 6. Functional Upgrades & State Fixes
+* **Zustand Toast Fix**: Built a singleton-like architecture around UI alerts. Used a `_carToastShown` state variable in the Zustand global store that initializes once on page load so vehicle model toasts (e.g. "Tata Nexon Loaded") only fire on actual explicit changes, preventing annoying spam renders.
+* **User Waypoints Support**: Expanded component state to handle intermediate location routing. Added dynamic mapping capability to insert and remove up to 5 waypoints within the frontend state object before passing them linearly to the routing backend.
+* **Distance Analytics Pipeline**: Fixed an issue displaying dummy static "294 km" text on the route timeline. Ported `haversine()` mathematics directly into the component loops to measure the exact geometric distances dynamically point-to-point leading up to chargers.
+* **Dashboard History Management**: Implemented `Trash2` operations allowing users to either individually garbage-collect historic trips off the UI or trigger an asynchronous bulk-delete wiping their `auth` user\'s trip history.
+* **Location Hardcoding Removed**: Obliterated the legacy static `"Ahmedabad"` defaults—relying directly on browser Geolocation API hooks or empty manual state input.

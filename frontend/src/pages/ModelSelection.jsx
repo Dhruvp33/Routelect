@@ -10,86 +10,86 @@ import { API_URL } from '../App'
 ═══════════════════════════════════════════════════════════ */
 const MODEL_IMAGE_MAP = {
   /* ── Tata Motors ── */
-  'Nexon EV':              '/models/tata-nexon-ev.png',
-  'Nexon EV Long Range':   '/models/tata-nexon-ev.png',
-  'Nexon EV Max':          '/models/tata-nexon-ev.png',
-  'Tiago EV':              '/models/tata-tiago-ev.png',
-  'Punch EV':              '/models/tata-punch-ev.png',
-  'Curvv EV':              '/models/tata-curvv-ev.png',
-  'Sierra EV':             '/models/tata-sierra-ev.png',
-  'Harrier EV':            '/models/harrierev.png',
-  'Tigor EV':              '/models/tigorev.png',
+  'Nexon EV': '/models/tata-nexon-ev.png',
+  'Nexon EV Long Range': '/models/tata-nexon-ev.png',
+  'Nexon EV Max': '/models/tata-nexon-ev.png',
+  'Tiago EV': '/models/tata-tiago-ev.png',
+  'Punch EV': '/models/tata-punch-ev.png',
+  'Curvv EV': '/models/tata-curvv-ev.png',
+  'Sierra EV': '/models/tata-sierra-ev.png',
+  'Harrier EV': '/models/harrierev.png',
+  'Tigor EV': '/models/tigorev.png',
   /* ── Mahindra ── */
-  'BE 6e':                 '/models/mahindra-be6e.png',
-  'BE 6':                  '/models/mahindra-be6e.png',
-  'XEV 9e':                '/models/mahindra-xev9e.png',
-  'XEV 7e':                '/models/XEV-9e.png',
-  'XUV400 EC Pro':         '/models/mahindra-xuv400.png',
-  'XUV400 EL Pro':         '/models/mahindra-xuv400.png',
+  'BE 6e': '/models/mahindra-be6e.png',
+  'BE 6': '/models/mahindra-be6e.png',
+  'XEV 9e': '/models/mahindra-xev9e.png',
+  'XEV 7e': '/models/XEV-9e.png',
+  'XUV400 EC Pro': '/models/mahindra-xuv400.png',
+  'XUV400 EL Pro': '/models/mahindra-xuv400.png',
   /* ── MG Motor ── */
-  'Windsor EV':            '/models/mg-windsor-ev.png',
-  'Comet EV':              '/models/mg-comet-ev.png',
-  'ZS EV':                 '/models/mg-zs-ev.png',
-  'ZS EV 2024':            '/models/mg-zs-ev.png',
-  'Cyberster':             '/models/cyberster.png',
+  'Windsor EV': '/models/mg-windsor-ev.png',
+  'Comet EV': '/models/mg-comet-ev.png',
+  'ZS EV': '/models/mg-zs-ev.png',
+  'ZS EV 2024': '/models/mg-zs-ev.png',
+  'Cyberster': '/models/cyberster.png',
   /* ── Hyundai ── */
-  'Creta EV':              '/models/hyundai-creta-electric.png',
-  'IONIQ 5':               '/models/hyundai-ioniq5.png',
-  'IONIQ 5 N':             '/models/hyundai-ioniq5.png',
-  'IONIQ 6':               '/models/hyundai-ioniq6.png',
-  'IONIQ 9':               '/models/ionix9.png',
-  'Kona Electric':         '/models/Kona.png',
+  'Creta EV': '/models/hyundai-creta-electric.png',
+  'IONIQ 5': '/models/hyundai-ioniq5.png',
+  'IONIQ 5 N': '/models/hyundai-ioniq5.png',
+  'IONIQ 6': '/models/hyundai-ioniq6.png',
+  'IONIQ 9': '/models/ionix9.png',
+  'Kona Electric': '/models/Kona.png',
   /* ── Kia ── */
-  'EV6':                   '/models/kia-ev6.png',
-  'EV6 GT':                '/models/kia-ev6.png',
-  'EV9':                   '/models/kia-ev9.png',
+  'EV6': '/models/kia-ev6.png',
+  'EV6 GT': '/models/kia-ev6.png',
+  'EV9': '/models/kia-ev9.png',
   /* ── Volvo ── */
-  'XC40 Recharge':         '/models/volvo-xc40-recharge.png',
-  'C40 Recharge':          '/models/volvo-c40-recharge.png',
-  'EX30':                  '/models/volvo-ex30.png',
-  'EX90':                  '/models/volvo-ex90.png',
+  'XC40 Recharge': '/models/volvo-xc40-recharge.png',
+  'C40 Recharge': '/models/volvo-c40-recharge.png',
+  'EX30': '/models/volvo-ex30.png',
+  'EX90': '/models/volvo-ex90.png',
   /* ── Tesla ── */
-  'Model 3 Long Range':    '/models/tesla-model3.png',
-  'Model 3 Standard':      '/models/tesla-model3.png',
-  'Model Y Long Range':    '/models/tesla-modely.png',
-  'Model Y Standard':      '/models/tesla-modely.png',
-  'Model S':               '/models/tesla-models.png',
-  'Model X':               '/models/tesla-modelx.png',
+  'Model 3 Long Range': '/models/tesla-model3.png',
+  'Model 3 Standard': '/models/tesla-model3.png',
+  'Model Y Long Range': '/models/tesla-modely.png',
+  'Model Y Standard': '/models/tesla-modely.png',
+  'Model S': '/models/tesla-models.png',
+  'Model X': '/models/tesla-modelx.png',
   /* ── Ola Electric ── */
-  'S1 Pro':                '/models/ola-s1-pro.png',
-  'S1 Air':                '/models/ola-s1-air.png',
-  'S1 X':                  '/models/ola-s1-x.png',
-  'S1 X+':                 '/models/ola-s1-pro.png',
-  'S1':                    '/models/ola-s1-air.png',
+  'S1 Pro': '/models/ola-s1-pro.png',
+  'S1 Air': '/models/ola-s1-air.png',
+  'S1 X': '/models/ola-s1-x.png',
+  'S1 X+': '/models/ola-s1-pro.png',
+  'S1': '/models/ola-s1-air.png',
   /* ── Ather Energy ── */
-  '450X':                  '/models/ather-450x.png',
-  '450S':                  '/models/ather-450s.png',
-  'Rizta Z':               '/models/ather-rizta.png',
-  '450 Apex':              '/models/ather-450x.png',
+  '450X': '/models/ather-450x.png',
+  '450S': '/models/ather-450s.png',
+  'Rizta Z': '/models/ather-rizta.png',
+  '450 Apex': '/models/ather-450x.png',
   /* ── Maruti Suzuki ── */
-  'eVitara':               '/models/maruti-evitara.png',
+  'eVitara': '/models/maruti-evitara.png',
   /* ── Citroen ── */
-  'eC3':                   '/models/citroen-ec3.png',
-  'eC3 Aircross':          '/models/citroen-ec3-aircross.png',
+  'eC3': '/models/citroen-ec3.png',
+  'eC3 Aircross': '/models/citroen-ec3-aircross.png',
   /* ── BYD ── */
-  'Seal':                  '/models/byd-seal.png',
-  'Atto 3':                '/models/byd-atto3.png',
-  'Sealion 6':             '/models/byd-sealion6.png',
-  'Dolphin':               '/models/byd-dolphin.png',
+  'Seal': '/models/byd-seal.png',
+  'Atto 3': '/models/byd-atto3.png',
+  'Sealion 6': '/models/byd-sealion6.png',
+  'Dolphin': '/models/byd-dolphin.png',
 }
 
 /* ── Original neon segment colours — unchanged ── */
 const SEGMENT_COLORS = {
-  'SUV':         '#00D4AA',
-  'Hatchback':   '#A78BFA',
-  'Sedan':       '#60A5FA',
-  'Crossover':   '#34D399',
-  'Coupe SUV':   '#F59E0B',
-  'MPV':         '#FB923C',
-  'Sports':      '#F43F5E',
+  'SUV': '#00D4AA',
+  'Hatchback': '#A78BFA',
+  'Sedan': '#60A5FA',
+  'Crossover': '#34D399',
+  'Coupe SUV': '#F59E0B',
+  'MPV': '#FB923C',
+  'Sports': '#F43F5E',
   'Performance': '#EF4444',
-  'Micro EV':    '#06B6D4',
-  'Scooter':     '#FBBF24',
+  'Micro EV': '#06B6D4',
+  'Scooter': '#FBBF24',
 }
 
 /* ── Original range colours — unchanged ── */
@@ -182,33 +182,42 @@ const CARD_BODY_H = 150
 function ModelCard({ model, onClick, index }) {
   const [hovered, setHovered] = useState(false)
 
-  const color    = SEGMENT_COLORS[model.segment] || '#00D4AA'
-  const rColor   = rangeColor(model.range_km)
+  const color = SEGMENT_COLORS[model.segment] || '#00D4AA'
+  const rColor = rangeColor(model.range_km)
   const rangePct = Math.min(100, (model.range_km / 700) * 100)
-  const eff      = ((model.battery_capacity_kwh / model.range_km) * 1000).toFixed(0)
+  const eff = ((model.battery_capacity_kwh / model.range_km) * 1000).toFixed(0)
 
   const specs = [
     {
       /* Keep the neon icon colours — they're decorative, not text */
-      icon:  <Battery style={{ width: 13, height: 13, color: '#00D4AA' }} />,
+      icon: <Battery style={{ width: 13, height: 13, color: '#00D4AA' }} />,
       label: 'Battery',
       value: `${model.battery_capacity_kwh} kWh`,
     },
     {
-      icon:  <Zap style={{ width: 13, height: 13, color: '#FBBF24' }} />,
+      icon: <Zap style={{ width: 13, height: 13, color: '#FBBF24' }} />,
       label: 'Max charge',
       value: `${model.charging_speed_kw} kW`,
     },
     {
-      icon:  <Gauge style={{ width: 13, height: 13, color: '#A78BFA' }} />,
+      icon: <Gauge style={{ width: 13, height: 13, color: '#A78BFA' }} />,
       label: 'Efficiency',
       value: `${eff} Wh/km`,
     },
   ]
 
+  const handleInteraction = () => {
+    if (window.matchMedia('(hover: none)').matches) {
+      if (!hovered) setHovered(true)
+      else onClick()
+    } else {
+      onClick()
+    }
+  }
+
   return (
     <button
-      onClick={onClick}
+      onClick={handleInteraction}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       className="animate-fade-up"
@@ -438,16 +447,16 @@ function FilterPill({ label, active, color, onClick }) {
    PAGE
 ══════════════════════════════════════════════════════════ */
 export default function ModelSelection() {
-  const { brandId }                  = useParams()
-  const navigate                     = useNavigate()
+  const { brandId } = useParams()
+  const navigate = useNavigate()
   const { setSelectedCar, addToast } = useStore()
-  const { user, saveCarPreference }  = useAuth()
+  const { user, saveCarPreference } = useAuth()
 
-  const [models,    setModels]    = useState([])
-  const [loading,   setLoading]   = useState(true)
+  const [models, setModels] = useState([])
+  const [loading, setLoading] = useState(true)
   const [brandName, setBrandName] = useState('')
-  const [search,    setSearch]    = useState('')
-  const [segment,   setSegment]   = useState('All')
+  const [search, setSearch] = useState('')
+  const [segment, setSegment] = useState('All')
 
   useEffect(() => {
     fetch(`${API_URL}/api/brands/${brandId}/models`)
@@ -483,7 +492,7 @@ export default function ModelSelection() {
   }, {})
 
   const filtered = models.filter(m => {
-    const matchSearch  = m.name.toLowerCase().includes(search.toLowerCase())
+    const matchSearch = m.name.toLowerCase().includes(search.toLowerCase())
     const matchSegment = segment === 'All' || m.segment === segment
     return matchSearch && matchSegment
   })
@@ -582,13 +591,13 @@ export default function ModelSelection() {
           {loading
             ? Array(6).fill(0).map((_, i) => <SkeletonCard key={i} />)
             : filtered.map((m, i) => (
-                <ModelCard
-                  key={m.id}
-                  model={m}
-                  index={i}
-                  onClick={() => handleSelect(m)}
-                />
-              ))
+              <ModelCard
+                key={m.id}
+                model={m}
+                index={i}
+                onClick={() => handleSelect(m)}
+              />
+            ))
           }
         </div>
 
