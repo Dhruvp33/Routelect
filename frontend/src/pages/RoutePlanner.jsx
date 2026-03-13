@@ -622,6 +622,7 @@ export default function RoutePlanner() {
   const [loadingMsg, setLoadingMsg] = useState(LOADING_MSGS[0])
   const [showSummary, setShowSummary] = useState(false)
   const [routingErr, setRoutingErr] = useState(null)
+  const [routeKey, setRouteKey] = useState(0)
 
   // Mobile Bottom Sheet
   const [sheetOpen, setSheetOpen] = useState(true)
@@ -752,8 +753,16 @@ export default function RoutePlanner() {
           car_model_id: selectedCar.id,
         }),
       })
-      if (!res.ok) throw new Error()
+      if (!res.ok) {
+        let errMsg = 'Route calculation failed'
+        try { const e = await res.json(); if (e?.detail) errMsg = e.detail } catch (_) { }
+        setRoutingErr(errMsg)
+        addToast('error', errMsg)
+        setLoading(false)
+        return
+      }
       const data = await res.json()
+      setRoutingErr(null)
       setRoute(data); setRouteKey(k => k + 1)
       addToHistory({ car: selectedCar, route: data, date: new Date().toISOString(), startLoc, endLoc, startCoords, endCoords })
       if (user) await saveTrip(user.id, { startCoords, endCoords, route: data })
