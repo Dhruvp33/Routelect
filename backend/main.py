@@ -21,6 +21,7 @@ app.add_middleware(
         "http://127.0.0.1:5173",
         "http://localhost:4173",
         "https://routelect.pages.dev",
+        "https://feature-ui-fixes.routelect.pages.dev",
     ],
     allow_credentials=True,
     allow_methods=["*"],
