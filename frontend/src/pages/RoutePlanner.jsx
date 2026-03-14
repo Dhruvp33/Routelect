@@ -623,6 +623,7 @@ export default function RoutePlanner() {
   const [showSummary, setShowSummary] = useState(false)
   const [routingErr, setRoutingErr] = useState(null)
   const [routeKey, setRouteKey] = useState(0)
+  const [partialWarning, setPartialWarning] = useState(null)
 
   // Mobile Bottom Sheet
   const [sheetOpen, setSheetOpen] = useState(true)
@@ -741,7 +742,7 @@ export default function RoutePlanner() {
   const handleCalculate = async () => {
     if (!startCoords || !endCoords) { addToast('warning', 'Pick both locations from the dropdown'); return }
     if (isMobile) setSheetOpen(false)
-    setLoading(true); setRoute(null)
+    setLoading(true); setRoute(null); setPartialWarning(null)
     try {
       const res = await fetch(`${API_URL}/api/route/calculate`, {
         method: 'POST',
@@ -764,9 +765,15 @@ export default function RoutePlanner() {
       const data = await res.json()
       setRoutingErr(null)
       setRoute(data); setRouteKey(k => k + 1)
+      if (data.partial_route && data.coverage_warning) {
+        setPartialWarning({ message: data.coverage_warning, uncoveredKm: data.uncovered_km })
+        addToast('warning', `Partial route — last ~${data.uncovered_km} km has no charger coverage`)
+      } else {
+        setPartialWarning(null)
+        addToast('success', `Route found — ${data.total_distance_km} km · ${data.estimated_total_time_minutes} min`)
+      }
       addToHistory({ car: selectedCar, route: data, date: new Date().toISOString(), startLoc, endLoc, startCoords, endCoords })
       if (user) await saveTrip(user.id, { startCoords, endCoords, route: data })
-      addToast('success', `Route found — ${data.total_distance_km} km · ${data.estimated_total_time_minutes} min`)
       if (isMobile && data) setSheetOpen(true)
     } catch { addToast('error', 'Route calculation failed — check backend') }
     setLoading(false)
@@ -944,6 +951,44 @@ export default function RoutePlanner() {
             </div>
           )}
 
+          {/* ── Partial route warning panel ── */}
+          {partialWarning && (
+            <div style={{ background: 'rgba(255,181,71,0.06)', border: '1.5px solid rgba(255,181,71,0.38)', borderRadius: 14, overflow: 'hidden' }}>
+              {/* Header */}
+              <div style={{ background: 'rgba(255,181,71,0.13)', borderBottom: '1px solid rgba(255,181,71,0.22)', padding: '9px 14px', display: 'flex', alignItems: 'center', gap: 8 }}>
+                <AlertTriangle style={{ width: 14, height: 14, color: '#FFB547', flexShrink: 0 }} />
+                <span style={{ fontSize: 11, fontWeight: 800, color: '#FFB547', letterSpacing: '0.07em', textTransform: 'uppercase', fontFamily: 'IBM Plex Mono, monospace' }}>
+                  Partial Route · Coverage Gap
+                </span>
+              </div>
+              {/* Body */}
+              <div style={{ padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+                {/* Gap pill */}
+                <div style={{ display: 'inline-flex', alignItems: 'center', gap: 7, background: 'rgba(255,77,109,0.1)', border: '1px solid rgba(255,77,109,0.3)', borderRadius: 20, padding: '5px 13px', alignSelf: 'flex-start' }}>
+                  <span style={{ fontSize: 14, fontWeight: 800, color: '#FF4D6D', fontFamily: 'IBM Plex Mono, monospace' }}>~{partialWarning.uncoveredKm} km</span>
+                  <span style={{ fontSize: 11, color: 'var(--text-2)' }}>without charger data</span>
+                </div>
+                {/* Message */}
+                <p style={{ fontSize: 12, color: 'var(--text-2)', lineHeight: 1.65, margin: 0 }}>{partialWarning.message}</p>
+                {/* Checklist */}
+                <div style={{ background: 'var(--surface-2)', border: '1px solid var(--border)', borderRadius: 10, padding: '10px 12px' }}>
+                  <p style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-3)', textTransform: 'uppercase', letterSpacing: '0.08em', margin: '0 0 8px', fontFamily: 'IBM Plex Mono, monospace' }}>Before you depart</p>
+                  {['Charge to 100% at the last confirmed stop', 'Check Tata Power / BPCL Pulse app for this region', "Call ahead — some stations aren't listed online yet"].map((tip, i) => (
+                    <div key={i} style={{ display: 'flex', gap: 8, marginBottom: i < 2 ? 6 : 0 }}>
+                      <span style={{ color: '#FFB547', fontSize: 12, flexShrink: 0 }}>→</span>
+                      <span style={{ fontSize: 11, color: 'var(--text-2)', lineHeight: 1.5 }}>{tip}</span>
+                    </div>
+                  ))}
+                </div>
+                {/* Map legend */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <svg width="36" height="8"><line x1="0" y1="4" x2="36" y2="4" stroke="#FFB547" strokeWidth="2.5" strokeDasharray="6 5" strokeLinecap="round" /></svg>
+                  <span style={{ fontSize: 11, color: 'var(--text-3)' }}>Dashed line on map = uncovered segment</span>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Summary + Share */}
           <div style={{ display: 'flex', gap: 8 }}>
             <button className="btn-secondary" style={{ flex: 1 }} onClick={() => setShowSummary(true)}>
@@ -1104,6 +1149,17 @@ export default function RoutePlanner() {
               <Polyline key={`glow-${routeKey}`} positions={route.route_coords} pathOptions={{ color: '#ffffff', weight: 9, opacity: 0.07, lineCap: 'round', lineJoin: 'round' }} />
               <Polyline key={`line-${routeKey}`} positions={route.route_coords} pathOptions={{ color: '#00D4AA', weight: 3.5, opacity: 0.9, lineCap: 'round', lineJoin: 'round' }} />
             </>}
+
+            {/* Dashed amber line: last confirmed stop → destination (coverage gap) */}
+            {route?.partial_route && route?.charging_stops?.length > 0 && endCoords && (() => {
+              const last = route.charging_stops[route.charging_stops.length - 1]
+              const lp = [last.lat ?? last.latitude, last.lng ?? last.longitude]
+              if (!lp[0] || !lp[1]) return null
+              return <>
+                <Polyline key={`gap-glow-${routeKey}`} positions={[lp, endCoords]} pathOptions={{ color: '#FFB547', weight: 12, opacity: 0.07, lineCap: 'round' }} />
+                <Polyline key={`gap-dash-${routeKey}`} positions={[lp, endCoords]} pathOptions={{ color: '#FFB547', weight: 2.5, opacity: 0.85, dashArray: '7 9', lineCap: 'round' }} />
+              </>
+            })()}
 
             {/* Road/highway name labels along the route */}
             {route?.road_names?.map((road, i) => (

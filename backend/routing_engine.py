@@ -321,7 +321,44 @@ class EVRouter:
 
                 result = self._find_best_charger(crit_lat, crit_lng, db_chargers, used_coords)
                 if result is None:
-                    return {"error": f"Stop needed near ({crit_lat:.3f}, {crit_lng:.3f}) but no stations found."}
+                    # No charger found — return whatever stops we have so far as a partial route.
+                    # Never hard-error when we already have confirmed stops.
+                    if stops:
+                        last = stops[-1]
+                        gap_km = round(self._haversine(last["lat"], last["lng"], end_lat, end_lng))
+                        wp = [[start_lng, start_lat]] + [[s["lng"], s["lat"]] for s in stops] + [[end_lng, end_lat]]
+                        via_p = self._osrm(wp)
+                        if via_p:
+                            d = via_p["distance"] / 1000.0
+                            kwh = specs.kwh_consumed_over(d)
+                            c = round(kwh * COST_PER_KWH_INR)
+                            return {
+                                "route_coords": self._decode_geojson(via_p),
+                                "total_distance_km": round(d, 2),
+                                "estimated_total_time_minutes": round((via_p["duration"] / 60.0) + total_stop_min),
+                                "needs_charging": True,
+                                "charging_stops": stops,
+                                "energy_kwh_used": round(kwh, 2),
+                                "estimated_charge_cost_inr": c,
+                                "petrol_equivalent_cost_inr": round(d * 7),
+                                "savings_vs_petrol_inr": max(0, round((d * 7) - c)),
+                                "battery_at_arrival_pct": 15.0,
+                                "real_world_range_km": round(real_world_range),
+                                "road_names": self._extract_road_names(via_p),
+                                "partial_route": True,
+                                "uncovered_km": gap_km,
+                                "coverage_warning": (
+                                    f"No charging stations found for the last ~{gap_km} km of your journey. "
+                                    f"The {len(stops)} stop(s) shown are confirmed. "
+                                    f"Charge to 100% at the last stop and check Tata Power, "
+                                    f"BPCL Pulse, or Ather Grid for stations in this region."
+                                ),
+                                "message": f"Partial route — {len(stops)} stop(s) confirmed, last ~{gap_km} km has no coverage ⚠️",
+                            }
+                    return {"error": (
+                        f"No charging stations found near ({crit_lat:.2f}°N, {crit_lng:.2f}°E) and no prior stops exist. "
+                        "Try routing via a major city like Nagpur, Hyderabad, or Pune."
+                    )}
 
                 charger, coord_key = result
                 used_coords.add(coord_key)
@@ -357,6 +394,21 @@ class EVRouter:
                 if specs.range_from_kwh(remaining_kwh) >= self._haversine(c_lat, c_lng, end_lat, end_lng): break
                 prev_pos, seg_start = [c_lng, c_lat], critical_idx
 
+            # ── Post-loop gap check: did the last stop actually reach the destination? ──
+            is_partial, gap_km, warn = False, 0, None
+            if stops:
+                last = stops[-1]
+                dist_to_end = self._haversine(last["lat"], last["lng"], end_lat, end_lng)
+                if dist_to_end > specs.range_from_kwh(self.CHARGE_TO * specs.battery_capacity_kwh):
+                    is_partial = True
+                    gap_km = round(dist_to_end)
+                    warn = (
+                        f"No charging stations found for the last ~{gap_km} km of your journey. "
+                        f"The {len(stops)} stop(s) shown are confirmed. "
+                        f"Charge to 100% at the last stop and check Tata Power, "
+                        f"BPCL Pulse, or Ather Grid for stations in this region."
+                    )
+
             waypoints = [[start_lng, start_lat]] + [[s["lng"], s["lat"]] for s in stops] + [[end_lng, end_lat]]
             via = self._osrm(waypoints)
             if not via: return {"error": "Found all stops but could not build the final road route."}
@@ -378,7 +430,14 @@ class EVRouter:
                 "battery_at_arrival_pct": 15.0,
                 "real_world_range_km": round(real_world_range),
                 "road_names": self._extract_road_names(via),
-                "message": f"Optimised route via {len(stops)} charging stop(s) — ready to go ⚡",
+                "partial_route": is_partial,
+                "uncovered_km": gap_km,
+                "coverage_warning": warn,
+                "message": (
+                    f"Partial route — {len(stops)} stop(s) confirmed, last ~{gap_km} km has no coverage ⚠️"
+                    if is_partial else
+                    f"Optimised route via {len(stops)} charging stop(s) — ready to go ⚡"
+                ),
             }
 
         except Exception as e:

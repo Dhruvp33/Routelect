@@ -173,8 +173,12 @@ def calculate_route(req: RouteRequest):
         db_chargers,
     )
 
+    # Hard error — no route possible at all
     if "error" in result:
         raise HTTPException(400, result["error"])
+
+    # Partial route — route exists but coverage gap found.
+    # Pass through to frontend with partial_route flag; frontend shows the warning panel.
     return result
 
 

@@ -7,9 +7,9 @@ import {
 /* ─── Data ─────────────────────────────────────────────── */
 const STATS = [
   { value: '1,200+', label: 'Charging Stations' },
-  { value: '50+',    label: 'EV Models' },
-  { value: '28',     label: 'States Covered' },
-  { value: '< 2s',   label: 'Route Calculation' },
+  { value: '50+', label: 'EV Models' },
+  { value: '28', label: 'States Covered' },
+  { value: '< 10s', label: 'Route Calculation' },
 ]
 
 const FEATURES = [
@@ -17,43 +17,43 @@ const FEATURES = [
     icon: <Navigation className="w-5 h-5" />,
     color: '#60A5FA',
     title: 'Smart Indian Routing',
-    desc:  'Algorithms built for NH highways, state roads, and city traffic. Every pothole accounted for.',
-    tag:   'AI Powered',
+    desc: 'Algorithms built for NH highways, state roads, and city traffic. Every pothole accounted for.',
+    tag: 'AI Powered',
   },
   {
     icon: <Zap className="w-5 h-5" />,
     color: '#FBBF24',
     title: 'Live Charger Network',
-    desc:  'Real-time data from Tata Power, EESL, ChargeZone, Statiq & 20+ networks.',
-    tag:   'Live Data',
+    desc: 'Real-time data from Tata Power, EESL, ChargeZone, Statiq & 20+ networks.',
+    tag: 'Live Data',
   },
   {
     icon: <Battery className="w-5 h-5" />,
     color: '#00D4AA',
     title: 'Model-Accurate Range',
-    desc:  'Consumption profiles per EV model — accounting for speed, AC usage, load, and terrain.',
-    tag:   'Precise',
+    desc: 'Consumption profiles per EV model — accounting for speed, AC usage, load, and terrain.',
+    tag: 'Precise',
   },
   {
     icon: <Shield className="w-5 h-5" />,
     color: '#A78BFA',
     title: '10% Safety Buffer',
-    desc:  "We never route you below critical charge. Configurable safety margins, always.",
-    tag:   'Safe',
+    desc: "We never route you below critical charge. Configurable safety margins, always.",
+    tag: 'Safe',
   },
   {
     icon: <Clock className="w-5 h-5" />,
     color: '#F472B6',
     title: 'Time-Optimal Stops',
-    desc:  'Charging stops computed to minimize total trip time — not just driving distance.',
-    tag:   'Optimized',
+    desc: 'Charging stops computed to minimize total trip time — not just driving distance.',
+    tag: 'Optimized',
   },
   {
     icon: <TrendingUp className="w-5 h-5" />,
     color: '#34D399',
     title: 'Cost vs Petrol',
-    desc:  'See exact energy cost and how much you save compared to an equivalent petrol car.',
-    tag:   'Savings',
+    desc: 'See exact energy cost and how much you save compared to an equivalent petrol car.',
+    tag: 'Savings',
   },
 ]
 
@@ -62,19 +62,19 @@ const STEPS = [
     step: '01',
     icon: <Car className="w-6 h-6" />,
     title: 'Pick your EV',
-    desc:  'Select brand and model. We have specs for 50+ Indian market EVs with accurate consumption data.',
+    desc: 'Select brand and model. We have specs for 50+ Indian market EVs with accurate consumption data.',
   },
   {
     step: '02',
     icon: <MapPin className="w-6 h-6" />,
     title: 'Enter your route',
-    desc:  'Type start and destination. Set your current battery charge with our interactive gauge.',
+    desc: 'Type start and destination. Set your current battery charge with our interactive gauge.',
   },
   {
     step: '03',
     icon: <Navigation className="w-6 h-6" />,
     title: 'Get your plan',
-    desc:  'Receive an optimized route with charging stops, times, energy breakdown, and cost estimate.',
+    desc: 'Receive an optimized route with charging stops, times, energy breakdown, and cost estimate.',
   },
 ]
 
