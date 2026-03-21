@@ -5,6 +5,17 @@ import { useStore } from '../store/useStore'
 import { useAuth } from '../hooks/useAuth'
 import { API_URL } from '../App'
 
+/* ─── Mobile Detection ─── */
+function useIsMobile() {
+  const [m, setM] = useState(window.innerWidth < 768)
+  useEffect(() => {
+    const h = () => setM(window.innerWidth < 768)
+    window.addEventListener('resize', h)
+    return () => window.removeEventListener('resize', h)
+  }, [])
+  return m
+}
+
 /* ═══════════════════════════════════════════════════════════
    MODEL IMAGE MAP — add file to /public/models/ → auto shows
 ═══════════════════════════════════════════════════════════ */
@@ -451,6 +462,7 @@ export default function ModelSelection() {
   const navigate = useNavigate()
   const { setSelectedCar, addToast } = useStore()
   const { user, saveCarPreference } = useAuth()
+  const isMobile = useIsMobile()
 
   const [models, setModels] = useState([])
   const [loading, setLoading] = useState(true)
@@ -499,9 +511,9 @@ export default function ModelSelection() {
 
   return (
     <div style={{
-      minHeight: 'calc(100vh - 56px)',
+      minHeight: '100vh',
       background: 'var(--bg)',
-      padding: '44px 20px 96px',
+      padding: isMobile ? '92px 16px 80px' : '108px 20px 96px',
     }}>
       <div style={{ maxWidth: 980, margin: '0 auto' }}>
 
@@ -527,13 +539,13 @@ export default function ModelSelection() {
               Step 2 of 2
             </span>
             <h1 style={{
-              fontSize: 'clamp(26px, 5vw, 36px)',
+              fontSize: isMobile ? 'clamp(22px, 7vw, 30px)' : 'clamp(26px, 5vw, 36px)',
               fontWeight: 800, letterSpacing: '-0.03em',
-              marginBottom: 10, lineHeight: 1.1,
+              marginBottom: isMobile ? 6 : 10, lineHeight: 1.1,
             }}>
               {loading ? 'Loading models…' : `${brandName} models`}
             </h1>
-            <p style={{ color: 'var(--text-2)', fontSize: 15, lineHeight: 1.6 }}>
+            <p style={{ color: 'var(--text-2)', fontSize: isMobile ? 13 : 15, lineHeight: 1.6 }}>
               Accurate range &amp; charging calculations based on your exact model
             </p>
           </div>
@@ -546,7 +558,7 @@ export default function ModelSelection() {
             alignItems: 'center', gap: 16, marginBottom: 36,
             animationDelay: '60ms',
           }}>
-            <div style={{ maxWidth: 340, width: '100%', position: 'relative' }}>
+            <div style={{ maxWidth: isMobile ? '100%' : 340, width: '100%', position: 'relative' }}>
               <Search style={{
                 position: 'absolute', left: 14, top: '50%',
                 transform: 'translateY(-50%)',
@@ -564,7 +576,13 @@ export default function ModelSelection() {
             </div>
 
             {segments.length > 2 && (
-              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'center' }}>
+              <div style={{
+                display: 'flex', gap: 8,
+                flexWrap: isMobile ? 'nowrap' : 'wrap', justifyContent: isMobile ? 'flex-start' : 'center',
+                overflowX: isMobile ? 'auto' : 'visible',
+                WebkitOverflowScrolling: 'touch',
+                paddingBottom: isMobile ? 2 : 0,
+              }}>
                 {segments.map(seg => (
                   <FilterPill
                     key={seg}
@@ -584,8 +602,8 @@ export default function ModelSelection() {
           className="stagger"
           style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))',
-            gap: 14,
+            gridTemplateColumns: isMobile ? 'repeat(auto-fill, minmax(220px, 1fr))' : 'repeat(auto-fill, minmax(260px, 1fr))',
+            gap: isMobile ? 12 : 14,
           }}
         >
           {loading

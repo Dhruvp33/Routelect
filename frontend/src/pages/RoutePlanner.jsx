@@ -625,8 +625,8 @@ export default function RoutePlanner() {
   const [routeKey, setRouteKey] = useState(0)
   const [partialWarning, setPartialWarning] = useState(null)
 
-  // Mobile Bottom Sheet
-  const [sheetOpen, setSheetOpen] = useState(true)
+  // Mobile Bottom Sheet — 3-state: 'peek' | 'half' | 'full'
+  const [sheetOpen, setSheetOpen] = useState('half')
   const [touchStartY, setTouchStartY] = useState(0)
   const [touchEndY, setTouchEndY] = useState(0)
 
@@ -635,8 +635,14 @@ export default function RoutePlanner() {
   const handleTouchEnd = () => {
     if (!touchStartY || !touchEndY) return
     const distance = touchStartY - touchEndY
-    if (distance > 40) setSheetOpen(true)
-    if (distance < -40) setSheetOpen(false)
+    if (distance > 40) {
+      // Swipe up: peek → half → full
+      setSheetOpen(prev => prev === 'peek' ? 'half' : prev === 'half' ? 'full' : 'full')
+    }
+    if (distance < -40) {
+      // Swipe down: full → half → peek
+      setSheetOpen(prev => prev === 'full' ? 'half' : prev === 'half' ? 'peek' : 'peek')
+    }
     setTouchStartY(0)
     setTouchEndY(0)
   }
@@ -1011,20 +1017,54 @@ export default function RoutePlanner() {
   /* ── CTA footer ── */
   const footerCTA = (
     <div style={{ padding: '14px 16px', borderTop: '1px solid var(--border)', background: 'var(--surface)', flexShrink: 0 }}>
-      <button
-        className={`btn-primary${ctaReady ? ' pulse-cta' : ''}`}
-        style={{ width: '100%', padding: '13px', fontSize: 15 }}
-        onClick={handleCalculate}
-        disabled={loading || !startCoords || !endCoords}
-      >
-        {loading
-          ? <>
-            <span style={{ width: 16, height: 16, borderRadius: '50%', border: '2px solid rgba(0,0,0,0.3)', borderTopColor: '#000', animation: 'spin 0.7s linear infinite', display: 'inline-block', flexShrink: 0 }} />
-            {loadingMsg}
-          </>
-          : <><Navigation className="w-4 h-4" />Find Best Route</>
-        }
-      </button>
+      {route ? (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          <button
+            className="btn-primary"
+            style={{ width: '100%', padding: '13px', fontSize: 15 }}
+            onClick={() => {
+              const origin = `${startCoords[0]},${startCoords[1]}`;
+              const destination = `${endCoords[0]},${endCoords[1]}`;
+              const waypoints = route.charging_stops?.map(stop => `${stop.lat},${stop.lng}`).join('|');
+              let url = `https://www.google.com/maps/dir/?api=1&origin=${origin}&destination=${destination}`;
+              if (waypoints) url += `&waypoints=${waypoints}`;
+              url += '&travelmode=driving';
+              window.open(url, '_blank');
+            }}
+          >
+            <MapPinIcon className="w-5 h-5" style={{ marginRight: 6 }} /> Start Navigation in Google Maps
+          </button>
+          <button
+            className="btn-secondary"
+            style={{ width: '100%', padding: '12px', fontSize: 14 }}
+            onClick={handleCalculate}
+            disabled={loading || !startCoords || !endCoords}
+          >
+            {loading
+              ? <>
+                <span style={{ width: 14, height: 14, borderRadius: '50%', border: '2px solid rgba(255,255,255,0.3)', borderTopColor: '#fff', animation: 'spin 0.7s linear infinite', display: 'inline-block', flexShrink: 0 }} />
+                {loadingMsg}
+              </>
+              : <><Navigation className="w-4 h-4" />Update Route</>
+            }
+          </button>
+        </div>
+      ) : (
+        <button
+          className="btn-primary pulse-cta"
+          style={{ width: '100%', padding: '13px', fontSize: 15 }}
+          onClick={handleCalculate}
+          disabled={loading || !startCoords || !endCoords}
+        >
+          {loading
+            ? <>
+              <span style={{ width: 16, height: 16, borderRadius: '50%', border: '2px solid rgba(0,0,0,0.3)', borderTopColor: '#000', animation: 'spin 0.7s linear infinite', display: 'inline-block', flexShrink: 0 }} />
+              {loadingMsg}
+            </>
+            : <><Navigation className="w-4 h-4" />Find Best Route</>
+          }
+        </button>
+      )}
       {(!startCoords || !endCoords) && !loading && (
         <p style={{ textAlign: 'center', fontSize: 11, color: 'var(--text-3)', marginTop: 8 }}>
           {!startCoords ? 'Set your start location above' : 'Set your destination above'}
@@ -1186,81 +1226,94 @@ export default function RoutePlanner() {
             </div>
           )}
 
-          {/* Mobile FAB */}
-          {isMobile && route && !sheetOpen && (
-            <button
-              onClick={() => setSheetOpen(true)}
-              style={{ position: 'absolute', bottom: 24, right: 16, zIndex: 500, width: 52, height: 52, borderRadius: '50%', background: 'var(--accent)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 20px rgba(0,212,170,0.5)' }}
-            >
-              <ChevronUp className="w-5 h-5" style={{ color: '#000' }} />
-            </button>
-          )}
+          {/* Mobile FAB removed for a cleaner, professional UI. The user will use the internal chevron button or the drag handle on the bottom sheet. */}
         </div>
 
         {/* ═══ MOBILE BOTTOM SHEET ═══ */}
         {isMobile && (
-          <div style={{
-            position: 'absolute', bottom: 0, left: 0, right: 0, zIndex: 200,
-            background: 'var(--surface)',
-            borderRadius: '20px 20px 0 0',
-            border: '1px solid var(--border)', borderBottom: 'none',
-            boxShadow: '0 -8px 40px rgba(0,0,0,0.6)',
-            display: 'flex', flexDirection: 'column',
-            /* Taller when route found, auto-expands to show results */
-            height: sheetOpen ? (route ? '75dvh' : '65dvh') : '72px',
-            transition: 'height 0.35s cubic-bezier(0.22, 1, 0.36, 1)',
-            overflow: 'hidden',
-          }}>
-            {/* Drag handle + header */}
+          <div
+            className="mobile-sheet"
+            style={{
+              height: sheetOpen === 'full' ? '90dvh'
+                   : sheetOpen === 'half' ? '55dvh'
+                   : route ? '96px' : '88px',
+            }}
+          >
+            {/* Drag handle */}
             <div
-              onClick={() => setSheetOpen(o => !o)}
+              className="sheet-handle"
+              onClick={() => setSheetOpen(prev =>
+                prev === 'peek' ? 'half' : prev === 'half' ? 'full' : 'half'
+              )}
               onTouchStart={handleTouchStart}
               onTouchMove={handleTouchMove}
               onTouchEnd={handleTouchEnd}
-              style={{ flexShrink: 0, padding: '10px 16px 12px', cursor: 'grab', userSelect: 'none', touchAction: 'none' }}
             >
-              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 10 }}>
-                <div style={{ width: 36, height: 4, borderRadius: 10, background: 'var(--border)' }} />
-              </div>
+              <div className="sheet-handle-bar" />
+            </div>
+
+            {/* Sheet header */}
+            <div className="sheet-header">
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <p style={{ fontSize: 14, fontWeight: 700 }}>
+                  <p style={{ fontSize: 15, fontWeight: 700 }}>
                     {route ? 'Route Found ✓' : 'Route Planner'}
                   </p>
-                  {/* Mini summary chips when route exists */}
                   {route ? (
-                    <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 3 }}>
-                      <span style={{ fontSize: 11, color: 'var(--text-2)', fontFamily: 'IBM Plex Mono, monospace' }}>{route.total_distance_km} km</span>
-                      <span style={{ fontSize: 11, color: 'var(--text-3)' }}>·</span>
-                      <span style={{ fontSize: 11, color: 'var(--text-2)', fontFamily: 'IBM Plex Mono, monospace' }}>{route.charging_stops?.length || 0} stop{route.charging_stops?.length !== 1 ? 's' : ''}</span>
-                      <span style={{ fontSize: 11, color: 'var(--text-3)' }}>·</span>
-                      <span style={{ fontSize: 11, color: 'var(--text-2)', fontFamily: 'IBM Plex Mono, monospace' }}>{Math.floor(route.estimated_total_time_minutes / 60)}h {route.estimated_total_time_minutes % 60}m</span>
+                    <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 3 }}>
+                      <span className="mono" style={{ fontSize: 12, color: 'var(--text-2)' }}>{route.total_distance_km} km</span>
+                      <span style={{ fontSize: 12, color: 'var(--text-3)' }}>·</span>
+                      <span className="mono" style={{ fontSize: 12, color: 'var(--text-2)' }}>{route.charging_stops?.length || 0} stop{route.charging_stops?.length !== 1 ? 's' : ''}</span>
+                      <span style={{ fontSize: 12, color: 'var(--text-3)' }}>·</span>
+                      <span className="mono" style={{ fontSize: 12, color: 'var(--text-2)' }}>{Math.floor(route.estimated_total_time_minutes / 60)}h {route.estimated_total_time_minutes % 60}m</span>
                     </div>
                   ) : (
-                    <p style={{ fontSize: 11, color: 'var(--text-2)' }}>
+                    <p style={{ fontSize: 12, color: 'var(--text-2)', marginTop: 2 }}>
                       {selectedCar.brand} · {selectedCar.name || selectedCar.model}
                     </p>
                   )}
                 </div>
-                <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexShrink: 0 }}>
                   <button
                     onClick={e => { e.stopPropagation(); navigate('/select-brand') }}
-                    style={{ width: 40, height: 40, borderRadius: 10, background: 'var(--surface-2)', border: '1px solid var(--border)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
+                    style={{
+                      width: 40, height: 40, borderRadius: 12,
+                      background: 'var(--surface-2)', border: '1px solid var(--border)',
+                      cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    }}
                   >
                     <ChevronLeft style={{ width: 18, height: 18, color: 'var(--text-1)' }} />
                   </button>
                   <button
-                    onClick={e => { e.stopPropagation(); setSheetOpen(o => !o) }}
-                    style={{ width: 40, height: 40, borderRadius: 10, background: 'var(--surface-2)', border: '1px solid var(--border)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
+                    onClick={e => {
+                      e.stopPropagation()
+                      setSheetOpen(prev => prev === 'peek' ? 'half' : 'peek')
+                    }}
+                    style={{
+                      width: 40, height: 40, borderRadius: 12,
+                      background: 'var(--surface-2)', border: '1px solid var(--border)',
+                      cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    }}
                   >
-                    <ChevronDown style={{ width: 18, height: 18, color: 'var(--text-1)', transition: 'transform 0.3s', transform: sheetOpen ? 'none' : 'rotate(180deg)' }} />
+                    <ChevronDown style={{
+                      width: 18, height: 18, color: 'var(--text-1)',
+                      transition: 'transform 0.3s',
+                      transform: sheetOpen === 'peek' ? 'rotate(180deg)' : 'none',
+                    }} />
                   </button>
                 </div>
               </div>
             </div>
 
-            {sidebarContent}
-            {footerCTA}
+            {/* Sheet scrollable content */}
+            <div className="sheet-content" style={{
+              opacity: sheetOpen !== 'peek' ? 1 : 0,
+              transition: 'opacity 0.2s',
+              visibility: sheetOpen !== 'peek' ? 'visible' : 'hidden',
+            }}>
+              {sidebarContent}
+            </div>
+            {sheetOpen !== 'peek' && footerCTA}
           </div>
         )}
       </div>

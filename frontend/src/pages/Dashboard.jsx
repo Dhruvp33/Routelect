@@ -18,10 +18,10 @@ export default function Dashboard() {
     if (!user) {
         return (
             <div style={{
-                minHeight: 'calc(100vh - 56px)',
+                minHeight: '100vh',
                 display: 'flex', flexDirection: 'column',
                 alignItems: 'center', justifyContent: 'center', gap: 20,
-                padding: 24, textAlign: 'center',
+                padding: '88px 24px 24px', textAlign: 'center',
             }}>
                 <div style={{
                     width: 64, height: 64, borderRadius: 18,
@@ -57,7 +57,7 @@ export default function Dashboard() {
         || 'Driver'
 
     return (
-        <div style={{ maxWidth: 900, margin: '0 auto', padding: '32px 24px 60px' }}>
+        <div style={{ maxWidth: 900, margin: '0 auto', padding: '96px 24px 60px' }}>
 
             {/* ── Header ── */}
             <div style={{ marginBottom: 32 }}>

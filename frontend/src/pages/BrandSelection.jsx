@@ -3,6 +3,17 @@ import { useNavigate } from 'react-router-dom'
 import { Search, ChevronRight, Car, Bike } from 'lucide-react'
 import { API_URL } from '../App'
 
+/* ─── Mobile Detection ─── */
+function useIsMobile() {
+  const [m, setM] = useState(window.innerWidth < 768)
+  useEffect(() => {
+    const h = () => setM(window.innerWidth < 768)
+    window.addEventListener('resize', h)
+    return () => window.removeEventListener('resize', h)
+  }, [])
+  return m
+}
+
 /* ═══════════════════════════════════════════════════════════
    LOGO MAP
 ═══════════════════════════════════════════════════════════ */
@@ -79,18 +90,21 @@ function InitialsBadge({ name }) {
 }
 
 /* ── Logo image with white pill background ── */
-function BrandLogo({ name }) {
+function BrandLogo({ name, isMobile }) {
   const src = LOGO_MAP[name]
   const [err, setErr] = useState(false)
+  const size = isMobile ? 64 : 80
+  const radius = isMobile ? 16 : 20
+  const pad = isMobile ? 8 : 10
 
   if (!src || err) return <InitialsBadge name={name} />
 
   return (
     <div style={{
-      width: 80, height: 80, borderRadius: 20,
+      width: size, height: size, borderRadius: radius,
       background: '#ffffff',
       display: 'flex', alignItems: 'center', justifyContent: 'center',
-      padding: 10,
+      padding: pad,
       boxShadow: '0 2px 12px rgba(0,0,0,0.3)',
       overflow: 'hidden',
       flexShrink: 0,
@@ -125,7 +139,7 @@ function SkeletonCard() {
 }
 
 /* ── Brand card ── */
-function BrandCard({ brand, onClick, index }) {
+function BrandCard({ brand, onClick, index, isMobile }) {
   const [hovered, setHovered] = useState(false)
   const accent = BRAND_ACCENT[brand.name] || '#00D4AA'
   const cat    = BRAND_CATEGORY[brand.name]
@@ -138,8 +152,8 @@ function BrandCard({ brand, onClick, index }) {
       className="animate-fade-up"
       style={{
         display: 'flex', flexDirection: 'column',
-        alignItems: 'center', gap: 16,
-        padding: '28px 22px 22px',
+        alignItems: 'center', gap: isMobile ? 12 : 16,
+        padding: isMobile ? '20px 16px 18px' : '28px 22px 22px',
         width: '100%', textAlign: 'center',
         background: hovered
           ? `linear-gradient(160deg, ${accent}0D 0%, var(--surface) 60%)`
@@ -147,10 +161,10 @@ function BrandCard({ brand, onClick, index }) {
         border: hovered
           ? `1px solid ${accent}60`
           : '1px solid var(--border)',
-        borderRadius: 20,
+        borderRadius: isMobile ? 16 : 20,
         cursor: 'pointer', outline: 'none',
         transition: 'border-color 0.22s ease, background 0.22s ease, box-shadow 0.22s ease, transform 0.18s ease',
-        transform: hovered ? 'translateY(-4px)' : 'translateY(0)',
+        transform: hovered && !isMobile ? 'translateY(-4px)' : 'translateY(0)',
         boxShadow: hovered
           ? `0 12px 40px ${accent}20, 0 4px 16px rgba(0,0,0,0.3)`
           : '0 1px 4px rgba(0,0,0,0.2)',
@@ -169,7 +183,7 @@ function BrandCard({ brand, onClick, index }) {
         }} />
       )}
 
-      <BrandLogo name={brand.name} />
+      <BrandLogo name={brand.name} isMobile={isMobile} />
 
       <div style={{ width: '100%' }}>
         {/* FIX: brand name always var(--text-1), never neon */}
@@ -261,6 +275,7 @@ export default function BrandSelection() {
   const [search,   setSearch]   = useState('')
   const [category, setCategory] = useState('All')
   const navigate = useNavigate()
+  const isMobile = useIsMobile()
 
   const fetchBrands = () => {
     setLoading(true); setError(null)
@@ -292,9 +307,9 @@ export default function BrandSelection() {
 
   return (
     <div style={{
-      minHeight: 'calc(100vh - 56px)',
+      minHeight: '100vh',
       background: 'var(--bg)',
-      padding: '44px 20px 96px',
+      padding: isMobile ? '92px 16px 80px' : '108px 20px 96px',
     }}>
       <div style={{ maxWidth: 980, margin: '0 auto' }}>
 
@@ -302,22 +317,22 @@ export default function BrandSelection() {
         <div className="animate-fade-up" style={{ textAlign: 'center', marginBottom: 40 }}>
           <span style={{
             display: 'inline-block',
-            fontSize: 11, fontWeight: 700,
+            fontSize: isMobile ? 10 : 11, fontWeight: 700,
             letterSpacing: '0.14em', textTransform: 'uppercase',
             color: 'var(--accent)',
-            marginBottom: 12,
+            marginBottom: isMobile ? 8 : 12,
             fontFamily: 'IBM Plex Mono, monospace',
           }}>
             Step 1 of 2
           </span>
           <h1 style={{
-            fontSize: 'clamp(26px, 5vw, 36px)',
+            fontSize: isMobile ? 'clamp(22px, 7vw, 30px)' : 'clamp(26px, 5vw, 36px)',
             fontWeight: 800, letterSpacing: '-0.03em',
-            marginBottom: 10, lineHeight: 1.1,
+            marginBottom: isMobile ? 6 : 10, lineHeight: 1.1,
           }}>
             Choose your EV brand
           </h1>
-          <p style={{ color: 'var(--text-2)', fontSize: 15, lineHeight: 1.6 }}>
+          <p style={{ color: 'var(--text-2)', fontSize: isMobile ? 13 : 15, lineHeight: 1.6 }}>
             Select the manufacturer of your electric vehicle
           </p>
         </div>
@@ -329,7 +344,7 @@ export default function BrandSelection() {
             alignItems: 'center', gap: 16,
             marginBottom: 36, animationDelay: '60ms',
           }}>
-            <div style={{ maxWidth: 340, width: '100%', position: 'relative' }}>
+            <div style={{ maxWidth: isMobile ? '100%' : 340, width: '100%', position: 'relative' }}>
               <Search style={{
                 position: 'absolute', left: 14, top: '50%',
                 transform: 'translateY(-50%)',
@@ -346,7 +361,13 @@ export default function BrandSelection() {
               />
             </div>
 
-            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'center' }}>
+            <div style={{
+              display: 'flex', gap: 8,
+              flexWrap: isMobile ? 'nowrap' : 'wrap', justifyContent: isMobile ? 'flex-start' : 'center',
+              overflowX: isMobile ? 'auto' : 'visible',
+              WebkitOverflowScrolling: 'touch',
+              paddingBottom: isMobile ? 2 : 0,
+            }}>
               {CATEGORIES.map(cat => (
                 <FilterPill
                   key={cat}
@@ -395,6 +416,7 @@ export default function BrandSelection() {
                     key={brand.id}
                     brand={brand}
                     index={i}
+                    isMobile={isMobile}
                     onClick={() => navigate(`/select-model/${brand.id}`)}
                   />
                 ))

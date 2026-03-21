@@ -866,3 +866,285 @@ h5 {
     border-top: 1px solid var(--border);
   }
 }
+
+/* ========================================
+   MOBILE-FIRST OVERHAUL
+   Premium mobile experience
+   ======================================== */
+
+/* ── Safe-area insets ── */
+@supports (padding: env(safe-area-inset-bottom)) {
+  .safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  .safe-top {
+    padding-top: env(safe-area-inset-top, 0px);
+  }
+}
+
+/* ── Mobile base overrides ── */
+@media (max-width: 768px) {
+
+  /* Ensure minimum touch targets */
+  button, a, [role="button"], input, select, textarea {
+    min-height: 44px;
+  }
+
+  /* Badge touch override — keep smaller */
+  .badge, .badge-green, .badge-yellow, .badge-gray, .badge-red {
+    min-height: auto;
+  }
+
+  /* Better body text */
+  body {
+    font-size: 14px;
+    -webkit-text-size-adjust: 100%;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* Full-width inputs */
+  .input-field {
+    padding: 14px 14px 14px 44px;
+    font-size: 16px; /* Prevents iOS zoom on focus */
+    border-radius: 14px;
+  }
+
+  /* Larger primary buttons */
+  .btn-primary {
+    padding: 14px 24px;
+    font-size: 15px;
+    border-radius: 14px;
+    min-height: 50px;
+  }
+
+  .btn-secondary {
+    padding: 12px 18px;
+    font-size: 14px;
+    border-radius: 14px;
+    min-height: 48px;
+  }
+
+  .btn-ghost {
+    min-height: 44px;
+    padding: 10px 14px;
+    font-size: 14px;
+  }
+
+  /* Slider thumb bigger for touch */
+  .range-slider::-webkit-slider-thumb {
+    width: 28px;
+    height: 28px;
+  }
+
+  .range-slider {
+    height: 6px;
+  }
+
+  /* Toast: bottom-center, full-width on mobile */
+  .toast-container {
+    bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+    right: 16px;
+    left: 16px;
+    align-items: stretch;
+  }
+
+  .toast {
+    min-width: unset;
+    max-width: unset;
+    width: 100%;
+    border-radius: 14px;
+    padding: 14px 16px;
+    font-size: 13px;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6), 0 4px 12px rgba(0, 0, 0, 0.4);
+    animation: slide-up 0.3s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  /* Modal: full-width bottom sheet style on mobile */
+  .modal-panel {
+    max-width: 100%;
+    border-radius: 24px 24px 0 0;
+    max-height: 92vh;
+  }
+
+  /* Cards: mobile-optimized */
+  .card {
+    border-radius: 16px;
+  }
+
+  .card-interactive:hover {
+    transform: none; /* No hover lift on touch */
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.35);
+  }
+
+  /* Map controls: reposition for mobile */
+  .leaflet-control-zoom {
+    margin-right: 12px !important;
+    margin-bottom: 100px !important; /* Above bottom sheet peek */
+  }
+
+  .leaflet-control-attribution {
+    display: none !important; /* Hide on mobile for cleaner UI */
+  }
+
+  /* Scrollbar: always hide on mobile for cleaner look */
+  ::-webkit-scrollbar {
+    display: none;
+  }
+  * {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}
+
+/* ── Bottom Sheet (native feel) ── */
+.mobile-sheet {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 200;
+  background: var(--surface);
+  border-radius: 24px 24px 0 0;
+  border: 1px solid var(--border);
+  border-bottom: none;
+  box-shadow: 0 -12px 48px rgba(0, 0, 0, 0.65), 0 -2px 12px rgba(0, 0, 0, 0.3);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  transition: height 0.38s cubic-bezier(0.32, 0.72, 0, 1);
+  will-change: height;
+}
+
+.mobile-sheet .sheet-handle {
+  display: flex;
+  justify-content: center;
+  padding: 10px 0 6px;
+  cursor: grab;
+  user-select: none;
+  touch-action: none;
+  flex-shrink: 0;
+}
+
+.mobile-sheet .sheet-handle-bar {
+  width: 40px;
+  height: 5px;
+  border-radius: 100px;
+  background: var(--text-3);
+  opacity: 0.5;
+  transition: opacity 0.2s, width 0.2s;
+}
+
+.mobile-sheet .sheet-handle:active .sheet-handle-bar {
+  width: 48px;
+  opacity: 0.8;
+}
+
+.mobile-sheet .sheet-header {
+  padding: 4px 20px 14px;
+  flex-shrink: 0;
+}
+
+.mobile-sheet .sheet-content {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior-y: contain;
+  -webkit-overflow-scrolling: touch;
+  padding: 0 20px 20px;
+}
+
+/* ── Mobile FAB (Floating Action Button) ── */
+.mobile-fab {
+  position: absolute;
+  bottom: 100px;
+  right: 16px;
+  z-index: 500;
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
+  background: var(--accent);
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 20px rgba(0, 212, 170, 0.5), 0 2px 8px rgba(0, 0, 0, 0.3);
+  transition: transform 0.2s, box-shadow 0.2s;
+  color: #000;
+}
+
+.mobile-fab:active {
+  transform: scale(0.92);
+  box-shadow: 0 2px 10px rgba(0, 212, 170, 0.3);
+}
+
+/* ── Mobile Floating Bar (Route Summary pill) ── */
+.mobile-summary-pill {
+  position: absolute;
+  bottom: 100px;
+  left: 16px;
+  right: 80px;
+  z-index: 490;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 12px 16px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
+.mobile-summary-pill:active {
+  transform: scale(0.98);
+}
+
+/* ── Horizontal scroll snap for stats ── */
+.mobile-stats-scroll {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  padding: 2px;
+}
+
+.mobile-stats-scroll > * {
+  scroll-snap-align: start;
+  flex: 0 0 auto;
+  min-width: 120px;
+}
+
+/* ── Mobile Section Spacing ── */
+@media (max-width: 768px) {
+  .mobile-section {
+    padding-left: 20px;
+    padding-right: 20px;
+  }
+
+  .mobile-gap-sm { gap: 8px; }
+  .mobile-gap-md { gap: 12px; }
+  .mobile-gap-lg { gap: 16px; }
+  .mobile-gap-xl { gap: 24px; }
+
+  .mobile-py-sm { padding-top: 12px; padding-bottom: 12px; }
+  .mobile-py-md { padding-top: 20px; padding-bottom: 20px; }
+  .mobile-py-lg { padding-top: 32px; padding-bottom: 32px; }
+
+  .mobile-stack {
+    flex-direction: column !important;
+  }
+
+  .mobile-full-width {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  .mobile-text-center {
+    text-align: center !important;
+  }
+}

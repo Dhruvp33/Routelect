@@ -31,7 +31,8 @@ export default function ChargersMap() {
 
     // Mobile Bottom Sheet
     const [isMobile, setIsMobile] = useState(window.innerWidth <= 768)
-    const [sheetOpen, setSheetOpen] = useState(false)
+    // 3-state bottom sheet: 'peek' | 'half' | 'full'
+    const [sheetOpen, setSheetOpen] = useState('half')
     const [touchStartY, setTouchStartY] = useState(0)
     const [touchEndY, setTouchEndY] = useState(0)
 
@@ -46,8 +47,12 @@ export default function ChargersMap() {
     const handleTouchEnd = () => {
         if (!touchStartY || !touchEndY) return
         const distance = touchStartY - touchEndY
-        if (distance > 40) setSheetOpen(true)
-        if (distance < -40) setSheetOpen(false)
+        if (distance > 40) {
+            setSheetOpen(prev => prev === 'peek' ? 'half' : prev === 'half' ? 'full' : 'full')
+        }
+        if (distance < -40) {
+            setSheetOpen(prev => prev === 'full' ? 'half' : prev === 'half' ? 'peek' : 'peek')
+        }
         setTouchStartY(0)
         setTouchEndY(0)
     }
@@ -85,7 +90,7 @@ export default function ChargersMap() {
         <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', background: 'var(--bg)', overflow: 'hidden' }}>
             <Navbar />
 
-            <div className="map-layout-wrapper" style={{ flex: 1, display: 'flex', flexDirection: 'row', overflow: 'hidden', position: 'relative', marginTop: 56 }}>
+            <div className="map-layout-wrapper" style={{ flex: 1, display: 'flex', flexDirection: 'row', overflow: 'hidden', position: 'relative', marginTop: 64 }}>
 
                 {/* ═══ DESKTOP SIDEBAR ═══ */}
                 {!isMobile && (
@@ -298,57 +303,50 @@ export default function ChargersMap() {
                         ))}
                     </MapContainer>
 
-                    {/* Mobile FAB */}
-                    {isMobile && !sheetOpen && (
-                        <button
-                            onClick={() => setSheetOpen(true)}
-                            style={{ position: 'absolute', bottom: 24, right: 16, zIndex: 500, width: 52, height: 52, borderRadius: '50%', background: 'var(--accent)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 20px rgba(0,212,170,0.5)' }}
-                        >
-                            <ChevronUp style={{ width: 20, height: 20, color: '#000' }} />
-                        </button>
-                    )}
+                    {/* Mobile FAB removed in favor of internal sheet toggle for cleaner UI */}
                 </div>
 
                 {/* ═══ MOBILE BOTTOM SHEET ═══ */}
                 {isMobile && (
-                    <div style={{
-                        position: 'absolute', bottom: 0, left: 0, right: 0, zIndex: 200,
-                        background: 'var(--surface)',
-                        borderRadius: '20px 20px 0 0',
-                        border: '1px solid var(--border)', borderBottom: 'none',
-                        boxShadow: '0 -8px 40px rgba(0,0,0,0.6)',
-                        display: 'flex', flexDirection: 'column',
-                        height: sheetOpen ? '75dvh' : '72px',
-                        transition: 'height 0.35s cubic-bezier(0.22, 1, 0.36, 1)',
-                        overflow: 'hidden',
-                    }}>
-                        {/* Drag handle + header */}
+                    <div
+                        className="mobile-sheet"
+                        style={{
+                            height: sheetOpen === 'full' ? '85dvh'
+                                 : sheetOpen === 'half' ? '55dvh'
+                                 : '88px',
+                        }}
+                    >
+                        {/* Drag handle */}
                         <div
-                            onClick={() => setSheetOpen(o => !o)}
+                            className="sheet-handle"
+                            onClick={() => setSheetOpen(prev =>
+                                prev === 'peek' ? 'half' : prev === 'half' ? 'full' : 'half'
+                            )}
                             onTouchStart={handleTouchStart}
                             onTouchMove={handleTouchMove}
                             onTouchEnd={handleTouchEnd}
-                            style={{ flexShrink: 0, padding: '10px 16px 12px', cursor: 'grab', userSelect: 'none', touchAction: 'none' }}
                         >
-                            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 10 }}>
-                                <div style={{ width: 36, height: 4, borderRadius: 10, background: 'var(--border)' }} />
-                            </div>
+                            <div className="sheet-handle-bar" />
+                        </div>
+
+                        {/* Sheet header */}
+                        <div className="sheet-header">
                             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                                 <div style={{ flex: 1, minWidth: 0 }}>
-                                    <p style={{ fontSize: 14, fontWeight: 700 }}>
+                                    <p style={{ fontSize: 15, fontWeight: 700 }}>
                                         Charger Map
                                     </p>
-                                    <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 3 }}>
-                                        <span style={{ fontSize: 11, color: 'var(--text-2)' }}>{filtered.length} stations</span>
-                                        <span style={{ fontSize: 11, color: 'var(--text-3)' }}>·</span>
-                                        <span style={{ fontSize: 11, color: 'var(--text-2)' }}>{avgPower} avg kW</span>
+                                    <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 3 }}>
+                                        <span className="mono" style={{ fontSize: 12, color: 'var(--text-2)' }}>{filtered.length} stations</span>
+                                        <span style={{ fontSize: 12, color: 'var(--text-3)' }}>·</span>
+                                        <span className="mono" style={{ fontSize: 12, color: 'var(--text-2)' }}>{avgPower} avg kW</span>
                                     </div>
                                 </div>
                             </div>
                         </div>
 
                         {/* Content */}
-                        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', opacity: sheetOpen ? 1 : 0, transition: 'opacity 0.2s', visibility: sheetOpen ? 'visible' : 'hidden' }}>
+                        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', opacity: sheetOpen !== 'peek' ? 1 : 0, transition: 'opacity 0.2s', visibility: sheetOpen !== 'peek' ? 'visible' : 'hidden' }}>
                             {/* Inner Header - omitted for space since it's on drag handle */}
 
                             {/* Stats */}
