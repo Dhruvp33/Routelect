@@ -18,49 +18,49 @@ function useIsMobile() {
    LOGO MAP
 ═══════════════════════════════════════════════════════════ */
 const LOGO_MAP = {
-  'Tata Motors':   '/logos/tata motor.png',
-  'Mahindra':      '/logos/mahindra.png',
-  'MG Motor':      '/logos/mg.png',
-  'Hyundai':       '/logos/hyundai.png',
-  'Kia':           '/logos/kia.png',
-  'Volvo':         '/logos/volvo.png',
-  'Tesla':         '/logos/tesla.png',
-  'Ather Energy':  '/logos/ather.png',
+  'Tata Motors': '/logos/tata motor.png',
+  'Mahindra': '/logos/mahindra.png',
+  'MG Motor': '/logos/mg.png',
+  'Hyundai': '/logos/hyundai.png',
+  'Kia': '/logos/kia.png',
+  'Volvo': '/logos/volvo.png',
+  'Tesla': '/logos/tesla.png',
+  'Ather Energy': '/logos/ather.png',
   'Maruti Suzuki': '/logos/suzuki.png',
-  'Citroen':       '/logos/citroen.png',
-  'BYD':           '/logos/byd.png',
-  'Ola Electric':  '/logos/ola.png',
+  'Citroen': '/logos/citroen.png',
+  'BYD': '/logos/byd.png',
+  'Ola Electric': '/logos/ola.png',
 }
 
 /* Original neon accent colours — kept as-is for glows/borders */
 const BRAND_ACCENT = {
-  'Tata Motors':   '#4B6FBE',
-  'Mahindra':      '#A0926B',
-  'MG Motor':      '#C8102E',
-  'Hyundai':       '#0078D4',
-  'BYD':           '#1B4F72',
-  'Kia':           '#CE1126',
-  'Volvo':         '#003057',
-  'Tesla':         '#CC0000',
-  'Ola Electric':  '#F97316',
-  'Ather Energy':  '#00B0FF',
+  'Tata Motors': '#4B6FBE',
+  'Mahindra': '#A0926B',
+  'MG Motor': '#C8102E',
+  'Hyundai': '#0078D4',
+  'BYD': '#1B4F72',
+  'Kia': '#CE1126',
+  'Volvo': '#003057',
+  'Tesla': '#CC0000',
+  'Ola Electric': '#F97316',
+  'Ather Energy': '#00B0FF',
   'Maruti Suzuki': '#003399',
-  'Citroen':       '#C40404',
+  'Citroen': '#C40404',
 }
 
 const BRAND_CATEGORY = {
-  'Tata Motors':   'Cars',
-  'Mahindra':      'Cars',
-  'MG Motor':      'Cars',
-  'Hyundai':       'Cars',
-  'BYD':           'Cars',
-  'Kia':           'Cars',
-  'Volvo':         'Cars',
-  'Tesla':         'Cars',
+  'Tata Motors': 'Cars',
+  'Mahindra': 'Cars',
+  'MG Motor': 'Cars',
+  'Hyundai': 'Cars',
+  'BYD': 'Cars',
+  'Kia': 'Cars',
+  'Volvo': 'Cars',
+  'Tesla': 'Cars',
   'Maruti Suzuki': 'Cars',
-  'Citroen':       'Cars',
-  'Ola Electric':  'Two-wheelers',
-  'Ather Energy':  'Two-wheelers',
+  'Citroen': 'Cars',
+  'Ola Electric': 'Two-wheelers',
+  'Ather Energy': 'Two-wheelers',
 }
 
 const CATEGORIES = ['All', 'Cars', 'Two-wheelers']
@@ -68,7 +68,7 @@ const CATEGORIES = ['All', 'Cars', 'Two-wheelers']
 /* ── Fallback initials badge ── */
 function InitialsBadge({ name }) {
   const initials = name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()
-  const accent   = BRAND_ACCENT[name] || '#00D4AA'
+  const accent = BRAND_ACCENT[name] || '#00D4AA'
   return (
     <div style={{
       width: 72, height: 72, borderRadius: 18,
@@ -142,7 +142,7 @@ function SkeletonCard() {
 function BrandCard({ brand, onClick, index, isMobile }) {
   const [hovered, setHovered] = useState(false)
   const accent = BRAND_ACCENT[brand.name] || '#00D4AA'
-  const cat    = BRAND_CATEGORY[brand.name]
+  const cat = BRAND_CATEGORY[brand.name]
 
   return (
     <button
@@ -269,10 +269,10 @@ function FilterPill({ label, active, onClick, icon }) {
    PAGE
 ══════════════════════════════════════════════════════════ */
 export default function BrandSelection() {
-  const [brands,   setBrands]   = useState([])
-  const [loading,  setLoading]  = useState(true)
-  const [error,    setError]    = useState(null)
-  const [search,   setSearch]   = useState('')
+  const [brands, setBrands] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
+  const [search, setSearch] = useState('')
   const [category, setCategory] = useState('All')
   const navigate = useNavigate()
   const isMobile = useIsMobile()
@@ -281,7 +281,7 @@ export default function BrandSelection() {
     setLoading(true); setError(null)
     fetch(`${API_URL}/api/brands`)
       .then(r => { if (!r.ok) throw new Error(); return r.json() })
-      .then(d  => { setBrands(d); setLoading(false) })
+      .then(d => { setBrands(d); setLoading(false) })
       .catch(() => { setError('Could not load brands — is the backend running?'); setLoading(false) })
   }
 
@@ -289,13 +289,13 @@ export default function BrandSelection() {
 
   const filtered = brands.filter(b => {
     const matchSearch = b.name.toLowerCase().includes(search.toLowerCase())
-    const matchCat    = category === 'All' || BRAND_CATEGORY[b.name] === category
+    const matchCat = category === 'All' || BRAND_CATEGORY[b.name] === category
     return matchSearch && matchCat
   })
 
   const counts = {
-    'All':          brands.length,
-    'Cars':         brands.filter(b => BRAND_CATEGORY[b.name] === 'Cars').length,
+    'All': brands.length,
+    'Cars': brands.filter(b => BRAND_CATEGORY[b.name] === 'Cars').length,
     'Two-wheelers': brands.filter(b => BRAND_CATEGORY[b.name] === 'Two-wheelers').length,
   }
 
@@ -412,14 +412,14 @@ export default function BrandSelection() {
             {loading
               ? Array(12).fill(0).map((_, i) => <SkeletonCard key={i} />)
               : filtered.map((brand, i) => (
-                  <BrandCard
-                    key={brand.id}
-                    brand={brand}
-                    index={i}
-                    isMobile={isMobile}
-                    onClick={() => navigate(`/select-model/${brand.id}`)}
-                  />
-                ))
+                <BrandCard
+                  key={brand.id}
+                  brand={brand}
+                  index={i}
+                  isMobile={isMobile}
+                  onClick={() => navigate(`/select-model/${brand.id}`)}
+                />
+              ))
             }
           </div>
         )}

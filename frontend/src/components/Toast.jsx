@@ -3,9 +3,9 @@ import { CheckCircle, XCircle, AlertCircle, Info, X } from 'lucide-react'
 
 const ICONS = {
   success: <CheckCircle className="w-4 h-4 flex-shrink-0" style={{ color: '#00D4AA' }} />,
-  error:   <XCircle    className="w-4 h-4 flex-shrink-0" style={{ color: '#FF4D6D' }} />,
+  error: <XCircle className="w-4 h-4 flex-shrink-0" style={{ color: '#FF4D6D' }} />,
   warning: <AlertCircle className="w-4 h-4 flex-shrink-0" style={{ color: '#FFB547' }} />,
-  info:    <Info        className="w-4 h-4 flex-shrink-0" style={{ color: '#60A5FA' }} />,
+  info: <Info className="w-4 h-4 flex-shrink-0" style={{ color: '#60A5FA' }} />,
 }
 
 const DURATION = 4500

@@ -1235,8 +1235,8 @@ export default function RoutePlanner() {
             className="mobile-sheet"
             style={{
               height: sheetOpen === 'full' ? '90dvh'
-                   : sheetOpen === 'half' ? '55dvh'
-                   : route ? '96px' : '88px',
+                : sheetOpen === 'half' ? '55dvh'
+                  : route ? '96px' : '88px',
             }}
           >
             {/* Drag handle */}

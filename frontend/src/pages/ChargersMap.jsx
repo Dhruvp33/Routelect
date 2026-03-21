@@ -312,8 +312,8 @@ export default function ChargersMap() {
                         className="mobile-sheet"
                         style={{
                             height: sheetOpen === 'full' ? '85dvh'
-                                 : sheetOpen === 'half' ? '55dvh'
-                                 : '88px',
+                                : sheetOpen === 'half' ? '55dvh'
+                                    : '88px',
                         }}
                     >
                         {/* Drag handle */}
