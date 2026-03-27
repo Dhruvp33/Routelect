@@ -49,6 +49,7 @@ class RouteRequest(BaseModel):
 
 
 @app.get("/")
+@app.get("/api/health")
 def health():
     return {"status": "healthy", "version": "3.0.0"}
 
