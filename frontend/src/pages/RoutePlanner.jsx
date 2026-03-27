@@ -52,6 +52,7 @@ const mkChargerPin = (clickable = false) => L.divIcon({
 
 const startIcon = mkPin('#00D4AA', 44)
 const endIcon = mkPin('#FF4D6D', 44)
+const waypointIcon = mkPin('#FFB547', 38)
 const chargerIcon = mkChargerPin(true)
 
 /* ═══════════════════════════════════════════════════════
@@ -748,7 +749,7 @@ export default function RoutePlanner() {
   const handleCalculate = async () => {
     if (!startCoords || !endCoords) { addToast('warning', 'Pick both locations from the dropdown'); return }
     if (isMobile) setSheetOpen(false)
-    setLoading(true); setRoute(null); setPartialWarning(null)
+    setLoading(true); setPartialWarning(null)
     try {
       const res = await fetch(`${API_URL}/api/route/calculate`, {
         method: 'POST',
@@ -771,6 +772,8 @@ export default function RoutePlanner() {
       const data = await res.json()
       setRoutingErr(null)
       setRoute(data); setRouteKey(k => k + 1)
+      setLoading(false) // Give immediate UI feedback that calculation is done
+
       if (data.partial_route && data.coverage_warning) {
         setPartialWarning({ message: data.coverage_warning, uncoveredKm: data.uncovered_km })
         addToast('warning', `Partial route — last ~${data.uncovered_km} km has no charger coverage`)
@@ -778,11 +781,22 @@ export default function RoutePlanner() {
         setPartialWarning(null)
         addToast('success', `Route found — ${data.total_distance_km} km · ${data.estimated_total_time_minutes} min`)
       }
-      addToHistory({ car: selectedCar, route: data, date: new Date().toISOString(), startLoc, endLoc, startCoords, endCoords })
-      if (user) await saveTrip(user.id, { startCoords, endCoords, route: data })
+
+      // Non-blocking background tasks
+      try {
+        addToHistory({ car: selectedCar, route: data, date: new Date().toISOString(), startLoc, endLoc, startCoords, endCoords })
+        if (user) saveTrip(user.id, { startCoords, endCoords, route: data }).catch(() => { })
+      } catch (e) {
+        console.error('Background task failed', e)
+      }
+
       if (isMobile && data) setSheetOpen(true)
-    } catch { addToast('error', 'Route calculation failed — check backend') }
-    setLoading(false)
+    } catch (err) {
+      console.error(err)
+      addToast('error', 'Route calculation failed — check backend')
+    } finally {
+      setLoading(false)
+    }
   }
 
   if (!selectedCar) return null
@@ -1169,6 +1183,17 @@ export default function RoutePlanner() {
               </Marker>
             )}
 
+            {waypoints.map((wp, i) =>
+              wp.coords ? (
+                <Marker key={`wp-${i}`} position={wp.coords} icon={waypointIcon}>
+                  <Popup>
+                    <div style={{ fontWeight: 700, fontSize: 13 }}>🛑 {wp.label || `Stop ${i + 1}`}</div>
+                    <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.45)', marginTop: 3 }}>User added stop</div>
+                  </Popup>
+                </Marker>
+              ) : null
+            )}
+
             {route?.charging_stops?.map((stop, i) =>
               stop.lat && stop.lng ? (
                 <Marker key={i} position={[stop.lat, stop.lng]} icon={chargerIcon}
@@ -1326,7 +1351,7 @@ export default function RoutePlanner() {
         <ChargerDetailModal
           stop={selectedStop.stop}
           stopIndex={selectedStop.index}
-          batteryAtArrival={selectedStop.index === 0 ? currentBatteryPercent * 0.12 : 10}
+          batteryAtArrival={selectedStop.stop.battery_at_arrival_pct ?? 10}
           onClose={() => setSelectedStop(null)}
         />
       )}

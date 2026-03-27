@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
-import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet'
-import { Zap, Search, MapPin, ExternalLink, Loader2, Filter, X, ChevronUp } from 'lucide-react'
+import { MapContainer, TileLayer, Marker, Popup, useMapEvents } from 'react-leaflet'
+import { Zap, Search, MapPin, ExternalLink, Loader2, Filter, X, ChevronUp, AlertCircle } from 'lucide-react'
 import { useStore } from '../store/useStore'
 import Navbar from '../components/Navbar'
 import L from 'leaflet'
@@ -20,6 +20,25 @@ const chargerIcon = L.divIcon({
     popupAnchor: [0, -20],
 })
 
+function MapEventHandler({ setMapState }) {
+    useMapEvents({
+        moveend: (e) => {
+            const map = e.target;
+            const center = map.getCenter();
+            const bounds = map.getBounds();
+            const ne = bounds.getNorthEast();
+            const radiusKm = map.distance(center, ne) / 1000;
+
+            setMapState({
+                lat: center.lat,
+                lng: center.lng,
+                radius: radiusKm
+            });
+        }
+    });
+    return null;
+}
+
 export default function ChargersMap() {
     const [chargers, setChargers] = useState([])
     const [loading, setLoading] = useState(true)
@@ -28,6 +47,10 @@ export default function ChargersMap() {
     const { addToast, theme } = useStore()
 
     const isDark = theme === 'dark'
+
+    // Map Dynamic Fetching
+    const [mapState, setMapState] = useState({ lat: 21.14, lng: 79.08, radius: 1500 }) // Default center India
+    const [zoomWarn, setZoomWarn] = useState(false)
 
     // Mobile Bottom Sheet
     const [isMobile, setIsMobile] = useState(window.innerWidth <= 768)
@@ -59,11 +82,14 @@ export default function ChargersMap() {
 
     useEffect(() => {
         async function fetchChargers() {
+            setLoading(true)
             try {
-                const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000'}/api/chargers/all?lat=22.97&lng=78.66&radius_km=3000&limit=500`)
+                // Fetch dynamically based on map viewport, hard cap at 500 to prevent API/DOM lag
+                const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000'}/api/chargers/all?lat=${mapState.lat}&lng=${mapState.lng}&radius_km=${Math.round(mapState.radius)}&limit=500`)
                 if (!res.ok) throw new Error('API Response was not ok')
                 const data = await res.json()
                 setChargers(data.stations || [])
+                setZoomWarn(mapState.radius > 500 && data.stations?.length === 500)
             } catch (err) {
                 addToast('error', 'Failed to load chargers — check backend')
                 console.error(err)
@@ -71,8 +97,14 @@ export default function ChargersMap() {
                 setLoading(false)
             }
         }
-        fetchChargers()
-    }, [addToast])
+
+        // Debounce fetches to prevent API spam while panning
+        const timeoutId = setTimeout(() => {
+            fetchChargers()
+        }, 500)
+
+        return () => clearTimeout(timeoutId)
+    }, [mapState.lat, mapState.lng, mapState.radius, addToast])
 
     // Filtered chargers
     const operators = [...new Set(chargers.map(c => c.operator).filter(Boolean))].sort()
@@ -258,11 +290,20 @@ export default function ChargersMap() {
                         <div style={{ position: 'absolute', inset: 0, zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(6,10,18,0.7)', backdropFilter: 'blur(4px)' }}>
                             <div style={{ padding: '16px 24px', background: 'var(--surface-2)', borderRadius: 16, border: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: 12 }}>
                                 <Loader2 style={{ width: 16, height: 16, color: 'var(--accent)', animation: 'spin 0.7s linear infinite' }} />
-                                <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-1)' }}>Fetching nationwide chargers…</span>
+                                <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-1)' }}>Fetching area chargers…</span>
                             </div>
                         </div>
                     )}
-                    <MapContainer center={[22.97, 78.66]} zoom={5} zoomControl style={{ width: '100%', height: '100%' }}>
+
+                    {zoomWarn && !loading && (
+                        <div style={{ position: 'absolute', top: 24, left: '50%', transform: 'translateX(-50%)', zIndex: 1000, background: 'var(--surface-2)', padding: '10px 18px', borderRadius: 24, border: '1px solid var(--accent)', display: 'flex', alignItems: 'center', gap: 8, boxShadow: '0 8px 32px rgba(0,0,0,0.4)' }}>
+                            <AlertCircle style={{ width: 14, height: 14, color: '#FFB547' }} />
+                            <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-1)' }}>Zoom in to reveal more stations in specific areas</span>
+                        </div>
+                    )}
+
+                    <MapContainer center={[21.14, 79.08]} zoom={5} zoomControl style={{ width: '100%', height: '100%' }}>
+                        <MapEventHandler setMapState={setMapState} />
                         <TileLayer
                             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                             url='https://tile.openstreetmap.org/{z}/{x}/{y}.png'
