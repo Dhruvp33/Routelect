@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
+import { createPortal } from 'react-dom'
 import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from 'react-leaflet'
 import {
   Navigation, Battery, MapPin, Zap, Clock, ChevronLeft,
@@ -44,7 +45,7 @@ const mkPin = (color, size = 40) => L.divIcon({
 
 const mkChargerPin = (clickable = false) => L.divIcon({
   className: '',
-  html: `<div style="width:36px;height:36px;background:rgba(7,11,20,0.95);border:1.5px solid #FFB547;border-radius:10px;display:flex;align-items:center;justify-content:center;box-shadow:0 0 14px rgba(255,181,71,0.55);cursor:${clickable ? 'pointer' : 'default'}">
+  html: `<div class="${clickable ? 'marker-breathe' : ''}" style="width:36px;height:36px;background:rgba(7,11,20,0.95);border:1.5px solid #FFB547;border-radius:10px;display:flex;align-items:center;justify-content:center;box-shadow:0 0 14px rgba(255,181,71,0.55);cursor:${clickable ? 'pointer' : 'default'}">
     <svg viewBox="0 0 24 24" fill="#FFB547" width="18" height="18"><path d="M7 2v11h3v9l7-12h-4l4-8z"/></svg>
   </div>`,
   iconSize: [36, 36], iconAnchor: [18, 18], popupAnchor: [0, -24],
@@ -145,19 +146,39 @@ function LocationInput({ value, onChange, onSelect, placeholder, accent = '#00D4
   const [open, setOpen] = useState(false)
   const [cursor, setCursor] = useState(-1)
   const [touched, setTouched] = useState(false)
+  const [coords, setCoords] = useState(null)
   const wrapRef = useRef(null)
   const inputRef = useRef(null)
   const listRef = useRef(null)
 
   const { suggestions, loading, clear } = usePhotonAutocomplete(value, touched && open)
+  const showDrop = open && touched && (loading || suggestions.length > 0 || value.length >= 3)
 
+  // Position portal dropdown cleanly
   useEffect(() => {
-    const h = e => {
-      if (wrapRef.current && !wrapRef.current.contains(e.target)) { setOpen(false); setCursor(-1) }
+    if (showDrop && wrapRef.current) {
+      const rect = wrapRef.current.getBoundingClientRect()
+      setCoords({ top: rect.bottom + 6, left: rect.left, width: rect.width })
     }
+  }, [showDrop, suggestions, loading, value, open])
+
+  // Close drop on scroll
+  useEffect(() => {
+    if (!open) return
+    const h = (e) => {
+      if (listRef.current && listRef.current.contains(e.target)) return
+      if (wrapRef.current && wrapRef.current.contains(e.target)) return
+      setOpen(false)
+    }
+    window.addEventListener('scroll', h, true)
+    window.addEventListener('resize', h)
     document.addEventListener('mousedown', h)
-    return () => document.removeEventListener('mousedown', h)
-  }, [])
+    return () => {
+      window.removeEventListener('scroll', h, true)
+      window.removeEventListener('resize', h)
+      document.removeEventListener('mousedown', h)
+    }
+  }, [open])
 
   useEffect(() => {
     if (cursor >= 0 && listRef.current) {
@@ -178,22 +199,18 @@ function LocationInput({ value, onChange, onSelect, placeholder, accent = '#00D4
     else if (e.key === 'Escape') { setOpen(false); setCursor(-1) }
   }
 
-  const showDrop = open && touched && (loading || suggestions.length > 0 || value.length >= 3)
-
   return (
     <div ref={wrapRef} style={{ position: 'relative', width: '100%' }}>
       <div style={{ position: 'relative' }}>
         <div style={{ position: 'absolute', left: 13, top: '50%', transform: 'translateY(-50%)', zIndex: 2 }}>
-          <div style={{ width: 18, height: 18, borderRadius: '50%', border: `2px solid ${accent}`, background: `${accent}18`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <div style={{ width: 6, height: 6, borderRadius: '50%', background: accent }} />
-          </div>
+          <div style={{ width: 14, height: 14, borderRadius: '50%', border: `4px solid ${accent}`, background: 'var(--surface)', display: 'flex', alignItems: 'center', justifyContent: 'center' }} />
         </div>
         <input
           ref={inputRef}
           type="text"
           placeholder={placeholder}
           className="input-field"
-          style={{ paddingLeft: 40, paddingRight: 34, borderRadius: 10, borderColor: open && suggestions.length ? accent : undefined, boxShadow: open && suggestions.length ? `0 0 0 3px ${accent}18` : undefined }}
+          style={{ paddingLeft: 38, paddingRight: 34, borderRadius: 12, borderColor: open && suggestions.length ? accent : 'var(--border)', boxShadow: open && suggestions.length ? `0 0 0 3px ${accent}18` : undefined, background: 'var(--surface)', borderBottomWidth: 1 }}
           value={value}
           onChange={e => { onChange(e.target.value); setTouched(true); setOpen(true); setCursor(-1) }}
           onFocus={() => { if (value.length >= 3) setOpen(true) }}
@@ -217,9 +234,9 @@ function LocationInput({ value, onChange, onSelect, placeholder, accent = '#00D4
         </div>
       </div>
 
-      {showDrop && (
+      {showDrop && coords && createPortal(
         <div ref={listRef} role="listbox" className="no-scrollbar animate-fade-up"
-          style={{ position: 'absolute', top: 'calc(100% + 6px)', left: 0, right: 0, zIndex: 9999, background: 'var(--surface)', border: `1px solid ${accent}40`, borderRadius: 12, overflow: 'hidden', boxShadow: '0 20px 50px rgba(0,0,0,0.7), 0 4px 14px rgba(0,0,0,0.4)', maxHeight: 300, overflowY: 'auto' }}>
+          style={{ position: 'fixed', top: coords.top, left: coords.left, width: coords.width, zIndex: 999999, background: 'rgba(7,11,20,0.85)', backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)', border: `1px solid ${accent}40`, borderRadius: 16, overflow: 'hidden', boxShadow: '0 20px 50px rgba(0,0,0,0.8), 0 4px 14px rgba(0,0,0,0.5)', maxHeight: 300, overflowY: 'auto' }}>
           {loading && !suggestions.length && (
             <div style={{ padding: '8px 10px 6px', display: 'flex', flexDirection: 'column', gap: 5 }}>
               {[0, 1, 2].map(i => <div key={i} className="skeleton" style={{ height: 38, borderRadius: 8 }} />)}
@@ -229,38 +246,39 @@ function LocationInput({ value, onChange, onSelect, placeholder, accent = '#00D4
           {suggestions.map((item, idx) => (
             <button key={item.id} role="option" data-idx={idx} aria-selected={cursor === idx}
               onMouseDown={e => e.preventDefault()} onClick={() => pick(item)} onMouseEnter={() => setCursor(idx)}
-              style={{ width: '100%', background: cursor === idx ? `${accent}10` : 'transparent', border: 'none', borderBottom: idx < suggestions.length - 1 ? '1px solid var(--border)' : 'none', padding: '9px 13px', textAlign: 'left', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 10, transition: 'background 0.1s' }}>
-              <div style={{ width: 28, height: 28, borderRadius: 7, flexShrink: 0, background: cursor === idx ? `${accent}18` : 'var(--surface-2)', border: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              style={{ width: '100%', background: cursor === idx ? `${accent}10` : 'transparent', border: 'none', borderBottom: idx < suggestions.length - 1 ? '1px solid var(--border)' : 'none', padding: '10px 14px', textAlign: 'left', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 12, transition: 'background 0.1s' }}>
+              <div style={{ width: 30, height: 30, borderRadius: 8, flexShrink: 0, background: cursor === idx ? `${accent}18` : 'rgba(255,255,255,0.03)', border: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <MapPin style={{ width: 12, height: 12, color: cursor === idx ? accent : 'var(--text-3)' }} />
               </div>
               <div style={{ minWidth: 0, flex: 1 }}>
-                <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-1)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-1)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                   <Highlight text={item.label} q={value} />
                 </div>
-                {item.sub && <div style={{ fontSize: 11, color: 'var(--text-3)', marginTop: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.sub}</div>}
+                {item.sub && <div style={{ fontSize: 11, color: 'var(--text-3)', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.sub}</div>}
               </div>
               {cursor === idx && <span style={{ fontSize: 10, color: accent, opacity: 0.7, fontFamily: 'IBM Plex Mono, monospace', flexShrink: 0 }}>↵</span>}
             </button>
           ))}
           {!loading && !suggestions.length && value.length >= 3 && (
-            <div style={{ padding: '16px', textAlign: 'center', fontSize: 13, color: 'var(--text-2)' }}>
+            <div style={{ padding: '20px 16px', textAlign: 'center', fontSize: 13, color: 'var(--text-2)' }}>
               No results for "<strong style={{ color: 'var(--text-1)' }}>{value}</strong>"
               <div style={{ fontSize: 11, color: 'var(--text-3)', marginTop: 5 }}>Try adding area, city, or pincode</div>
             </div>
           )}
           {(loading || suggestions.length > 0) && (
-            <div style={{ padding: '6px 13px', borderTop: '1px solid var(--border)', fontSize: 10, color: 'var(--text-3)', display: 'flex', alignItems: 'center', gap: 5, background: 'var(--surface-2)' }}>
-              <MapPin style={{ width: 9, height: 9 }} />Powered by Photon / OpenStreetMap · Free &amp; open
+            <div style={{ padding: '8px 14px', borderTop: '1px solid var(--border)', fontSize: 9, textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 600, color: 'var(--text-3)', display: 'flex', alignItems: 'center', gap: 5, background: 'rgba(255,255,255,0.02)' }}>
+              <MapPin style={{ width: 9, height: 9 }} />Powered by Photon
             </div>
           )}
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   )
 }
 
 /* ═══════════════════════════════════════════════════════
-   CHARGER DETAIL MODAL
+   CHARGER DETAIL (Slide-in Panel)
    ═══════════════════════════════════════════════════════ */
 function ChargerDetailModal({ stop, stopIndex, batteryAtArrival = 10, onClose }) {
   if (!stop) return null
@@ -271,71 +289,79 @@ function ChargerDetailModal({ stop, stopIndex, batteryAtArrival = 10, onClose })
   const statusColor = stop.status === 'Operational' ? '#00D4AA' : stop.status === 'Unknown' ? '#FFB547' : '#FF4D6D'
 
   return (
-    <div className="modal-overlay" onClick={e => e.target === e.currentTarget && onClose()}>
-      <div className="modal-panel" style={{ maxWidth: 440 }}>
-        <div style={{ display: 'flex', justifyContent: 'center', padding: '12px 0 0' }}>
+    <div className="modal-overlay" onClick={e => e.target === e.currentTarget && onClose()} style={{ background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(4px)', animation: 'fade-in-anim 0.3s forwards' }}>
+      <div className="surface-2 slide-panel-in" style={{ 
+        position: 'absolute', right: window.innerWidth > 768 ? 20 : 0, 
+        bottom: window.innerWidth > 768 ? 20 : 0, 
+        top: window.innerWidth > 768 ? 80 : 'auto', 
+        width: '100%', maxWidth: window.innerWidth > 768 ? 380 : '100%',
+        margin: 0, borderRadius: window.innerWidth > 768 ? 24 : '24px 24px 0 0',
+        maxHeight: window.innerWidth > 768 ? 'calc(100vh - 100px)' : '85dvh',
+        boxShadow: '-10px 0 30px rgba(0,0,0,0.5)',
+        display: 'flex', flexDirection: 'column'
+      }}>
+        <div style={{ display: 'flex', justifyContent: 'center', padding: '12px 0 0', display: window.innerWidth > 768 ? 'none' : 'flex' }}>
           <div style={{ width: 36, height: 4, borderRadius: 10, background: 'var(--border)' }} />
         </div>
-        <div style={{ padding: '16px 20px 0', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
+        <div style={{ padding: '20px 24px 0', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
               <div style={{ width: 32, height: 32, borderRadius: 9, background: 'rgba(255,181,71,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                 <Zap className="w-4 h-4" style={{ color: '#FFB547' }} />
               </div>
               <span className="badge badge-yellow" style={{ fontSize: 11 }}>Stop #{stopIndex + 1}</span>
-              {stop.status && <span style={{ fontSize: 11, fontWeight: 600, color: statusColor }}>● {stop.status}</span>}
             </div>
-            <h2 style={{ fontSize: 17, fontWeight: 800, lineHeight: 1.3, letterSpacing: '-0.02em' }}>{stop.station_name}</h2>
-            {stop.operator && <p style={{ fontSize: 12, color: 'var(--accent)', marginTop: 3, fontWeight: 600 }}>{stop.operator}</p>}
+            <h2 style={{ fontSize: 19, fontWeight: 800, lineHeight: 1.3, letterSpacing: '-0.02em', color: 'var(--text-1)' }}>{stop.station_name}</h2>
+            {stop.operator && <p style={{ fontSize: 13, color: 'var(--accent)', marginTop: 3, fontWeight: 600 }}>{stop.operator}</p>}
           </div>
           <button className="btn-ghost" onClick={onClose} style={{ flexShrink: 0, marginTop: -4 }}>
-            <X className="w-4 h-4" />
+            <X className="w-5 h-5" />
           </button>
         </div>
 
-        <div className="no-scrollbar" style={{ overflowY: 'auto', padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: 12 }}>
-          <div style={{ background: 'rgba(255,181,71,0.06)', border: '1px solid rgba(255,181,71,0.2)', borderRadius: 12, padding: '14px 16px' }}>
-            <p style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: '#FFB547', marginBottom: 10, fontFamily: 'IBM Plex Mono, monospace' }}>Charging Plan</p>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
+        <div className="no-scrollbar" style={{ overflowY: 'auto', padding: '20px 24px', display: 'flex', flexDirection: 'column', gap: 16 }}>
+          <div style={{ background: 'rgba(255,181,71,0.06)', border: '1px solid rgba(255,181,71,0.2)', borderRadius: 16, padding: '16px 20px' }}>
+            <p style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: '#FFB547', marginBottom: 12, fontFamily: 'IBM Plex Mono, monospace' }}>Charging Plan</p>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
               <div style={{ flex: 1 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: 'var(--text-2)', marginBottom: 5 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: 'var(--text-2)', marginBottom: 6 }}>
                   <span>Arrive at</span><span>Depart at</span>
                 </div>
-                <div style={{ position: 'relative', height: 8, background: 'var(--surface-3)', borderRadius: 10, overflow: 'visible' }}>
+                <div style={{ position: 'relative', height: 10, background: 'var(--surface-3)', borderRadius: 10, overflow: 'visible' }}>
                   <div style={{ position: 'absolute', left: `${chargeFrom}%`, width: `${chargePct}%`, height: '100%', background: 'linear-gradient(to right, #FFB547, #00D4AA)', borderRadius: 10 }} />
-                  <div style={{ position: 'absolute', left: `${chargeFrom}%`, top: '50%', transform: 'translate(-50%,-50%)', width: 14, height: 14, borderRadius: '50%', background: '#FF4D6D', border: '2px solid var(--surface)', zIndex: 1 }} />
-                  <div style={{ position: 'absolute', left: `${chargeTo}%`, top: '50%', transform: 'translate(-50%,-50%)', width: 14, height: 14, borderRadius: '50%', background: '#00D4AA', border: '2px solid var(--surface)', zIndex: 1 }} />
+                  <div style={{ position: 'absolute', left: `${chargeFrom}%`, top: '50%', transform: 'translate(-50%,-50%)', width: 16, height: 16, borderRadius: '50%', background: '#FF4D6D', border: '2px solid var(--surface)', zIndex: 1 }} />
+                  <div style={{ position: 'absolute', left: `${chargeTo}%`, top: '50%', transform: 'translate(-50%,-50%)', width: 16, height: 16, borderRadius: '50%', background: '#00D4AA', border: '2px solid var(--surface)', zIndex: 1 }} />
                 </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, fontWeight: 700, marginTop: 5 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 15, fontWeight: 700, marginTop: 6 }}>
                   <span className="mono" style={{ color: '#FF4D6D' }}>{chargeFrom}%</span>
                   <span className="mono" style={{ color: '#00D4AA' }}>{chargeTo}%</span>
                 </div>
               </div>
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-              <div style={{ background: 'var(--surface-2)', border: '1px solid var(--border)', borderRadius: 9, padding: '10px 12px', textAlign: 'center' }}>
-                <div style={{ fontSize: 11, color: 'var(--text-2)', marginBottom: 3 }}>Charging time</div>
-                <div className="mono" style={{ fontSize: 18, fontWeight: 700, color: 'var(--text-1)' }}>{stop.charging_time_minutes}<span style={{ fontSize: 12, fontWeight: 400, marginLeft: 2 }}>min</span></div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+              <div style={{ background: 'var(--surface-2)', border: '1px solid var(--border)', borderRadius: 12, padding: '12px', textAlign: 'center' }}>
+                <div style={{ fontSize: 12, color: 'var(--text-2)', marginBottom: 3 }}>Charging time</div>
+                <div className="mono" style={{ fontSize: 20, fontWeight: 700, color: 'var(--text-1)' }}>{stop.charging_time_minutes}<span style={{ fontSize: 13, fontWeight: 400, marginLeft: 2 }}>min</span></div>
               </div>
-              <div style={{ background: 'var(--surface-2)', border: '1px solid var(--border)', borderRadius: 9, padding: '10px 12px', textAlign: 'center' }}>
-                <div style={{ fontSize: 11, color: 'var(--text-2)', marginBottom: 3 }}>Energy added</div>
-                <div className="mono" style={{ fontSize: 18, fontWeight: 700, color: 'var(--text-1)' }}>{stop.charge_added_kwh || '—'}<span style={{ fontSize: 12, fontWeight: 400, marginLeft: 2 }}>kWh</span></div>
+              <div style={{ background: 'var(--surface-2)', border: '1px solid var(--border)', borderRadius: 12, padding: '12px', textAlign: 'center' }}>
+                <div style={{ fontSize: 12, color: 'var(--text-2)', marginBottom: 3 }}>Energy added</div>
+                <div className="mono" style={{ fontSize: 20, fontWeight: 700, color: 'var(--text-1)' }}>{stop.charge_added_kwh || '—'}<span style={{ fontSize: 13, fontWeight: 400, marginLeft: 2 }}>kWh</span></div>
               </div>
             </div>
           </div>
 
-          <div style={{ background: 'var(--surface-2)', border: '1px solid var(--border)', borderRadius: 12, padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+          <div style={{ background: 'var(--surface-2)', border: '1px solid var(--border)', borderRadius: 16, padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: 12 }}>
             <p style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--text-2)', fontFamily: 'IBM Plex Mono, monospace' }}>Station Details</p>
             {[
+              { label: 'Status', value: stop.status || 'Unknown', color: statusColor, show: true },
               { label: 'Power output', value: `${stop.charger_power_kw || 50} kW`, show: true },
               { label: 'Connector type', value: stop.connector_type || 'CCS Type 2', show: true },
-              { label: 'No. of points', value: stop.num_points ? `${stop.num_points} plugs` : 'N/A', show: true },
-              { label: 'Network', value: stop.operator || 'Independent', show: !!stop.operator },
+              { label: 'No. of plugs', value: stop.num_points ? `${stop.num_points}` : 'N/A', show: true },
               { label: 'Cost per unit', value: stop.usage_cost || 'Contact operator', show: true },
             ].filter(r => r.show).map((row, i) => (
-              <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 13 }}>
+              <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 14 }}>
                 <span style={{ color: 'var(--text-2)' }}>{row.label}</span>
-                <span className="mono" style={{ fontWeight: 600, color: 'var(--text-1)' }}>{row.value}</span>
+                <span className="mono" style={{ fontWeight: 600, color: row.color || 'var(--text-1)' }}>{row.value}</span>
               </div>
             ))}
           </div>
@@ -398,76 +424,107 @@ function BatteryGauge({ percent, maxRangeKm }) {
 }
 
 /* ═══════════════════════════════════════════════════════
-   TRIP SUMMARY MODAL
+   TRIP SUMMARY & TIMELINE MODAL (Premium Glassmorphic)
    ═══════════════════════════════════════════════════════ */
-function TripSummaryModal({ route, car, onClose }) {
+function TripSummaryModal({ route, car, startLoc, endLoc, startBattery, onClose }) {
   if (!route || !car) return null
   const kwh100 = (car.battery_capacity_kwh / car.range_km) * 100
   const energy = route.energy_kwh_used ?? +((route.total_distance_km / 100 * kwh100).toFixed(1))
   const cost = route.estimated_charge_cost_inr ?? Math.round(energy * 8.5)
   const petrol = Math.round(route.total_distance_km * 7)
   const savings = Math.max(0, petrol - cost)
-  const hrs = Math.floor(route.estimated_total_time_minutes / 60)
-  const mins = route.estimated_total_time_minutes % 60
   const co2 = (route.total_distance_km * 0.12).toFixed(1)
 
+  const stops = route.charging_stops || []
+  const timelineNodes = []
+  timelineNodes.push({ type: 'start', label: startLoc || 'Starting Point', bat: startBattery || 100 })
+
+  let lastDist = 0
+  stops.forEach((stop, i) => {
+    const driven = Math.round((stop.route_dist || 0) - lastDist)
+    if (driven > 0) timelineNodes.push({ type: 'drive', dist: driven })
+    timelineNodes.push({
+      type: 'charge', name: stop.station_name || stop.name, 
+      arriveBat: stop.battery_at_arrival_pct, 
+      departBat: stop.battery_at_departure_pct,
+      time: stop.charging_time_minutes, kwh: stop.charge_added_kwh
+    })
+    lastDist = stop.route_dist || 0
+  })
+
+  const finalDist = Math.round(route.total_distance_km - lastDist)
+  if (finalDist > 0) timelineNodes.push({ type: 'drive', dist: finalDist })
+  timelineNodes.push({ type: 'end', label: endLoc || 'Destination', bat: route.battery_at_arrival_pct })
+
   return (
-    <div className="modal-overlay" onClick={e => e.target === e.currentTarget && onClose()}>
-      <div className="modal-panel" style={{ maxWidth: 460 }}>
-        <div style={{ display: 'flex', justifyContent: 'center', padding: '12px 0 0' }}>
-          <div style={{ width: 36, height: 4, borderRadius: 10, background: 'var(--border)' }} />
-        </div>
-        <div style={{ padding: '16px 22px 0', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+    <div className="modal-overlay" onClick={e => e.target === e.currentTarget && onClose()} style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', zIndex: 99999 }}>
+      <div className="scale-up-modal" style={{ width: '100%', maxWidth: 520, margin: '20px auto', background: 'rgba(13,17,23,0.85)', border: '1px solid rgba(0,212,170,0.3)', borderRadius: 24, boxShadow: '0 0 50px rgba(0,0,0,0.8), inset 0 0 20px rgba(0,212,170,0.05)', overflow: 'hidden', display: 'flex', flexDirection: 'column', maxHeight: '90vh' }}>
+        
+        <div style={{ padding: '24px 28px', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', background: 'linear-gradient(135deg, rgba(0,212,170,0.1), transparent)' }}>
           <div>
-            <h2 style={{ fontSize: 18, fontWeight: 800 }}>Trip Summary</h2>
-            <p style={{ fontSize: 12, color: 'var(--text-2)', marginTop: 2 }}>{car.brand} · {car.name || car.model}</p>
+            <h2 style={{ fontSize: 24, fontWeight: 800, color: '#fff', letterSpacing: '-0.03em' }}>Trip Summary</h2>
+            <p style={{ fontSize: 13, color: 'var(--accent)', marginTop: 4, fontWeight: 600 }}>{car.brand} {car.name || car.model}</p>
           </div>
-          <button className="btn-ghost" onClick={onClose}><X className="w-4 h-4" /></button>
+          <button className="btn-ghost" onClick={onClose}><X className="w-5 h-5" /></button>
         </div>
 
-        <div className="no-scrollbar" style={{ overflowY: 'auto', padding: '16px 22px', flex: 1 }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, marginBottom: 14 }}>
-            {[
-              { e: '📍', l: 'Distance', v: `${route.total_distance_km} km` },
-              { e: '⏱️', l: 'Total Time', v: `${hrs}h ${mins}m` },
-              { e: '⚡', l: 'Stops', v: `${route.charging_stops?.length || 0}` },
-            ].map((m, i) => (
-              <div key={i} style={{ background: 'var(--surface-2)', border: '1px solid var(--border)', borderRadius: 11, padding: '14px 10px', textAlign: 'center' }}>
-                <div style={{ fontSize: 20, marginBottom: 5 }}>{m.e}</div>
-                <div className="mono" style={{ fontSize: 15, fontWeight: 700 }}>{m.v}</div>
-                <div style={{ fontSize: 11, color: 'var(--text-2)', marginTop: 3 }}>{m.l}</div>
-              </div>
-            ))}
-          </div>
-
-          <div style={{ background: 'var(--surface-2)', border: '1px solid var(--border)', borderRadius: 12, padding: '16px', marginBottom: 14 }}>
-            <p style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--text-2)', marginBottom: 14 }}>Cost Analysis</p>
-            {[
-              { l: 'Energy consumed', v: `${energy} kWh` },
-              { l: 'Estimated charging cost', v: `₹${cost}` },
-              { l: 'Equivalent petrol cost', v: `₹${petrol}`, s: true },
-              { l: 'CO₂ saved', v: `${co2} kg`, g: true },
-            ].map((row, i) => (
-              <div key={i}>
-                {i === 3 && <div style={{ height: 1, background: 'var(--border)', margin: '10px 0' }} />}
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: i < 3 ? 10 : 0, fontSize: 13 }}>
-                  <span style={{ color: 'var(--text-2)' }}>{row.l}</span>
-                  <span className="mono" style={{ fontWeight: 600, textDecoration: row.s ? 'line-through' : 'none', opacity: row.s ? 0.5 : 1, color: row.g ? '#34D399' : 'var(--text-1)' }}>{row.v}</span>
-                </div>
-              </div>
-            ))}
-            <div style={{ marginTop: 14, padding: '12px 14px', background: 'rgba(0,212,170,0.06)', border: '1px solid rgba(0,212,170,0.2)', borderRadius: 9, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <span style={{ fontWeight: 600, fontSize: 14 }}>You save vs petrol</span>
-              <span className="mono" style={{ fontSize: 22, fontWeight: 700, color: 'var(--accent)' }}>₹{savings}</span>
+        <div className="no-scrollbar" style={{ overflowY: 'auto', padding: '24px 28px', flex: 1 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 24 }}>
+            <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 16, padding: '16px', textAlign: 'center' }}>
+              <div style={{ fontSize: 12, color: 'var(--text-2)', marginBottom: 4 }}>Money Saved</div>
+              <div className="mono" style={{ fontSize: 28, fontWeight: 800, color: 'var(--accent)', textShadow: '0 0 20px rgba(0,212,170,0.4)' }}>₹{savings}</div>
+            </div>
+            <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 16, padding: '16px', textAlign: 'center' }}>
+              <div style={{ fontSize: 12, color: 'var(--text-2)', marginBottom: 4 }}>CO₂ Reduced</div>
+              <div className="mono" style={{ fontSize: 28, fontWeight: 800, color: '#34D399', textShadow: '0 0 20px rgba(52,211,153,0.4)' }}>{co2}kg</div>
             </div>
           </div>
-        </div>
 
-        <div className="no-print" style={{ padding: '12px 22px 20px', borderTop: '1px solid var(--border)', display: 'flex', gap: 10 }}>
-          <button className="btn-secondary" style={{ flex: 1 }} onClick={() => window.print()}>
-            <Download className="w-4 h-4" />Export PDF
-          </button>
-          <button className="btn-primary" style={{ flex: 1 }} onClick={onClose}>Back to Map</button>
+          <p style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--text-3)', marginBottom: 16, fontFamily: 'IBM Plex Mono, monospace' }}>Journey Details</p>
+          
+          <div style={{ background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: 16, padding: '20px' }}>
+            {timelineNodes.map((n, i) => {
+              if (n.type === 'start') return (
+                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                  <div style={{ width: 12, height: 12, borderRadius: '50%', background: '#00D4AA', boxShadow: '0 0 10px #00D4AA', zIndex: 2 }} />
+                  <div style={{ flex: 1, fontSize: 15, fontWeight: 600 }}>{n.label.split(',')[0]}</div>
+                  <div className="mono" style={{ fontSize: 13, color: '#00D4AA', fontWeight: 700 }}>{n.bat}%</div>
+                </div>
+              )
+              if (n.type === 'drive') return (
+                <div key={i} style={{ display: 'flex', gap: 12, margin: '2px 0' }}>
+                  <div style={{ width: 12, display: 'flex', justifyContent: 'center' }}>
+                    <div className="timeline-glow" style={{ width: 2, minHeight: 28, borderRadius: 2 }} />
+                  </div>
+                  <div style={{ alignSelf: 'center', fontSize: 12, color: 'var(--text-2)', fontStyle: 'italic', fontFamily: 'IBM Plex Mono, monospace' }}>
+                    ↓ {n.dist} km driven
+                  </div>
+                </div>
+              )
+              if (n.type === 'charge') return (
+                <div key={i} style={{ display: 'flex', gap: 12, margin: '4px 0' }}>
+                  <div style={{ width: 12, display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 2 }}>
+                    <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#FFB547', outline: '2px solid rgba(255,181,71,0.3)' }} />
+                  </div>
+                  <div style={{ flex: 1, background: 'rgba(255,181,71,0.06)', border: '1px solid rgba(255,181,71,0.2)', borderRadius: 12, padding: '12px 14px' }}>
+                    <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-1)', marginBottom: 6 }}>{n.name}</div>
+                    <div style={{ display: 'flex', gap: 16, fontSize: 12 }}>
+                      <div><span style={{ color: 'var(--text-2)' }}>Arrived:</span> <span className="mono" style={{ color: '#FF4D6D', fontWeight: 600 }}>{n.arriveBat}%</span></div>
+                      <div><span style={{ color: 'var(--text-2)' }}>Charged:</span> <span className="mono" style={{ color: '#00D4AA', fontWeight: 600 }}>{n.departBat}%</span></div>
+                    </div>
+                  </div>
+                </div>
+              )
+              if (n.type === 'end') return (
+                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                  <div style={{ width: 12, height: 12, borderRadius: '50%', background: '#FF4D6D', boxShadow: '0 0 10px #FF4D6D', zIndex: 2 }} />
+                  <div style={{ flex: 1, fontSize: 15, fontWeight: 600 }}>{n.label.split(',')[0]}</div>
+                  <div className="mono" style={{ fontSize: 13, color: '#FF4D6D', fontWeight: 700 }}>{n.bat}%</div>
+                </div>
+              )
+              return null
+            })}
+          </div>
         </div>
       </div>
     </div>
@@ -827,7 +884,7 @@ export default function RoutePlanner() {
         console.error('Background task failed', e)
       }
 
-      if (isMobile && data) setSheetOpen(true)
+      if (isMobile && data) setSheetOpen('half')
     } catch (err) {
       console.error(err)
       addToast('error', 'Route calculation failed — check backend')
@@ -847,130 +904,109 @@ export default function RoutePlanner() {
      SIDEBAR CONTENT
      ════════════════════════════════════════════════════ */
   const sidebarContent = (
-    <div className="no-scrollbar" style={{ flex: 1, overflowY: 'auto', padding: '16px', display: 'flex', flexDirection: 'column', gap: 14 }}>
+    <div className="no-scrollbar" style={{ flex: 1, overflowY: 'auto', padding: '16px', display: 'flex', flexDirection: 'column', gap: 16 }}>
 
-      {/* ── Battery gauge (collapsible) ── */}
-      <div style={{ background: 'var(--surface-2)', border: '1px solid var(--border)', borderRadius: 13, padding: '14px 16px' }}>
-        <button
-          onClick={() => setGaugeExpanded(e => !e)}
-          style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'none', border: 'none', cursor: 'pointer', padding: 0, marginBottom: gaugeExpanded ? 12 : 0 }}
-        >
-          <p style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--text-2)', fontFamily: 'IBM Plex Mono, monospace' }}>
-            Initial Charge Level
-          </p>
-          {gaugeExpanded
-            ? <ChevronUp style={{ width: 14, height: 14, color: 'var(--text-3)' }} />
-            : <ChevronDown style={{ width: 14, height: 14, color: 'var(--text-3)' }} />
-          }
-        </button>
-
-        {gaugeExpanded ? (
-          <>
-            <BatteryGauge percent={currentBatteryPercent} maxRangeKm={selectedCar.range_km || 300} />
-            <div style={{ marginTop: 14 }}>
-              <input type="range" min="5" max="100" value={currentBatteryPercent}
-                onChange={e => setCurrentBatteryPercent(parseInt(e.target.value))}
-                className="range-slider"
-                style={{ background: `linear-gradient(to right, var(--accent) 0%, var(--accent) ${currentBatteryPercent}%, var(--surface-3) ${currentBatteryPercent}%, var(--surface-3) 100%)` }}
-              />
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 5, fontSize: 10, color: 'var(--text-3)' }}>
-                <span>5%</span><span>100%</span>
-              </div>
-            </div>
-          </>
-        ) : (
-          /* Compact inline row */
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <Battery style={{ width: 15, height: 15, color: batteryColor, flexShrink: 0 }} />
-            <span className="mono" style={{ fontSize: 15, fontWeight: 700, color: batteryColor, flexShrink: 0, minWidth: 36 }}>
-              {currentBatteryPercent}%
-            </span>
-            <input type="range" min="5" max="100" value={currentBatteryPercent}
-              onChange={e => setCurrentBatteryPercent(parseInt(e.target.value))}
-              className="range-slider"
-              style={{ flex: 1, background: `linear-gradient(to right, ${batteryColor} 0%, ${batteryColor} ${currentBatteryPercent}%, var(--surface-3) ${currentBatteryPercent}%, var(--surface-3) 100%)` }}
-            />
-            <span style={{ fontSize: 11, color: 'var(--text-3)', flexShrink: 0, fontFamily: 'IBM Plex Mono, monospace' }}>~{estKmCompact} km</span>
+      {/* ── Dashboard EV Gauge (Restored Premium Visualization) ── */}
+      <div style={{ background: 'var(--surface-2)', border: '1px solid var(--border)', borderRadius: 16, padding: '16px', position: 'relative' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+          <p style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--text-3)', fontFamily: 'IBM Plex Mono, monospace' }}>Initial Charge</p>
+        </div>
+        
+        {/* Circular Battery visual & Stats */}
+        <BatteryGauge percent={currentBatteryPercent} maxRangeKm={selectedCar.range_km || 300} />
+        
+        {/* Adjustment Slider */}
+        <div style={{ marginTop: 20, paddingTop: 16, borderTop: '1px solid var(--border)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+            <span style={{ fontSize: 12, color: 'var(--text-3)' }}>Adjust</span>
+            <span className="mono" style={{ fontSize: 13, fontWeight: 700, color: batteryColor }}>{currentBatteryPercent}%</span>
           </div>
-        )}
+          <input type="range" min="5" max="100" value={currentBatteryPercent}
+            onChange={e => setCurrentBatteryPercent(parseInt(e.target.value))}
+            className="range-slider"
+            style={{ width: '100%', background: `linear-gradient(to right, ${batteryColor} 0%, ${batteryColor} ${currentBatteryPercent}%, var(--surface-3) ${currentBatteryPercent}%, var(--surface-3) 100%)` }}
+          />
+        </div>
       </div>
 
-      {/* ── Location inputs ── */}
-      <div style={{ background: 'var(--surface-2)', border: '1px solid var(--border)', borderRadius: 13, padding: '14px', display: 'flex', flexDirection: 'column', gap: 10 }}>
-        <p style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--text-2)', fontFamily: 'IBM Plex Mono, monospace' }}>Route</p>
-
-        {/* Start input + locate-me button */}
-        <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+      {/* ── Unified Route Timeline ── */}
+      <div style={{ background: 'var(--surface-2)', border: '1px solid var(--border)', borderRadius: 16, padding: '16px', paddingLeft: 12, position: 'relative' }}>
+        <p style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--text-3)', fontFamily: 'IBM Plex Mono, monospace', marginBottom: 16, marginLeft: 4 }}>Trip Timeline</p>
+        
+        {/* The glowing connecting vertical line */}
+        <div className="timeline-glow" style={{ position: 'absolute', left: 32, top: 75, bottom: 45, width: 2, borderRadius: 2, zIndex: 1 }} />
+        
+        {/* Start input */}
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 12, position: 'relative', zIndex: 2 }}>
           <div style={{ flex: 1 }}>
-            <LocationInput value={startLoc} onChange={setStartLoc} onSelect={handleStartSelect} placeholder="Start — society, area, city…" accent="#00D4AA" />
+            <LocationInput value={startLoc} onChange={setStartLoc} onSelect={handleStartSelect} placeholder="Starting Point" accent="#00D4AA" />
           </div>
           <button
             onClick={handleLocateMe}
             disabled={locating}
             title="Use my location"
-            style={{ width: 38, height: 38, borderRadius: 10, flexShrink: 0, background: locating ? 'rgba(0,212,170,0.15)' : 'var(--surface-3)', border: '1px solid var(--border)', cursor: locating ? 'default' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.15s' }}
+            style={{ width: 42, height: 42, borderRadius: 12, flexShrink: 0, background: locating ? 'rgba(0,212,170,0.15)' : 'var(--surface-3)', border: '1px solid var(--border)', cursor: locating ? 'default' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.15s' }}
             onMouseEnter={e => { if (!locating) { e.currentTarget.style.borderColor = '#00D4AA'; e.currentTarget.style.background = 'rgba(0,212,170,0.08)' } }}
             onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.background = locating ? 'rgba(0,212,170,0.15)' : 'var(--surface-3)' }}
           >
             {locating
-              ? <Loader2 style={{ width: 14, height: 14, color: '#00D4AA', animation: 'spin 0.8s linear infinite' }} />
-              : <Crosshair style={{ width: 14, height: 14, color: 'var(--text-2)' }} />
+              ? <Loader2 style={{ width: 16, height: 16, color: '#00D4AA', animation: 'spin 0.8s linear infinite' }} />
+              : <Crosshair style={{ width: 16, height: 16, color: 'var(--text-2)' }} />
             }
           </button>
         </div>
 
-        {/* Swap + Add stop buttons */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-          <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
-          <button
-            onClick={handleSwap}
-            title="Swap start and destination"
-            style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '4px 12px', borderRadius: 20, background: 'var(--surface-3)', border: '1px solid var(--border)', cursor: 'pointer', transition: 'all 0.15s', fontSize: 11, color: 'var(--text-2)', fontFamily: 'Outfit, sans-serif' }}
-          >
-            <ArrowUpDown style={{ width: 11, height: 11 }} />Swap
-          </button>
-          {waypoints.length < 5 && (
-            <button
-              onClick={() => setWaypoints(w => [...w, { label: '', coords: null }])}
-              title="Add intermediate stop"
-              style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '4px 12px', borderRadius: 20, background: 'rgba(0,212,170,0.06)', border: '1px solid rgba(0,212,170,0.2)', cursor: 'pointer', transition: 'all 0.15s', fontSize: 11, color: 'var(--accent)', fontFamily: 'Outfit, sans-serif' }}
-            >
-              <Plus style={{ width: 11, height: 11 }} />Add stop
-            </button>
-          )}
-          <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
-        </div>
-
         {/* Waypoints */}
         {waypoints.map((wp, idx) => (
-          <div key={idx} style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+          <div key={idx} style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 12, position: 'relative', zIndex: 2 }}>
             <div style={{ flex: 1 }}>
               <LocationInput
                 value={wp.label}
                 onChange={(v) => setWaypoints(w => w.map((item, i) => i === idx ? { ...item, label: v } : item))}
                 onSelect={(coords) => setWaypoints(w => w.map((item, i) => i === idx ? { ...item, coords } : item))}
-                placeholder={`Stop ${idx + 1} — city or place`}
+                placeholder={`Stop ${idx + 1}`}
                 accent="#FFB547"
               />
             </div>
             <button
               onClick={() => setWaypoints(w => w.filter((_, i) => i !== idx))}
-              style={{ width: 34, height: 34, borderRadius: 8, flexShrink: 0, background: 'rgba(255,77,109,0.06)', border: '1px solid rgba(255,77,109,0.2)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+              style={{ width: 42, height: 42, borderRadius: 12, flexShrink: 0, background: 'rgba(255,77,109,0.06)', border: '1px solid rgba(255,77,109,0.2)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
             >
-              <Trash2 style={{ width: 13, height: 13, color: 'var(--error)' }} />
+              <Trash2 style={{ width: 14, height: 14, color: 'var(--error)' }} />
             </button>
           </div>
         ))}
 
-        {/* Destination */}
-        <LocationInput value={endLoc} onChange={setEndLoc} onSelect={handleEndSelect} placeholder="Destination — where to?" accent="#FF4D6D" />
-
-        {!endCoords && (
-          <p style={{ fontSize: 11, color: 'var(--text-3)', textAlign: 'center' }}>
-            ↑ Pick from the dropdown to pin on map
-          </p>
+        {/* Add stop button along timeline */}
+        {waypoints.length < 5 && (
+          <div style={{ paddingLeft: 46, marginBottom: 12, position: 'relative', zIndex: 2 }}>
+            <button
+              onClick={() => setWaypoints(w => [...w, { label: '', coords: null }])}
+              style={{ border: 'none', background: 'none', color: '#FFB547', fontSize: 12, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 5, cursor: 'pointer', fontFamily: 'Outfit, sans-serif' }}
+            >
+              <div style={{ width: 22, height: 22, borderRadius: '50%', background: 'rgba(255,181,71,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <Plus style={{ width: 12, height: 12 }} />
+              </div>
+              Add Stop
+            </button>
+          </div>
         )}
 
+        {/* Destination */}
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center', position: 'relative', zIndex: 2 }}>
+          <div style={{ flex: 1 }}>
+            <LocationInput value={endLoc} onChange={setEndLoc} onSelect={handleEndSelect} placeholder="Destination" accent="#FF4D6D" />
+          </div>
+          <button
+            onClick={handleSwap}
+            title="Swap start and destination"
+            style={{ width: 42, height: 42, borderRadius: 12, flexShrink: 0, background: 'var(--surface-3)', border: '1px solid var(--border)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.15s' }}
+            onMouseEnter={e => e.currentTarget.style.color = 'var(--text-1)'}
+            onMouseLeave={e => e.currentTarget.style.color = 'var(--text-2)'}
+          >
+            <ArrowUpDown style={{ width: 14, height: 14, color: 'inherit' }} />
+          </button>
+        </div>
       </div>
 
       {/* ── Route results ── */}
@@ -1067,12 +1103,12 @@ export default function RoutePlanner() {
 
   /* ── CTA footer ── */
   const footerCTA = (
-    <div style={{ padding: '14px 16px', borderTop: '1px solid var(--border)', background: 'var(--surface)', flexShrink: 0 }}>
+    <div style={{ padding: '20px 16px', background: 'rgba(7,11,20,0.85)', backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)', borderTop: '1px solid rgba(255,255,255,0.05)', flexShrink: 0, position: 'sticky', bottom: 0, zIndex: 10 }}>
       {route ? (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           <button
             className="btn-primary"
-            style={{ width: '100%', padding: '13px', fontSize: 15 }}
+            style={{ width: '100%', padding: '16px', fontSize: 16, borderRadius: 16, boxShadow: '0 8px 30px rgba(0,212,170,0.3)' }}
             onClick={() => {
               const origin = `${startCoords[0]},${startCoords[1]}`;
               const destination = `${endCoords[0]},${endCoords[1]}`;
@@ -1083,11 +1119,11 @@ export default function RoutePlanner() {
               window.open(url, '_blank');
             }}
           >
-            <MapPinIcon className="w-5 h-5" style={{ marginRight: 6 }} /> Start Navigation in Google Maps
+            <MapPinIcon className="w-5 h-5" style={{ marginRight: 8 }} /> Start Navigation in G-Maps
           </button>
           <button
             className="btn-secondary"
-            style={{ width: '100%', padding: '12px', fontSize: 14 }}
+            style={{ width: '100%', padding: '14px', fontSize: 14, borderRadius: 14, background: 'var(--surface-3)', border: '1px solid var(--border)' }}
             onClick={handleCalculate}
             disabled={loading || !startCoords || !endCoords}
           >
@@ -1096,14 +1132,14 @@ export default function RoutePlanner() {
                 <span style={{ width: 14, height: 14, borderRadius: '50%', border: '2px solid rgba(255,255,255,0.3)', borderTopColor: '#fff', animation: 'spin 0.7s linear infinite', display: 'inline-block', flexShrink: 0 }} />
                 {loadingMsg}
               </>
-              : <><Navigation className="w-4 h-4" />Update Route</>
+              : <><Navigation className="w-4 h-4" />Update Route Data</>
             }
           </button>
         </div>
       ) : (
         <button
           className="btn-primary pulse-cta"
-          style={{ width: '100%', padding: '13px', fontSize: 15 }}
+          style={{ width: '100%', padding: '16px', fontSize: 16, borderRadius: 16, background: 'linear-gradient(135deg, #00D4AA 0%, #00a887 100%)', boxShadow: '0 8px 30px rgba(0,212,170,0.3)' }}
           onClick={handleCalculate}
           disabled={loading || !startCoords || !endCoords}
         >
@@ -1112,7 +1148,7 @@ export default function RoutePlanner() {
               <span style={{ width: 16, height: 16, borderRadius: '50%', border: '2px solid rgba(0,0,0,0.3)', borderTopColor: '#000', animation: 'spin 0.7s linear infinite', display: 'inline-block', flexShrink: 0 }} />
               {loadingMsg}
             </>
-            : <><Navigation className="w-4 h-4" />Find Best Route</>
+            : <><Zap className="w-5 h-5" style={{ color: '#000' }} /><span style={{ color: '#000', fontWeight: 700 }}>Find Best Route</span></>
           }
         </button>
       )}
@@ -1127,13 +1163,13 @@ export default function RoutePlanner() {
         onClick={() => setShowDisclaimer(d => !d)}
         style={{
           background: 'none', border: 'none', cursor: 'pointer',
-          fontSize: 10, color: 'var(--text-3)', opacity: 0.5,
+          fontSize: 12, color: 'var(--text-2)', opacity: 0.8, fontWeight: 600,
           textAlign: 'center', width: '100%', marginTop: 8,
           fontFamily: 'Outfit, sans-serif', padding: '4px 0',
-          transition: 'opacity 0.15s',
+          transition: 'opacity 0.15s, color 0.15s',
         }}
-        onMouseEnter={e => e.currentTarget.style.opacity = '0.9'}
-        onMouseLeave={e => e.currentTarget.style.opacity = '0.5'}
+        onMouseEnter={e => { e.currentTarget.style.opacity = '1'; e.currentTarget.style.color = '#FFB547'; }}
+        onMouseLeave={e => { e.currentTarget.style.opacity = '0.8'; e.currentTarget.style.color = 'var(--text-2)'; }}
       >
         {showDisclaimer ? '▾ Close disclaimer' : '⚠ Important disclaimer'}
       </button>
@@ -1141,10 +1177,10 @@ export default function RoutePlanner() {
         <div style={{
           background: 'rgba(255,181,71,0.06)', border: '1px solid rgba(255,181,71,0.15)',
           borderRadius: 10, padding: '10px 12px', marginTop: 6,
-          fontSize: 10.5, lineHeight: 1.6, color: 'var(--text-2)',
+          fontSize: 11, lineHeight: 1.6, color: 'var(--text-2)',
           animation: 'fade-up 0.2s ease',
         }}>
-          <p style={{ fontWeight: 700, color: '#FFB547', marginBottom: 4, fontSize: 11 }}>⚠ Disclaimer</p>
+          <p style={{ fontWeight: 700, color: '#FFB547', marginBottom: 4, fontSize: 12 }}>⚠ Disclaimer</p>
           <p>
             Routelect provides <strong>estimated</strong> route plans based on manufacturer specifications and 
             publicly available charger data. Actual range may vary significantly due to driving conditions, 
@@ -1347,10 +1383,11 @@ export default function RoutePlanner() {
               ) : null
             )}
 
-            {/* Dual polyline: white glow + teal on top */}
+            {/* Dual polyline: white glow + teal on top + animated pulse */}
             {route?.route_coords && <>
               <Polyline key={`glow-${routeKey}`} positions={route.route_coords} pathOptions={{ color: '#ffffff', weight: 9, opacity: 0.07, lineCap: 'round', lineJoin: 'round' }} />
               <Polyline key={`line-${routeKey}`} positions={route.route_coords} pathOptions={{ color: '#00D4AA', weight: 3.5, opacity: 0.9, lineCap: 'round', lineJoin: 'round' }} />
+              <Polyline key={`pulse-${routeKey}`} positions={route.route_coords} pathOptions={{ color: '#ffffff', weight: 3.5, opacity: 0.8, className: 'energy-pulse-line' }} />
             </>}
 
             {/* Dashed amber line: last confirmed stop → destination (coverage gap) */}
@@ -1483,7 +1520,14 @@ export default function RoutePlanner() {
 
       {/* Modals */}
       {showSummary && route && (
-        <TripSummaryModal route={route} car={selectedCar} onClose={() => setShowSummary(false)} />
+        <TripSummaryModal 
+          route={route} 
+          car={selectedCar} 
+          startLoc={startLoc}
+          endLoc={endLoc}
+          startBattery={currentBatteryPercent}
+          onClose={() => setShowSummary(false)} 
+        />
       )}
       {selectedStop && (
         <ChargerDetailModal
