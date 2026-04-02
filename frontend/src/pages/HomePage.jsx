@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import {
-  MapPin, Zap, Navigation, ChevronRight, Battery,
+import { MapPin, Zap, Navigation, ChevronRight, Battery,
   Shield, Clock, TrendingUp, ArrowRight, Car
 } from 'lucide-react'
+import Footer from '../components/Footer'
 
 /* ─── Mobile Detection ─────────────────────────────────── */
 function useIsMobile() {
@@ -443,6 +443,7 @@ export default function HomePage() {
         </div>
 
       </div>
+      <Footer />
     </div>
   )
 }

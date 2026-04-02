@@ -81,6 +81,18 @@ export default function Footer() {
                     <p style={{ fontSize: 12, color: 'var(--text-3)' }}>
                         © {new Date().getFullYear()} Routelect · Made with ⚡ for Indian EV drivers
                     </p>
+
+                    {/* Subtle legal disclaimer */}
+                    <p style={{
+                        fontSize: 10, color: 'var(--text-3)', opacity: 0.45,
+                        maxWidth: 520, lineHeight: 1.55, textAlign: 'center',
+                        flex: '1 1 100%', marginTop: 8,
+                    }}>
+                        Route estimates are indicative only. Actual range varies with driving conditions, weather &amp; vehicle health.
+                        Always verify charger availability before departure. Routelect is not liable for any inconvenience arising from route suggestions.
+                        Charger data sourced from OpenChargeMap &amp; Supabase. Routing powered by OSRM / OpenStreetMap contributors.
+                    </p>
+
                     <div style={{ display: 'flex', gap: 16 }}>
                         <a
                             href="https://github.com"

@@ -1185,3 +1185,91 @@ h5 {
     text-align: center !important;
   }
 }
+
+/* ========================================
+   SVG STARTUP ANIMATION
+   ======================================== */
+.startup-container {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg);
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+}
+
+.draw-bolt {
+  stroke-dasharray: 400;
+  stroke-dashoffset: 400;
+  animation: draw-bolt-anim 1.2s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.draw-route {
+  stroke-dasharray: 200;
+  stroke-dashoffset: 200;
+  animation: draw-route-anim 0.8s ease-out forwards;
+}
+
+.glow-bolt {
+  animation: glow-pulse-anim 2s ease-in-out infinite alternate;
+  animation-delay: 1.2s;
+}
+
+.fade-text-up {
+  opacity: 0;
+  transform: translateY(10px);
+  animation: fade-up-anim 0.8s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  animation-delay: 0.6s;
+}
+
+.fade-subtext {
+  opacity: 0;
+  animation: fade-in-anim 1s ease forwards;
+  animation-delay: 1s;
+}
+
+@keyframes draw-bolt-anim {
+  0% {
+    stroke-dashoffset: 400;
+  }
+  100% {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes draw-route-anim {
+  0% {
+    stroke-dashoffset: 200;
+  }
+  100% {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes glow-pulse-anim {
+  0% {
+    filter: drop-shadow(0 0 4px rgba(0, 212, 170, 0.4));
+  }
+  100% {
+    filter: drop-shadow(0 0 12px rgba(0, 212, 170, 0.8));
+  }
+}
+
+@keyframes fade-up-anim {
+  0% {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fade-in-anim {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}

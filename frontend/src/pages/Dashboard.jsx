@@ -169,7 +169,7 @@ export default function Dashboard() {
                         {trips.slice(0, 10).map((trip, i) => (
                             <div
                                 key={trip.id || i}
-                                onClick={() => navigate('/plan-route')}
+                                onClick={() => navigate('/plan-route', { state: { restoreTrip: trip } })}
                                 role="button"
                                 style={{
                                     display: 'flex', alignItems: 'center', gap: 14,

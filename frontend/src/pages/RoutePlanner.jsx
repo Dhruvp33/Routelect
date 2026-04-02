@@ -1,5 +1,5 @@
-import { useState, useEffect, useCallback, useRef } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
+import { useNavigate, useLocation } from 'react-router-dom'
 import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from 'react-leaflet'
 import {
   Navigation, Battery, MapPin, Zap, Clock, ChevronLeft,
@@ -603,6 +603,7 @@ const LOADING_MSGS = [
    ═══════════════════════════════════════════════════════ */
 export default function RoutePlanner() {
   const navigate = useNavigate()
+  const location = useLocation()
   const isMobile = useIsMobile()
   const {
     selectedCar,
@@ -612,6 +613,8 @@ export default function RoutePlanner() {
   } = useStore()
   const { user, saveTrip } = useAuth()
   const isDark = useStore((s) => s.theme) === 'dark'
+  const [showDisclaimer, setShowDisclaimer] = useState(false)
+  const hasRestoredRef = useRef(false)
 
   const [startLoc, setStartLoc] = useState('')
   const [endLoc, setEndLoc] = useState('')
@@ -656,8 +659,32 @@ export default function RoutePlanner() {
 
   useEffect(() => { if (!selectedCar) navigate('/select-brand') }, [selectedCar, navigate])
 
-  /* ── Parse shared URL params + geocode default start ── */
+  /* ── Restore route from Dashboard (location.state) ── */
   useEffect(() => {
+    if (hasRestoredRef.current) return
+    const state = location.state
+    if (state?.restoreTrip) {
+      hasRestoredRef.current = true
+      const trip = state.restoreTrip
+      if (trip.startCoords) { setStartCoords(trip.startCoords); setMapCenter(trip.startCoords) }
+      if (trip.endCoords) setEndCoords(trip.endCoords)
+      if (trip.startLoc) setStartLoc(trip.startLoc)
+      if (trip.endLoc) setEndLoc(trip.endLoc)
+      if (trip.route) {
+        setRoute(trip.route)
+        setRouteKey(k => k + 1)
+        addToast('success', 'Route restored from your trip history')
+      }
+      // Clear the state so refresh doesn't re-restore
+      window.history.replaceState({}, '')
+      return
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.state])
+
+  /* ── Parse shared URL params + auto-calculate ── */
+  useEffect(() => {
+    if (hasRestoredRef.current) return
     const params = new URLSearchParams(window.location.search)
     const fromStr = params.get('from')
     const fromName = params.get('fromName')
@@ -667,10 +694,17 @@ export default function RoutePlanner() {
     if (fromStr && fromName) {
       const [lat, lng] = fromStr.split(',').map(Number)
       if (!isNaN(lat) && !isNaN(lng)) {
+        hasRestoredRef.current = true
         setStartLoc(fromName); setStartCoords([lat, lng]); setMapCenter([lat, lng])
         if (toStr && toName) {
           const [tlat, tlng] = toStr.split(',').map(Number)
-          if (!isNaN(tlat) && !isNaN(tlng)) { setEndLoc(toName); setEndCoords([tlat, tlng]) }
+          if (!isNaN(tlat) && !isNaN(tlng)) {
+            setEndLoc(toName); setEndCoords([tlat, tlng])
+            // Auto-calculate after a short delay to let state settle
+            setTimeout(() => {
+              addToast('info', 'Shared route detected — calculating...')
+            }, 500)
+          }
         }
         return
       }
@@ -759,6 +793,9 @@ export default function RoutePlanner() {
           end_lat: endCoords[0], end_lng: endCoords[1],
           current_battery_percent: currentBatteryPercent,
           car_model_id: selectedCar.id,
+          waypoints: waypoints
+            .filter(wp => wp.coords)
+            .map(wp => ({ lat: wp.coords[0], lng: wp.coords[1], label: wp.label || '' })),
         }),
       })
       if (!res.ok) {
@@ -1084,6 +1121,39 @@ export default function RoutePlanner() {
           {!startCoords ? 'Set your start location above' : 'Set your destination above'}
         </p>
       )}
+
+      {/* ── Subtle disclaimer link ── */}
+      <button
+        onClick={() => setShowDisclaimer(d => !d)}
+        style={{
+          background: 'none', border: 'none', cursor: 'pointer',
+          fontSize: 10, color: 'var(--text-3)', opacity: 0.5,
+          textAlign: 'center', width: '100%', marginTop: 8,
+          fontFamily: 'Outfit, sans-serif', padding: '4px 0',
+          transition: 'opacity 0.15s',
+        }}
+        onMouseEnter={e => e.currentTarget.style.opacity = '0.9'}
+        onMouseLeave={e => e.currentTarget.style.opacity = '0.5'}
+      >
+        {showDisclaimer ? '▾ Close disclaimer' : '⚠ Important disclaimer'}
+      </button>
+      {showDisclaimer && (
+        <div style={{
+          background: 'rgba(255,181,71,0.06)', border: '1px solid rgba(255,181,71,0.15)',
+          borderRadius: 10, padding: '10px 12px', marginTop: 6,
+          fontSize: 10.5, lineHeight: 1.6, color: 'var(--text-2)',
+          animation: 'fade-up 0.2s ease',
+        }}>
+          <p style={{ fontWeight: 700, color: '#FFB547', marginBottom: 4, fontSize: 11 }}>⚠ Disclaimer</p>
+          <p>
+            Routelect provides <strong>estimated</strong> route plans based on manufacturer specifications and 
+            publicly available charger data. Actual range may vary significantly due to driving conditions, 
+            weather, elevation, vehicle health, and charger availability. <strong>Always verify charger 
+            status before departing</strong> and maintain a safe battery margin. Routelect is not liable 
+            for any inconvenience, breakdown, or damage resulting from route suggestions. Use at your own discretion.
+          </p>
+        </div>
+      )}
     </div>
   )
 
@@ -1125,6 +1195,14 @@ export default function RoutePlanner() {
           50%      { box-shadow: 0 0 0 9px rgba(0,212,170,0); }
         }
         .pulse-cta { animation: pulse-cta 2.2s ease-in-out infinite !important; }
+
+        @keyframes route-loading-spin {
+          to { transform: rotate(360deg); }
+        }
+        @keyframes loading-text-pulse {
+          0%,100% { opacity: 1; }
+          50%     { opacity: 0.5; }
+        }
       `}</style>
 
       <Navbar />
@@ -1156,6 +1234,66 @@ export default function RoutePlanner() {
 
         {/* ═══ MAP ═══ */}
         <div className={`${isDark ? 'dark-tiles' : ''}${route?.route_coords ? ' route-active' : ''}`} style={{ flex: 1, position: 'relative', zIndex: 0, height: '100%' }}>
+
+          {/* ═══ FULL-SCREEN LOADING OVERLAY ═══ */}
+          {loading && (
+            <div style={{
+              position: 'absolute', inset: 0, zIndex: 500,
+              background: 'rgba(7, 11, 20, 0.75)',
+              backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)',
+              display: 'flex', flexDirection: 'column',
+              alignItems: 'center', justifyContent: 'center', gap: 20,
+              animation: 'fade-in 0.3s ease',
+            }}>
+              {/* Animated spinner ring */}
+              <div style={{ position: 'relative', width: 72, height: 72 }}>
+                <svg
+                  viewBox="0 0 72 72" fill="none"
+                  style={{ width: 72, height: 72, animation: 'route-loading-spin 1.2s linear infinite' }}
+                >
+                  <circle cx="36" cy="36" r="30" stroke="rgba(255,255,255,0.08)" strokeWidth="3" />
+                  <circle
+                    cx="36" cy="36" r="30"
+                    stroke="var(--accent)" strokeWidth="3"
+                    strokeDasharray="50 140" strokeLinecap="round"
+                  />
+                </svg>
+                <div style={{
+                  position: 'absolute', inset: 0,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                }}>
+                  <span style={{ fontSize: 22 }}>⚡</span>
+                </div>
+              </div>
+
+              {/* Cycling loading text */}
+              <div style={{ textAlign: 'center' }}>
+                <p style={{
+                  fontFamily: 'Outfit, sans-serif', fontSize: 16, fontWeight: 700,
+                  color: 'var(--text-1)', marginBottom: 6,
+                  animation: 'loading-text-pulse 1.8s ease infinite',
+                }}>
+                  {loadingMsg}
+                </p>
+                <p style={{ fontSize: 12, color: 'var(--text-3)' }}>
+                  This may take a few seconds for long routes
+                </p>
+              </div>
+
+              {/* Progress dots */}
+              <div style={{ display: 'flex', gap: 6 }}>
+                {[0, 1, 2, 3, 4].map(i => (
+                  <div key={i} style={{
+                    width: 6, height: 6, borderRadius: '50%',
+                    background: 'var(--accent)',
+                    opacity: 0.3,
+                    animation: `pulse-dot 1.5s ease ${i * 0.25}s infinite`,
+                  }} />
+                ))}
+              </div>
+            </div>
+          )}
+
           <MapContainer center={mapCenter} zoom={6} zoomControl style={{ width: '100%', height: '100%' }}>
             {/* Standard OSM tiles — maximum detail; dark mode via CSS invert */}
             <TileLayer

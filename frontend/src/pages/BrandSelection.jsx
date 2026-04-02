@@ -25,11 +25,10 @@ const LOGO_MAP = {
   'Kia': '/logos/kia.png',
   'Volvo': '/logos/volvo.png',
   'Tesla': '/logos/tesla.png',
-  'Ather Energy': '/logos/ather.png',
   'Maruti Suzuki': '/logos/suzuki.png',
   'Citroen': '/logos/citroen.png',
   'BYD': '/logos/byd.png',
-  'Ola Electric': '/logos/ola.png',
+  
 }
 
 /* Original neon accent colours — kept as-is for glows/borders */
@@ -48,22 +47,7 @@ const BRAND_ACCENT = {
   'Citroen': '#C40404',
 }
 
-const BRAND_CATEGORY = {
-  'Tata Motors': 'Cars',
-  'Mahindra': 'Cars',
-  'MG Motor': 'Cars',
-  'Hyundai': 'Cars',
-  'BYD': 'Cars',
-  'Kia': 'Cars',
-  'Volvo': 'Cars',
-  'Tesla': 'Cars',
-  'Maruti Suzuki': 'Cars',
-  'Citroen': 'Cars',
-  'Ola Electric': 'Two-wheelers',
-  'Ather Energy': 'Two-wheelers',
-}
 
-const CATEGORIES = ['All', 'Cars', 'Two-wheelers']
 
 /* ── Fallback initials badge ── */
 function InitialsBadge({ name }) {
@@ -142,7 +126,7 @@ function SkeletonCard() {
 function BrandCard({ brand, onClick, index, isMobile }) {
   const [hovered, setHovered] = useState(false)
   const accent = BRAND_ACCENT[brand.name] || '#00D4AA'
-  const cat = BRAND_CATEGORY[brand.name]
+
 
   return (
     <button
@@ -206,22 +190,7 @@ function BrandCard({ brand, onClick, index, isMobile }) {
               {brand.country}
             </span>
           )}
-          {cat && (
-            <>
-              {brand.country && <span style={{ fontSize: 10, color: 'var(--text-3)' }}>·</span>}
-              {/* FIX: category tag uses accent for color only at reduced opacity */}
-              <span style={{
-                fontSize: 10, fontWeight: 700,
-                color: accent,
-                opacity: 0.75,   /* toned down so it's readable, not glaring */
-                textTransform: 'uppercase',
-                letterSpacing: '0.08em',
-                fontFamily: 'IBM Plex Mono, monospace',
-              }}>
-                {cat === 'Two-wheelers' ? '2W' : 'Car'}
-              </span>
-            </>
-          )}
+
         </div>
       </div>
 
@@ -241,29 +210,7 @@ function BrandCard({ brand, onClick, index, isMobile }) {
   )
 }
 
-/* ── Category filter pill ── */
-function FilterPill({ label, active, onClick, icon }) {
-  return (
-    <button
-      onClick={onClick}
-      style={{
-        display: 'inline-flex', alignItems: 'center', gap: 6,
-        padding: '7px 16px', borderRadius: 100,
-        fontSize: 13, fontWeight: 600,
-        cursor: 'pointer', outline: 'none',
-        border: active ? '1px solid var(--accent)' : '1px solid var(--border)',
-        background: active ? 'rgba(0,212,170,0.1)' : 'var(--surface)',
-        /* FIX: active text is var(--accent) which is fine since it's on dark bg;
-                inactive text bumped to var(--text-1) for better readability */
-        color: active ? 'var(--accent)' : 'var(--text-1)',
-        transition: 'all 0.18s ease',
-        whiteSpace: 'nowrap',
-      }}
-    >
-      {icon}{label}
-    </button>
-  )
-}
+
 
 /* ══════════════════════════════════════════════════════════
    PAGE
@@ -273,7 +220,7 @@ export default function BrandSelection() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [search, setSearch] = useState('')
-  const [category, setCategory] = useState('All')
+
   const navigate = useNavigate()
   const isMobile = useIsMobile()
 
@@ -288,22 +235,10 @@ export default function BrandSelection() {
   useEffect(() => { fetchBrands() }, [])
 
   const filtered = brands.filter(b => {
-    const matchSearch = b.name.toLowerCase().includes(search.toLowerCase())
-    const matchCat = category === 'All' || BRAND_CATEGORY[b.name] === category
-    return matchSearch && matchCat
+    return b.name.toLowerCase().includes(search.toLowerCase())
   })
 
-  const counts = {
-    'All': brands.length,
-    'Cars': brands.filter(b => BRAND_CATEGORY[b.name] === 'Cars').length,
-    'Two-wheelers': brands.filter(b => BRAND_CATEGORY[b.name] === 'Two-wheelers').length,
-  }
 
-  const pillIcon = (cat) => {
-    if (cat === 'Cars') return <Car style={{ width: 12, height: 12 }} />
-    if (cat === 'Two-wheelers') return <Bike style={{ width: 12, height: 12 }} />
-    return null
-  }
 
   return (
     <div style={{
@@ -360,24 +295,6 @@ export default function BrandSelection() {
                 style={{ paddingLeft: 42, borderRadius: 12 }}
               />
             </div>
-
-            <div style={{
-              display: 'flex', gap: 8,
-              flexWrap: isMobile ? 'nowrap' : 'wrap', justifyContent: isMobile ? 'flex-start' : 'center',
-              overflowX: isMobile ? 'auto' : 'visible',
-              WebkitOverflowScrolling: 'touch',
-              paddingBottom: isMobile ? 2 : 0,
-            }}>
-              {CATEGORIES.map(cat => (
-                <FilterPill
-                  key={cat}
-                  label={cat === 'All' ? `All (${counts['All']})` : `${cat} (${counts[cat]})`}
-                  active={category === cat}
-                  icon={pillIcon(cat)}
-                  onClick={() => setCategory(cat)}
-                />
-              ))}
-            </div>
           </div>
         )}
 
@@ -432,7 +349,7 @@ export default function BrandSelection() {
               No brands found{search ? ` for "${search}"` : ''}
             </p>
             <p style={{ fontSize: 13, color: 'var(--text-3)', marginTop: 6 }}>
-              Try a different search or category
+              Try a different search query
             </p>
           </div>
         )}

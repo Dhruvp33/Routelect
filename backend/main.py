@@ -5,6 +5,7 @@ main.py — EVRoute API v3.0 (FastAPI + Supabase)
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
+from typing import List, Optional
 from supabase import create_client, Client
 import os, math
 from dotenv import load_dotenv
@@ -39,6 +40,11 @@ print("🚀 EVRoute Engine v3.0 starting…")
 router_engine = EVRouter()
 
 
+class Waypoint(BaseModel):
+    lat:   float
+    lng:   float
+    label: str = ""
+
 class RouteRequest(BaseModel):
     start_lat:               float
     start_lng:               float
@@ -46,6 +52,7 @@ class RouteRequest(BaseModel):
     end_lng:                 float
     current_battery_percent: float
     car_model_id:            int
+    waypoints:               Optional[List[Waypoint]] = []
 
 
 @app.get("/")
@@ -166,12 +173,16 @@ def calculate_route(req: RouteRequest):
         .execute()
     ).data or []
 
+    # Convert waypoints to list of [lat, lng] for the routing engine
+    wp_list = [[wp.lat, wp.lng] for wp in (req.waypoints or [])]
+
     result = router_engine.find_route_with_charging(
         req.start_lat, req.start_lng,
         req.end_lat,   req.end_lng,
         req.current_battery_percent,
         specs,
         db_chargers,
+        user_waypoints=wp_list,
     )
 
     # Hard error — no route possible at all

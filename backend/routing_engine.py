@@ -194,7 +194,7 @@ class EVRouter:
         milestones = []
         last_dist = -999.0
         for i, d in enumerate(cumulative_dist):
-            if d - last_dist >= 200.0:
+            if d - last_dist >= 100.0:
                 milestones.append(raw_coords[i])
                 last_dist = d
                 
@@ -219,7 +219,7 @@ class EVRouter:
             import concurrent.futures
             
             def fetch_chunk(lat, lng):
-                return self._fetch_ocm(lat, lng, radius_km=150, max_results=250)
+                return self._fetch_ocm(lat, lng, radius_km=60, max_results=500)
 
             with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
                 futures = [executor.submit(fetch_chunk, lat, lng) for lat, lng in milestones]
@@ -274,10 +274,16 @@ class EVRouter:
         effective_kw = min(charger_kw, 150.0)
         return round((needed_kwh / max(effective_kw, 1.0)) * 60.0, 1)
 
-    def find_route_with_charging(self, start_lat: float, start_lng: float, end_lat: float, end_lng: float, battery_pct: float, specs: EVSpecs, db_chargers: Optional[List[Dict]] = None) -> Dict:
+    def find_route_with_charging(self, start_lat: float, start_lng: float, end_lat: float, end_lng: float, battery_pct: float, specs: EVSpecs, db_chargers: Optional[List[Dict]] = None, user_waypoints: Optional[List[List[float]]] = None) -> Dict:
         try:
-            # 1. Fetch direct OSRM baseline
-            direct = self._osrm([[start_lng, start_lat], [end_lng, end_lat]])
+            # Build ordered waypoint list for OSRM: start → user waypoints → end
+            osrm_points = [[start_lng, start_lat]]
+            for wp in (user_waypoints or []):
+                osrm_points.append([wp[1], wp[0]])   # [lng, lat]
+            osrm_points.append([end_lng, end_lat])
+
+            # 1. Fetch OSRM baseline through all user waypoints
+            direct = self._osrm(osrm_points)
             if not direct: return {"error": "Could not fetch a road route between these locations. OSRM may be down."}
 
             raw_coords = self._decode_geojson(direct)
@@ -310,6 +316,7 @@ class EVRouter:
                     "battery_at_arrival_pct": max(15.0, arr_pct),
                     "real_world_range_km": round(real_world_range),
                     "road_names": self._extract_road_names(direct),
+                    "user_waypoints": [[wp[0], wp[1]] for wp in (user_waypoints or [])],
                     "message": "Direct trip possible — no charging needed 🎉",
                 }
 
@@ -393,13 +400,34 @@ class EVRouter:
                     is_partial = True
                     break
                     
-            # 6. Build Final OSRM Route geometry and exact leg distances
+            # 6. Build Final OSRM Route geometry with user waypoints + charging stops
             if not stops:
                 # If no stops were found at all, return the baseline raw direct route as an error state
                 return {"error": "No charging stations found along your route. Ensure the API key is active or try a shorter route."}
-                
-            waypoints = [[start_lng, start_lat]] + [[s["lng"], s["lat"]] for s in stops] + [[end_lng, end_lat]]
-            exact_route = self._osrm(waypoints)
+            
+            # Merge user waypoints and charging stops in route-distance order
+            # so OSRM produces a single coherent polyline through everything.
+            all_via = []
+            # Add charging stops with their route_dist for ordering
+            for s in stops:
+                all_via.append({"lng": s["lng"], "lat": s["lat"], "route_dist": s.get("route_dist", 0), "type": "charger"})
+            # Add user waypoints — snap them to route_dist for proper ordering
+            for wp in (user_waypoints or []):
+                wp_lat, wp_lng = wp[0], wp[1]
+                best_d = float('inf')
+                best_rd = 0.0
+                for i in range(0, len(raw_coords), 5):
+                    d = self._haversine(wp_lat, wp_lng, raw_coords[i][0], raw_coords[i][1])
+                    if d < best_d:
+                        best_d = d
+                        best_rd = cumulative_dist[i]
+                all_via.append({"lng": wp_lng, "lat": wp_lat, "route_dist": best_rd, "type": "waypoint"})
+            
+            # Sort all via-points by their position along the route
+            all_via.sort(key=lambda x: x["route_dist"])
+            
+            waypoints_osrm = [[start_lng, start_lat]] + [[v["lng"], v["lat"]] for v in all_via] + [[end_lng, end_lat]]
+            exact_route = self._osrm(waypoints_osrm)
             if not exact_route:
                 return {"error": "Successfully mapped charging stops but could not resolve final OSRM geometry."}
                 
@@ -431,6 +459,7 @@ class EVRouter:
                 "battery_at_arrival_pct": 15.0 if not is_partial else "Low", 
                 "real_world_range_km": round(real_world_range),
                 "road_names": self._extract_road_names(exact_route),
+                "user_waypoints": [[wp[0], wp[1]] for wp in (user_waypoints or [])],
                 "partial_route": is_partial,
                 "uncovered_km": uncovered_km,
                 "coverage_warning": warn,

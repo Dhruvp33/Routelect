@@ -207,16 +207,11 @@ export default function Navbar() {
           background: #00D4AA;
           color: #000 !important;
           border-color: transparent;
-          box-shadow: 0 0 18px rgba(0,212,170,0.28);
-          animation: glow-pulse 3s ease-in-out infinite;
+          box-shadow: 0 2px 12px rgba(0,212,170,0.25);
         }
         .rl-navlink.primary:hover {
           background: #00e5b8;
-          box-shadow: 0 0 28px rgba(0,212,170,0.45);
-        }
-        @keyframes glow-pulse {
-          0%, 100% { box-shadow: 0 0 18px rgba(0,212,170,0.28); }
-          50%       { box-shadow: 0 0 30px rgba(0,212,170,0.5); }
+          box-shadow: 0 4px 20px rgba(0,212,170,0.4);
         }
 
         /* Right cluster */
@@ -619,11 +614,13 @@ export default function Navbar() {
                 {theme === 'dark' ? <Sun size={15} /> : <Moon size={15} />}
               </button>
 
-              {/* Status pill */}
-              <div className={`rl-status ${backendStatus ? 'live' : 'offline'}`}>
-                <div className="rl-status-dot" />
-                {backendStatus ? 'Live' : 'Offline'}
-              </div>
+              {/* Status pill — only show on plan-route page */}
+              {location.pathname === '/plan-route' && (
+                <div className={`rl-status ${backendStatus ? 'live' : 'offline'}`}>
+                  <div className="rl-status-dot" />
+                  {backendStatus ? 'Live' : 'Offline'}
+                </div>
+              )}
 
               {/* Auth — desktop */}
               {user ? (

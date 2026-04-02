@@ -15,23 +15,53 @@ export const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000'
 /* ── Loading screen ── */
 function LoadingScreen() {
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 24, background: 'var(--bg)' }}>
-      <div style={{ position: 'relative' }}>
-        <img
-          src="/routelect-logo.png"
-          alt="Routelect Logo"
-          style={{ width: 64, height: 64, objectFit: 'contain' }}
-        />
-        <svg className="animate-spin" style={{ position: 'absolute', inset: -12, animationDuration: '1.2s' }} viewBox="0 0 88 88" fill="none">
-          <circle cx="44" cy="44" r="40" stroke="var(--border)" strokeWidth="2.5" />
-          <circle cx="44" cy="44" r="40" stroke="var(--accent)" strokeWidth="2.5" strokeDasharray="60 190" strokeLinecap="round" />
+    <div className="startup-container">
+      <style>
+        {`
+          .draw-bolt {
+            fill: transparent;
+            animation: draw-bolt-anim 1s cubic-bezier(0.22, 1, 0.36, 1) forwards, fill-bolt-anim 0.4s ease 0.9s forwards, glow-pulse-anim 2s ease-in-out 1.2s infinite alternate;
+          }
+          @keyframes fill-bolt-anim {
+            0% { fill: transparent; }
+            100% { fill: var(--accent); }
+          }
+        `}
+      </style>
+      <div style={{ position: 'relative', width: 100, height: 100, marginBottom: 12 }}>
+        <svg viewBox="0 0 100 100" fill="none" style={{ width: '100%', height: '100%', overflow: 'visible' }}>
+          {/* subtle glow background */}
+          <circle cx="50" cy="50" r="45" fill="var(--accent)" opacity="0.05" className="fade-subtext" />
+          
+          {/* The Route Path */}
+          <path 
+            d="M 15 80 Q 30 75, 45 60 T 80 40" 
+            stroke="var(--border)" 
+            strokeWidth="3.5" 
+            strokeLinecap="round" 
+            strokeLinejoin="round"
+            className="draw-route"
+          />
+          <circle cx="15" cy="80" r="3" fill="var(--text-3)" className="fade-subtext" />
+          <circle cx="80" cy="40" r="3" fill="var(--text-3)" className="fade-subtext" />
+          
+          {/* The Lightning Bolt (Striking) */}
+          <path 
+            d="M 55 15 L 35 55 L 50 55 L 40 85 L 75 45 L 55 45 Z" 
+            stroke="var(--accent)"
+            strokeWidth="2.5"
+            strokeLinejoin="round" 
+            className="draw-bolt"
+          />
         </svg>
       </div>
-      <div style={{ textAlign: 'center' }}>
-        <p style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 800, fontSize: 18, letterSpacing: '-0.03em', color: 'var(--text-1)' }}>
+      <div className="fade-text-up" style={{ textAlign: 'center' }}>
+        <p style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 800, fontSize: 28, letterSpacing: '-0.04em', color: 'var(--text-1)' }}>
           Route<span style={{ color: 'var(--accent)' }}>lect</span>
         </p>
-        <p style={{ fontSize: 13, color: 'var(--text-2)', marginTop: 4 }}>Connecting to backend…</p>
+        <p className="fade-subtext" style={{ fontSize: 11, color: 'var(--text-3)', marginTop: 4, letterSpacing: '0.12em', textTransform: 'uppercase', fontWeight: 600 }}>
+          Connecting EV Network
+        </p>
       </div>
     </div>
   )
