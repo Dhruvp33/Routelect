@@ -56,7 +56,9 @@ class RouteRequest(BaseModel):
 
 
 @app.get("/")
+@app.head("/")
 @app.get("/api/health")
+@app.head("/api/health")   # ← fixes 405
 def health():
     return {"status": "healthy", "version": "3.0.0"}
 
