@@ -61,7 +61,12 @@ const chargerIcon = mkChargerPin(true)
    ═══════════════════════════════════════════════════════ */
 function FlyTo({ center }) {
   const map = useMap()
-  useEffect(() => { if (center) map.flyTo(center, 9, { duration: 1.4 }) }, [center, map])
+  const isFirst = useRef(true)
+  useEffect(() => {
+    if (!center) return
+    if (isFirst.current) { isFirst.current = false; return }
+    map.flyTo(center, 9, { duration: 1.4 })
+  }, [center, map])
   return null
 }
 function FitBounds({ start, end }) {
@@ -147,6 +152,7 @@ function LocationInput({ value, onChange, onSelect, placeholder, accent = '#00D4
   const [cursor, setCursor] = useState(-1)
   const [touched, setTouched] = useState(false)
   const [coords, setCoords] = useState(null)
+  const isDark = useStore((s) => s.theme) === 'dark'
   const wrapRef = useRef(null)
   const inputRef = useRef(null)
   const listRef = useRef(null)
@@ -236,7 +242,7 @@ function LocationInput({ value, onChange, onSelect, placeholder, accent = '#00D4
 
       {showDrop && coords && createPortal(
         <div ref={listRef} role="listbox" className="no-scrollbar animate-fade-up"
-          style={{ position: 'fixed', top: coords.top, left: coords.left, width: coords.width, zIndex: 999999, background: 'rgba(7,11,20,0.85)', backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)', border: `1px solid ${accent}40`, borderRadius: 16, overflow: 'hidden', boxShadow: '0 20px 50px rgba(0,0,0,0.8), 0 4px 14px rgba(0,0,0,0.5)', maxHeight: 300, overflowY: 'auto' }}>
+          style={{ position: 'fixed', top: coords.top, left: coords.left, width: coords.width, zIndex: 999999, background: isDark ? 'rgba(7,11,20,0.85)' : 'rgba(255,255,255,0.97)', backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)', border: isDark ? `1px solid ${accent}40` : '1px solid rgba(0,0,0,0.12)', borderRadius: 16, overflow: 'hidden', boxShadow: isDark ? '0 20px 50px rgba(0,0,0,0.8), 0 4px 14px rgba(0,0,0,0.5)' : '0 20px 50px rgba(0,0,0,0.12), 0 4px 14px rgba(0,0,0,0.06)', maxHeight: 300, overflowY: 'auto' }}>
           {loading && !suggestions.length && (
             <div style={{ padding: '8px 10px 6px', display: 'flex', flexDirection: 'column', gap: 5 }}>
               {[0, 1, 2].map(i => <div key={i} className="skeleton" style={{ height: 38, borderRadius: 8 }} />)}
@@ -390,6 +396,7 @@ function ChargerDetailModal({ stop, stopIndex, batteryAtArrival = 10, onClose })
    BATTERY GAUGE
    ═══════════════════════════════════════════════════════ */
 function BatteryGauge({ percent, maxRangeKm }) {
+  const isDark = useStore((s) => s.theme) === 'dark'
   const r = 34, circ = 2 * Math.PI * r, arc = 0.75
   const fill = (percent / 100) * circ * arc
   const color = percent > 50 ? 'var(--accent)' : percent > 20 ? '#FBBF24' : '#FF4D6D'
@@ -399,7 +406,7 @@ function BatteryGauge({ percent, maxRangeKm }) {
     <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
       <div style={{ position: 'relative', width: 84, height: 84, flexShrink: 0 }}>
         <svg width="84" height="84" viewBox="0 0 84 84" style={{ transform: 'rotate(135deg)' }}>
-          <circle cx="42" cy="42" r={r} fill="none" strokeWidth="5" stroke="rgba(255,255,255,0.06)" strokeDasharray={`${circ * arc} ${circ * (1 - arc)}`} strokeLinecap="round" />
+          <circle cx="42" cy="42" r={r} fill="none" strokeWidth="5" stroke={isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.08)'} strokeDasharray={`${circ * arc} ${circ * (1 - arc)}`} strokeLinecap="round" />
           <circle cx="42" cy="42" r={r} fill="none" strokeWidth="5" stroke={color} strokeDasharray={`${fill} ${circ - fill}`} strokeLinecap="round" style={{ transition: 'stroke-dasharray 0.45s ease, stroke 0.3s ease', filter: `drop-shadow(0 0 5px ${color})` }} />
         </svg>
         <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
@@ -427,6 +434,7 @@ function BatteryGauge({ percent, maxRangeKm }) {
    TRIP SUMMARY & TIMELINE MODAL (Premium Glassmorphic)
    ═══════════════════════════════════════════════════════ */
 function TripSummaryModal({ route, car, startLoc, endLoc, startBattery, onClose }) {
+  const isDark = useStore((s) => s.theme) === 'dark'
   if (!route || !car) return null
   const kwh100 = (car.battery_capacity_kwh / car.range_km) * 100
   const energy = route.energy_kwh_used ?? +((route.total_distance_km / 100 * kwh100).toFixed(1))
@@ -458,11 +466,11 @@ function TripSummaryModal({ route, car, startLoc, endLoc, startBattery, onClose 
 
   return (
     <div className="modal-overlay" onClick={e => e.target === e.currentTarget && onClose()} style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', zIndex: 99999 }}>
-      <div className="scale-up-modal" style={{ width: '100%', maxWidth: 520, margin: '20px auto', background: 'rgba(13,17,23,0.85)', border: '1px solid rgba(0,212,170,0.3)', borderRadius: 24, boxShadow: '0 0 50px rgba(0,0,0,0.8), inset 0 0 20px rgba(0,212,170,0.05)', overflow: 'hidden', display: 'flex', flexDirection: 'column', maxHeight: '90vh' }}>
+      <div className="scale-up-modal" style={{ width: '100%', maxWidth: 520, margin: '20px auto', background: isDark ? 'rgba(13,17,23,0.85)' : 'rgba(255,255,255,0.97)', border: `1px solid ${isDark ? 'rgba(0,212,170,0.3)' : 'rgba(0,184,148,0.25)'}`, borderRadius: 24, boxShadow: isDark ? '0 0 50px rgba(0,0,0,0.8), inset 0 0 20px rgba(0,212,170,0.05)' : '0 0 50px rgba(0,0,0,0.1), inset 0 0 20px rgba(0,184,148,0.04)', overflow: 'hidden', display: 'flex', flexDirection: 'column', maxHeight: '90vh' }}>
         
         <div style={{ padding: '24px 28px', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', background: 'linear-gradient(135deg, rgba(0,212,170,0.1), transparent)' }}>
           <div>
-            <h2 style={{ fontSize: 24, fontWeight: 800, color: '#fff', letterSpacing: '-0.03em' }}>Trip Summary</h2>
+            <h2 style={{ fontSize: 24, fontWeight: 800, color: 'var(--text-1)', letterSpacing: '-0.03em' }}>Trip Summary</h2>
             <p style={{ fontSize: 13, color: 'var(--accent)', marginTop: 4, fontWeight: 600 }}>{car.brand} {car.name || car.model}</p>
           </div>
           <button className="btn-ghost" onClick={onClose}><X className="w-5 h-5" /></button>
@@ -470,11 +478,11 @@ function TripSummaryModal({ route, car, startLoc, endLoc, startBattery, onClose 
 
         <div className="no-scrollbar" style={{ overflowY: 'auto', padding: '24px 28px', flex: 1 }}>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 24 }}>
-            <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 16, padding: '16px', textAlign: 'center' }}>
+            <div style={{ background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.03)', border: `1px solid ${isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'}`, borderRadius: 16, padding: '16px', textAlign: 'center' }}>
               <div style={{ fontSize: 12, color: 'var(--text-2)', marginBottom: 4 }}>Money Saved</div>
               <div className="mono" style={{ fontSize: 28, fontWeight: 800, color: 'var(--accent)', textShadow: '0 0 20px rgba(0,212,170,0.4)' }}>₹{savings}</div>
             </div>
-            <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 16, padding: '16px', textAlign: 'center' }}>
+            <div style={{ background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.03)', border: `1px solid ${isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'}`, borderRadius: 16, padding: '16px', textAlign: 'center' }}>
               <div style={{ fontSize: 12, color: 'var(--text-2)', marginBottom: 4 }}>CO₂ Reduced</div>
               <div className="mono" style={{ fontSize: 28, fontWeight: 800, color: '#34D399', textShadow: '0 0 20px rgba(52,211,153,0.4)' }}>{co2}kg</div>
             </div>
@@ -482,7 +490,7 @@ function TripSummaryModal({ route, car, startLoc, endLoc, startBattery, onClose 
 
           <p style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--text-3)', marginBottom: 16, fontFamily: 'IBM Plex Mono, monospace' }}>Journey Details</p>
           
-          <div style={{ background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: 16, padding: '20px' }}>
+          <div style={{ background: isDark ? 'rgba(0,0,0,0.2)' : 'rgba(0,0,0,0.04)', border: `1px solid ${isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.06)'}`, borderRadius: 16, padding: '20px' }}>
             {timelineNodes.map((n, i) => {
               if (n.type === 'start') return (
                 <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
@@ -512,6 +520,12 @@ function TripSummaryModal({ route, car, startLoc, endLoc, startBattery, onClose 
                       <div><span style={{ color: 'var(--text-2)' }}>Arrived:</span> <span className="mono" style={{ color: '#FF4D6D', fontWeight: 600 }}>{n.arriveBat}%</span></div>
                       <div><span style={{ color: 'var(--text-2)' }}>Charged:</span> <span className="mono" style={{ color: '#00D4AA', fontWeight: 600 }}>{n.departBat}%</span></div>
                     </div>
+                    {n.time && (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 11, color: 'var(--text-2)', marginTop: 6 }}>
+                        <Clock style={{ width: 10, height: 10 }} />
+                        <span className="mono" style={{ fontWeight: 600, color: 'var(--text-1)' }}>{n.time} min</span> charge time
+                      </div>
+                    )}
                   </div>
                 </div>
               )
@@ -1103,7 +1117,7 @@ export default function RoutePlanner() {
 
   /* ── CTA footer ── */
   const footerCTA = (
-    <div style={{ padding: '20px 16px', background: 'rgba(7,11,20,0.85)', backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)', borderTop: '1px solid rgba(255,255,255,0.05)', flexShrink: 0, position: 'sticky', bottom: 0, zIndex: 10 }}>
+    <div style={{ padding: '20px 16px', background: isDark ? 'rgba(7,11,20,0.85)' : 'rgba(255,255,255,0.92)', backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)', borderTop: '1px solid var(--border)', flexShrink: 0, position: 'sticky', bottom: 0, zIndex: 10 }}>
       {route ? (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           <button
@@ -1232,13 +1246,56 @@ export default function RoutePlanner() {
         }
         .pulse-cta { animation: pulse-cta 2.2s ease-in-out infinite !important; }
 
-        @keyframes route-loading-spin {
-          to { transform: rotate(360deg); }
-        }
         @keyframes loading-text-pulse {
           0%,100% { opacity: 1; }
           50%     { opacity: 0.5; }
         }
+
+        /* Logo Drawing Animations */
+        @keyframes draw-path-loop {
+          0%, 5% { stroke-dashoffset: 1500; opacity: 0; }
+          15% { opacity: 1; }
+          45%, 65% { stroke-dashoffset: 0; opacity: 1; }
+          85% { opacity: 0; }
+          100% { stroke-dashoffset: 1500; opacity: 0; }
+        }
+        @keyframes accent-fade-loop {
+          0%, 55% { opacity: 0; }
+          70%, 85% { opacity: 1; }
+          100% { opacity: 0; }
+        }
+        @keyframes logo-glow {
+          0%, 100% { filter: drop-shadow(0 0 5px rgba(74,190,161,0.25)); }
+          50% { filter: drop-shadow(0 0 15px rgba(74,190,161,0.5)); }
+        }
+
+        .logo-path-pin {
+          stroke-dasharray: 1500;
+          stroke-dashoffset: 1500;
+          animation: draw-path-loop 4s ease-in-out infinite;
+        }
+        .logo-path-main {
+          stroke-dasharray: 1500;
+          stroke-dashoffset: 1500;
+          animation: draw-path-loop 4s ease-in-out 0.4s infinite;
+        }
+        .logo-path-accent {
+          opacity: 0;
+          animation: accent-fade-loop 4s ease-in-out infinite;
+        }
+        .logo-paths-group {
+          animation: logo-glow 3s ease-in-out infinite;
+        }
+        
+        .logo-svg-container {
+          animation: logo-float 4s ease-in-out infinite;
+        }
+
+        @keyframes logo-float {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-10px); }
+        }
+
       `}</style>
 
       <Navbar />
@@ -1249,13 +1306,10 @@ export default function RoutePlanner() {
         {!isMobile && (
           <div className="glass-sidebar no-scrollbar" style={{ width: 370, height: '100%', position: 'relative', zIndex: 100, flexShrink: 0, display: 'flex', flexDirection: 'column' }}>
             <div style={{ padding: '16px 18px 14px', borderBottom: '1px solid var(--border)', flexShrink: 0 }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+              <div style={{ display: 'flex', alignItems: 'center', marginBottom: 10 }}>
                 <button className="btn-ghost" style={{ marginLeft: -8 }} onClick={() => navigate('/select-brand')}>
                   <ChevronLeft className="w-3.5 h-3.5" />Change vehicle
                 </button>
-                <span className="badge badge-green" style={{ fontSize: 10 }}>
-                  <span style={{ width: 5, height: 5, borderRadius: '50%', background: 'currentColor', animation: 'pulse-dot 1.5s ease infinite' }} />Live
-                </span>
               </div>
               {/* Car name prominent, "Route Planner" as small label */}
               <p style={{ fontSize: 10, fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--text-3)', marginBottom: 3 }}>Route Planner</p>
@@ -1275,31 +1329,21 @@ export default function RoutePlanner() {
           {loading && (
             <div style={{
               position: 'absolute', inset: 0, zIndex: 500,
-              background: 'rgba(7, 11, 20, 0.75)',
-              backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)',
+              background: isDark ? 'rgba(7, 11, 20, 0.7)' : 'rgba(255, 255, 255, 0.6)',
+              backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)',
               display: 'flex', flexDirection: 'column',
               alignItems: 'center', justifyContent: 'center', gap: 20,
               animation: 'fade-in 0.3s ease',
             }}>
               {/* Animated spinner ring */}
-              <div style={{ position: 'relative', width: 72, height: 72 }}>
-                <svg
-                  viewBox="0 0 72 72" fill="none"
-                  style={{ width: 72, height: 72, animation: 'route-loading-spin 1.2s linear infinite' }}
-                >
-                  <circle cx="36" cy="36" r="30" stroke="rgba(255,255,255,0.08)" strokeWidth="3" />
-                  <circle
-                    cx="36" cy="36" r="30"
-                    stroke="var(--accent)" strokeWidth="3"
-                    strokeDasharray="50 140" strokeLinecap="round"
-                  />
+              <div className="logo-svg-container" style={{ position: 'relative', width: 90, height: 90, marginBottom: 4, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <svg viewBox="260 160 330 480" xmlns="http://www.w3.org/2000/svg" style={{ width: '100%', height: '100%', overflow: 'visible' }}>
+                  <g className="logo-paths-group">
+                    <path className="logo-path-pin" style={{ fill: 'transparent', stroke: 'var(--accent)', strokeLinecap: 'round', strokeLinejoin: 'round', strokeWidth: 3 }} d="M389.25,224.84c-29,0.5-64.54,29.54-54.97,73c0.97,6.5,29.86,57.79,54.97,88.5 c22.18-27.25,55-80,56-89C454.25,257.34,423.25,224.34,389.25,224.84z M389.75,316.34c-18.5,0-33.5-15-33.5-33.5s15-33.5,33.5-33.5s33.5,15,33.5,33.5 S408.25,316.34,389.75,316.34z"/>
+                    <path className="logo-path-main" style={{ fill: 'transparent', stroke: 'var(--accent)', strokeLinecap: 'round', strokeLinejoin: 'round', strokeWidth: 3 }} d="M510.25,499.34l-27,23l-33-49c24.99-14.76,47.18-31.85,61-49 c38.74-43.63,55.84-169.82-28-230c-112.28-77.49-241.16,8.11-204,120 c13.13,39.08,36.88,80.05,70.88,122.85c8-4.09,16.39-8.03,25.12-11.85 c-32.07-32.97-54.88-68.65-72-106c-22.5-60.5,17.32-122.61,83-125 c65.14-2.37,99.18,48.21,85,123c-12.56,50.62-47.98,84.05-96,108 l-25,12c-0.04-0.05-0.08-0.1-0.12-0.15 c-53.89,27.49-89.96,61.71-90.49,112.65v70 c0.61,14.5,15.61,38.5,39.61,38.5c32,0,42-23,42.18-38.5l0.34-70 c-0.52-12.5,29.32-33.19,50.48-44.5l79,119l26-28l85,81L510.25,499.34z M318.25,549.34v70.37c0,7.63-8,9.63-17,9.63c-10,0-18-4-18.03-9.5v-70 c0.03-63.5,49.6-83.37,119.03-116.17c94-47.33,110.4-134.11,86.5-208.83 c59.5,82.5,44.5,191.5-86.5,247.81 C358.25,492.34,320.25,523.34,318.25,549.34z M496.25,569.34l-24,20l-62-93l25-15l46,66l24-15l33,77L496.25,569.34z"/>
+                    <polygon className="logo-path-accent" style={{ fill: 'transparent', stroke: 'var(--accent)', strokeLinecap: 'round', strokeLinejoin: 'round', strokeWidth: 3 }} points="374.61,424.96 349.73,436.32 351.09,439.16 375.98,427.8"/>
+                  </g>
                 </svg>
-                <div style={{
-                  position: 'absolute', inset: 0,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                }}>
-                  <span style={{ fontSize: 22 }}>⚡</span>
-                </div>
               </div>
 
               {/* Cycling loading text */}
@@ -1344,7 +1388,7 @@ export default function RoutePlanner() {
               <Marker position={startCoords} icon={startIcon}>
                 <Popup>
                   <div style={{ fontWeight: 700, fontSize: 13 }}>📍 {startLoc}</div>
-                  <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.45)', marginTop: 3 }}>Start</div>
+                  <div style={{ fontSize: 11, color: 'var(--text-3)', marginTop: 3 }}>Start</div>
                 </Popup>
               </Marker>
             )}
@@ -1352,7 +1396,7 @@ export default function RoutePlanner() {
               <Marker position={endCoords} icon={endIcon}>
                 <Popup>
                   <div style={{ fontWeight: 700, fontSize: 13 }}>🏁 {endLoc}</div>
-                  <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.45)', marginTop: 3 }}>Destination</div>
+                  <div style={{ fontSize: 11, color: 'var(--text-3)', marginTop: 3 }}>Destination</div>
                 </Popup>
               </Marker>
             )}
@@ -1362,7 +1406,7 @@ export default function RoutePlanner() {
                 <Marker key={`wp-${i}`} position={wp.coords} icon={waypointIcon}>
                   <Popup>
                     <div style={{ fontWeight: 700, fontSize: 13 }}>🛑 {wp.label || `Stop ${i + 1}`}</div>
-                    <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.45)', marginTop: 3 }}>User added stop</div>
+                    <div style={{ fontSize: 11, color: 'var(--text-3)', marginTop: 3 }}>User added stop</div>
                   </Popup>
                 </Marker>
               ) : null
@@ -1374,7 +1418,7 @@ export default function RoutePlanner() {
                   eventHandlers={{ click: () => setSelectedStop({ stop, index: i }) }}>
                   <Popup>
                     <div style={{ fontWeight: 700, fontSize: 13 }}>⚡ {stop.station_name}</div>
-                    <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.45)', marginTop: 3 }}>Stop #{i + 1} · {stop.charging_time_minutes} min</div>
+                    <div style={{ fontSize: 11, color: 'var(--text-3)', marginTop: 3 }}>Stop #{i + 1} · {stop.charging_time_minutes} min</div>
                     <button onClick={() => setSelectedStop({ stop, index: i })} style={{ marginTop: 7, fontSize: 11, color: '#00D4AA', background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontFamily: 'Outfit' }}>
                       View details →
                     </button>
@@ -1385,9 +1429,9 @@ export default function RoutePlanner() {
 
             {/* Dual polyline: white glow + teal on top + animated pulse */}
             {route?.route_coords && <>
-              <Polyline key={`glow-${routeKey}`} positions={route.route_coords} pathOptions={{ color: '#ffffff', weight: 9, opacity: 0.07, lineCap: 'round', lineJoin: 'round' }} />
-              <Polyline key={`line-${routeKey}`} positions={route.route_coords} pathOptions={{ color: '#00D4AA', weight: 3.5, opacity: 0.9, lineCap: 'round', lineJoin: 'round' }} />
-              <Polyline key={`pulse-${routeKey}`} positions={route.route_coords} pathOptions={{ color: '#ffffff', weight: 3.5, opacity: 0.8, className: 'energy-pulse-line' }} />
+              <Polyline key={`glow-${routeKey}`} positions={route.route_coords} pathOptions={{ color: isDark ? '#ffffff' : '#000000', weight: 9, opacity: isDark ? 0.07 : 0.06, lineCap: 'round', lineJoin: 'round' }} />
+              <Polyline key={`line-${routeKey}`} positions={route.route_coords} pathOptions={{ color: isDark ? '#00D4AA' : '#0E7660', weight: isDark ? 3.5 : 4, opacity: 0.9, lineCap: 'round', lineJoin: 'round' }} />
+              <Polyline key={`pulse-${routeKey}`} positions={route.route_coords} pathOptions={{ color: isDark ? '#ffffff' : '#00D4AA', weight: 3.5, opacity: isDark ? 0.8 : 0.5, className: 'energy-pulse-line' }} />
             </>}
 
             {/* Dashed amber line: last confirmed stop → destination (coverage gap) */}
@@ -1420,7 +1464,7 @@ export default function RoutePlanner() {
           {/* Map hint */}
           {!route && !loading && (
             <div style={{ position: 'absolute', bottom: isMobile ? '56vh' : 24, left: '50%', transform: 'translateX(-50%)', zIndex: 1000, pointerEvents: 'none', whiteSpace: 'nowrap' }}>
-              <div style={{ padding: '8px 16px', borderRadius: 100, background: 'rgba(7,11,20,0.92)', border: '1px solid var(--border)', fontSize: 12, color: 'var(--text-2)', backdropFilter: 'blur(12px)' }}>
+              <div style={{ padding: '8px 16px', borderRadius: 100, background: isDark ? 'rgba(7,11,20,0.92)' : 'rgba(255,255,255,0.95)', border: '1px solid var(--border)', fontSize: 12, color: 'var(--text-2)', backdropFilter: 'blur(12px)', boxShadow: isDark ? 'none' : '0 4px 16px rgba(0,0,0,0.08)' }}>
                 Type a location → pick suggestion → <strong style={{ color: 'var(--text-1)' }}>Find Best Route</strong>
               </div>
             </div>

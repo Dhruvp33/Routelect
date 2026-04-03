@@ -17,7 +17,7 @@
   --border-active: rgba(0, 212, 170, 0.4);
   --text-1: #F0F2FF;
   --text-2: #8892A4;
-  --text-3: #3D4A5C;
+  --text-3: #546278;
   --accent: #00D4AA;
   --accent-dim: rgba(0, 212, 170, 0.08);
   --accent-glow: rgba(0, 212, 170, 0.3);
@@ -50,6 +50,44 @@
   --info: #3B82F6;
 }
 
+/* ── Light mode component overrides ── */
+:root[data-theme="light"] ::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.12);
+}
+:root[data-theme="light"] ::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.25);
+}
+:root[data-theme="light"] .glass-panel {
+  background: rgba(255, 255, 255, 0.88);
+}
+:root[data-theme="light"] .glass-sidebar {
+  background: rgba(255, 255, 255, 0.97);
+}
+:root[data-theme="light"] .btn-ghost:hover {
+  background: rgba(0, 0, 0, 0.05);
+}
+:root[data-theme="light"] .card:hover {
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.1);
+}
+:root[data-theme="light"] .card-interactive:hover {
+  box-shadow: 0 8px 32px rgba(0, 184, 148, 0.1), 0 4px 16px rgba(0, 0, 0, 0.08);
+}
+:root[data-theme="light"] .toast {
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+:root[data-theme="light"] .mobile-sheet {
+  box-shadow: 0 -12px 48px rgba(0, 0, 0, 0.1), 0 -2px 12px rgba(0, 0, 0, 0.06);
+}
+:root[data-theme="light"] .leaflet-control-attribution {
+  background: rgba(255, 255, 255, 0.88) !important;
+}
+:root[data-theme="light"] .leaflet-control-zoom {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1) !important;
+}
+:root[data-theme="light"] .modal-overlay {
+  background: rgba(0, 0, 0, 0.35);
+}
+
 /* ========================================
    BASE
    ======================================== */
@@ -66,6 +104,7 @@ html {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
+  touch-action: manipulation;
 }
 
 body {
@@ -277,6 +316,8 @@ h5 {
   font-size: 14px;
   outline: none;
   transition: all var(--transition);
+  cursor: text !important;
+  caret-color: var(--text-1);
 }
 
 .input-field::placeholder {
@@ -570,6 +611,7 @@ h5 {
 .leaflet-container {
   background: var(--bg) !important;
   font-family: 'Outfit', sans-serif !important;
+  touch-action: auto !important;
 }
 
 .leaflet-popup-content-wrapper {
@@ -1278,8 +1320,10 @@ h5 {
    PREMIUM UI OVERHAUL ANIMATIONS
    ======================================== */
 .energy-pulse-line {
-  stroke-dasharray: 12 18;
-  animation: dash-flow 1.5s linear infinite;
+  stroke-dasharray: 12 18 !important;
+  stroke-dashoffset: 0;
+  animation: dash-flow 1.5s linear infinite !important;
+  will-change: stroke-dashoffset;
 }
 
 @keyframes dash-flow {

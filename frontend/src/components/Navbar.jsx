@@ -547,6 +547,96 @@ export default function Navbar() {
           background: rgba(0,212,170,0.16);
         }
 
+        /* ── Light mode ── */
+        :root[data-theme="light"] .rl-bar {
+          background: rgba(255, 255, 255, 0.92);
+          border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+          box-shadow: 0 1px 0 rgba(0, 0, 0, 0.03), 0 4px 24px rgba(0, 0, 0, 0.06);
+        }
+        :root[data-theme="light"] .rl-logo-text {
+          color: #111827;
+        }
+        :root[data-theme="light"] .rl-navlink {
+          color: rgba(0, 0, 0, 0.55);
+        }
+        :root[data-theme="light"] .rl-navlink:hover {
+          background: rgba(0, 0, 0, 0.05);
+          color: #111827;
+          border-color: rgba(0, 0, 0, 0.08);
+        }
+        :root[data-theme="light"] .rl-navlink.active {
+          background: rgba(0, 0, 0, 0.06);
+          color: #111827;
+          border-color: rgba(0, 0, 0, 0.1);
+        }
+        :root[data-theme="light"] .rl-profile-btn {
+          background: rgba(0, 0, 0, 0.04);
+          border-color: rgba(0, 0, 0, 0.1);
+        }
+        :root[data-theme="light"] .rl-profile-btn:hover {
+          background: rgba(0, 0, 0, 0.07);
+          border-color: rgba(0, 0, 0, 0.15);
+        }
+        :root[data-theme="light"] .rl-avatar {
+          background: #E5E8EE;
+        }
+        :root[data-theme="light"] .rl-profile-name {
+          color: #111827;
+        }
+        :root[data-theme="light"] .rl-chevron {
+          color: rgba(0, 0, 0, 0.35);
+        }
+        :root[data-theme="light"] .rl-dropdown {
+          background: rgba(255, 255, 255, 0.98);
+          border-color: rgba(0, 0, 0, 0.1);
+          box-shadow: 0 24px 60px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(0, 0, 0, 0.04);
+        }
+        :root[data-theme="light"] .rl-dropdown-header {
+          border-bottom-color: rgba(0, 0, 0, 0.07);
+        }
+        :root[data-theme="light"] .rl-dropdown-name {
+          color: #111827;
+        }
+        :root[data-theme="light"] .rl-dropdown-email {
+          color: rgba(0, 0, 0, 0.45);
+        }
+        :root[data-theme="light"] .rl-dropdown-car {
+          border-bottom-color: rgba(0, 0, 0, 0.07);
+          color: rgba(0, 0, 0, 0.55);
+        }
+        :root[data-theme="light"] .rl-hamburger {
+          background: rgba(0, 0, 0, 0.04);
+          border-color: rgba(0, 0, 0, 0.1);
+          color: rgba(0, 0, 0, 0.7);
+        }
+        :root[data-theme="light"] .rl-hamburger:hover {
+          background: rgba(0, 0, 0, 0.08);
+        }
+        :root[data-theme="light"] .rl-drawer {
+          background: rgba(255, 255, 255, 0.98);
+          border-bottom-color: rgba(0, 0, 0, 0.08);
+        }
+        :root[data-theme="light"] .rl-drawer-link {
+          color: rgba(0, 0, 0, 0.65);
+          background: rgba(0, 0, 0, 0.03);
+          border-color: rgba(0, 0, 0, 0.07);
+        }
+        :root[data-theme="light"] .rl-drawer-link:hover {
+          background: rgba(0, 0, 0, 0.06);
+          color: #111827;
+          border-color: rgba(0, 0, 0, 0.1);
+        }
+        :root[data-theme="light"] .rl-drawer-user {
+          background: rgba(0, 0, 0, 0.02);
+          border-color: rgba(0, 0, 0, 0.07);
+        }
+        :root[data-theme="light"] .rl-drawer-avatar {
+          background: #E5E8EE;
+        }
+        :root[data-theme="light"] .rl-drawer-divider {
+          background: rgba(0, 0, 0, 0.06);
+        }
+
         /* ── Responsive ── */
         @media (max-width: 680px) {
           .rl-inner {
@@ -596,7 +686,7 @@ export default function Navbar() {
               </nav>
 
               {/* Divider */}
-              <div style={{ width: 1, height: 20, background: 'rgba(255,255,255,0.1)', flexShrink: 0 }} />
+              <div style={{ width: 1, height: 20, background: 'var(--border)', flexShrink: 0 }} />
 
               {/* Theme toggle */}
               <button
@@ -604,12 +694,12 @@ export default function Navbar() {
                 title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
                 style={{
                   width: 34, height: 34, borderRadius: 8, flexShrink: 0,
-                  background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)',
+                  background: 'var(--surface-2)', border: '1px solid var(--border)',
                   cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
                   transition: 'all 0.2s', color: 'var(--text-2)',
                 }}
-                onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.08)'; e.currentTarget.style.color = 'var(--accent)' }}
-                onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.04)'; e.currentTarget.style.color = 'var(--text-2)' }}
+                onMouseEnter={e => { e.currentTarget.style.background = 'var(--surface-3)'; e.currentTarget.style.color = 'var(--accent)' }}
+                onMouseLeave={e => { e.currentTarget.style.background = 'var(--surface-2)'; e.currentTarget.style.color = 'var(--text-2)' }}
               >
                 {theme === 'dark' ? <Sun size={15} /> : <Moon size={15} />}
               </button>

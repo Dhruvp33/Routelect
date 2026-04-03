@@ -1,5 +1,4 @@
 import { Link } from 'react-router-dom'
-import { Zap } from 'lucide-react'
 
 export default function Footer() {
     return (
@@ -20,22 +19,22 @@ export default function Footer() {
                             display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12,
                         }}>
                             <div style={{
-                                width: 28, height: 28, borderRadius: 8,
-                                background: 'linear-gradient(135deg, #00D4AA, #00B87A)',
+                                width: 28, height: 28,
                                 display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                flexShrink: 0,
                             }}>
-                                <Zap style={{ width: 14, height: 14, color: '#000' }} />
+                                <img src="/routelect-logo.svg" alt="Routelect" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
                             </div>
                             <span style={{
                                 fontFamily: 'Outfit, sans-serif', fontWeight: 800,
                                 fontSize: 16, letterSpacing: '-0.03em',
                             }}>
-                                Route<span style={{ color: 'var(--accent)' }}>lect</span>
+                                ROUT<span style={{ color: 'var(--accent)' }}>ELECT</span>
                             </span>
                         </div>
                         <p style={{ fontSize: 13, color: 'var(--text-2)', lineHeight: 1.6 }}>
                             The intelligent EV route planner built for Indian roads.
-                            Open source · no ads · free forever.
+                            Real battery math, real chargers, real confidence.
                         </p>
                     </div>
 
@@ -52,7 +51,7 @@ export default function Footer() {
                             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                                 <Link to="/select-brand" style={{ fontSize: 13, color: 'var(--text-2)', textDecoration: 'none' }}>Choose EV</Link>
                                 <Link to="/plan-route" style={{ fontSize: 13, color: 'var(--text-2)', textDecoration: 'none' }}>Route Planner</Link>
-                                <Link to="/chargers" style={{ fontSize: 13, color: 'var(--text-2)', textDecoration: 'none' }}>Charger Map</Link>
+                                <Link to="/chargers-map" style={{ fontSize: 13, color: 'var(--text-2)', textDecoration: 'none' }}>Charger Map</Link>
                             </div>
                         </div>
                         <div>
@@ -72,40 +71,14 @@ export default function Footer() {
                     </div>
                 </div>
 
-                {/* Bottom bar */}
+                {/* Bottom bar — clean copyright only */}
                 <div style={{
                     borderTop: '1px solid var(--border)', paddingTop: 20,
-                    display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between',
-                    alignItems: 'center', gap: 12,
+                    display: 'flex', justifyContent: 'center', alignItems: 'center',
                 }}>
                     <p style={{ fontSize: 12, color: 'var(--text-3)' }}>
                         © {new Date().getFullYear()} Routelect · Made with ⚡ for Indian EV drivers
                     </p>
-
-                    {/* Subtle legal disclaimer */}
-                    <p style={{
-                        fontSize: 10, color: 'var(--text-3)', opacity: 0.45,
-                        maxWidth: 520, lineHeight: 1.55, textAlign: 'center',
-                        flex: '1 1 100%', marginTop: 8,
-                    }}>
-                        Route estimates are indicative only. Actual range varies with driving conditions, weather &amp; vehicle health.
-                        Always verify charger availability before departure. Routelect is not liable for any inconvenience arising from route suggestions.
-                        Charger data sourced from OpenChargeMap &amp; Supabase. Routing powered by OSRM / OpenStreetMap contributors.
-                    </p>
-
-                    <div style={{ display: 'flex', gap: 16 }}>
-                        <a
-                            href="https://github.com"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            style={{ fontSize: 12, color: 'var(--text-3)', textDecoration: 'none' }}
-                        >
-                            GitHub
-                        </a>
-                        <span style={{ fontSize: 12, color: 'var(--text-3)' }}>
-                            MIT License
-                        </span>
-                    </div>
                 </div>
             </div>
         </footer>

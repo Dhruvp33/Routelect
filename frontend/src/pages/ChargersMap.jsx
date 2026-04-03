@@ -287,8 +287,13 @@ export default function ChargersMap() {
                 {/* ═══ MAP ═══ */}
                 <div className={isDark ? 'dark-tiles' : ''} style={{ flex: 1, position: 'relative', height: '100%', zIndex: 0 }}>
                     {loading && (
-                        <div style={{ position: 'absolute', inset: 0, zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(6,10,18,0.7)', backdropFilter: 'blur(4px)' }}>
-                            <div style={{ padding: '16px 24px', background: 'var(--surface-2)', borderRadius: 16, border: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: 12 }}>
+                        <div style={{ 
+                            position: 'absolute', inset: 0, zIndex: 1000, 
+                            display: 'flex', alignItems: 'center', justifyContent: 'center', 
+                            background: isDark ? 'rgba(7, 11, 20, 0.7)' : 'rgba(255, 255, 255, 0.6)', 
+                            backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)' 
+                        }}>
+                            <div style={{ padding: '16px 24px', background: 'var(--surface-2)', borderRadius: 16, border: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: 12, boxShadow: isDark ? '0 8px 32px rgba(0,0,0,0.5)' : '0 8px 32px rgba(0,0,0,0.1)' }}>
                                 <Loader2 style={{ width: 16, height: 16, color: 'var(--accent)', animation: 'spin 0.7s linear infinite' }} />
                                 <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-1)' }}>Fetching area chargers…</span>
                             </div>
