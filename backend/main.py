@@ -188,7 +188,7 @@ def calculate_route(req: RouteRequest):
     )
 
     # Hard error — no route possible at all
-    if "error" in result:
+    if result.get("error"):
         raise HTTPException(400, result["error"])
 
     # Partial route — route exists but coverage gap found.

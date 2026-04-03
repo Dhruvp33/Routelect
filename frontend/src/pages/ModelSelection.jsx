@@ -4,6 +4,7 @@ import { Battery, Zap, ChevronLeft, Gauge, ArrowRight, Search, ImageOff } from '
 import { useStore } from '../store/useStore'
 import { useAuth } from '../hooks/useAuth'
 import { API_URL } from '../App'
+import SEO from '../components/SEO'
 
 /* ─── Mobile Detection ─── */
 function useIsMobile() {
@@ -515,6 +516,10 @@ export default function ModelSelection() {
       background: 'var(--bg)',
       padding: isMobile ? '92px 16px 80px' : '108px 20px 96px',
     }}>
+      <SEO 
+        title={brandName ? `${brandName} EV Models` : "Select Your EV Model"} 
+        description={`Select your ${brandName ? brandName : 'electric vehicle'} model to get the most accurate route planning, battery curve estimates, and charging recommendations.`} 
+      />
       <div style={{ maxWidth: 980, margin: '0 auto' }}>
 
         {/* ── Header ── */}

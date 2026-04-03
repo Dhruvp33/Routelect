@@ -12,6 +12,7 @@ import { useStore } from '../store/useStore'
 import { useAuth } from '../hooks/useAuth'
 import { API_URL } from '../App'
 import Navbar from '../components/Navbar'
+import SEO from '../components/SEO'
 import 'leaflet/dist/leaflet.css'
 import L from 'leaflet'
 
@@ -882,12 +883,19 @@ export default function RoutePlanner() {
       setRoute(data); setRouteKey(k => k + 1)
       setLoading(false) // Give immediate UI feedback that calculation is done
 
-      if (data.partial_route && data.coverage_warning) {
+      if (data.low_battery_mode) {
+        setPartialWarning({ message: data.message, uncoveredKm: 0, lowBattery: true })
+        addToast('warning', data.message)
+      } else if (data.partial_route && data.coverage_warning) {
         setPartialWarning({ message: data.coverage_warning, uncoveredKm: data.uncovered_km })
-        addToast('warning', `Partial route — last ~${data.uncovered_km} km has no charger coverage`)
+        addToast('warning', `Partial route — last ~${data.uncovered_km} km has no charger coverage`)
       } else {
         setPartialWarning(null)
-        addToast('success', `Route found — ${data.total_distance_km} km · ${data.estimated_total_time_minutes} min`)
+        if (data.low_arrival_warning) {
+          addToast('warning', data.low_arrival_warning)
+        } else {
+          addToast('success', `Route found — ${data.total_distance_km} km · ${data.estimated_total_time_minutes} min`)
+        }
       }
 
       // Non-blocking background tasks
@@ -1053,19 +1061,27 @@ export default function RoutePlanner() {
               <Zap className="w-4 h-4" style={{ color: 'var(--accent)', flexShrink: 0 }} />
               <div>
                 <p style={{ fontSize: 13, fontWeight: 600, color: 'var(--accent)' }}>Direct trip possible</p>
-                <p style={{ fontSize: 11, color: 'var(--text-2)', marginTop: 1 }}>No charging stop needed</p>
+                <p style={{ fontSize: 11, color: 'var(--text-2)', marginTop: 1 }}>Arriving with ~{route.battery_at_arrival_pct}% battery</p>
               </div>
+            </div>
+          )}
+
+          {/* Low arrival warning for direct routes */}
+          {route.low_arrival_warning && (
+            <div style={{ background: 'rgba(255,181,71,0.08)', border: '1.5px solid rgba(255,181,71,0.35)', borderRadius: 12, padding: '11px 14px', display: 'flex', alignItems: 'center', gap: 10 }}>
+              <AlertTriangle style={{ width: 15, height: 15, color: '#FFB547', flexShrink: 0 }} />
+              <p style={{ fontSize: 12, color: '#FFB547', fontWeight: 600, lineHeight: 1.5, margin: 0 }}>{route.low_arrival_warning}</p>
             </div>
           )}
 
           {/* ── Partial route warning panel ── */}
           {partialWarning && (
-            <div style={{ background: 'rgba(255,181,71,0.06)', border: '1.5px solid rgba(255,181,71,0.38)', borderRadius: 14, overflow: 'hidden' }}>
+            <div style={{ background: partialWarning.lowBattery ? 'rgba(255,77,109,0.06)' : 'rgba(255,181,71,0.06)', border: `1.5px solid ${partialWarning.lowBattery ? 'rgba(255,77,109,0.38)' : 'rgba(255,181,71,0.38)'}`, borderRadius: 14, overflow: 'hidden' }}>
               {/* Header */}
-              <div style={{ background: 'rgba(255,181,71,0.13)', borderBottom: '1px solid rgba(255,181,71,0.22)', padding: '9px 14px', display: 'flex', alignItems: 'center', gap: 8 }}>
-                <AlertTriangle style={{ width: 14, height: 14, color: '#FFB547', flexShrink: 0 }} />
-                <span style={{ fontSize: 11, fontWeight: 800, color: '#FFB547', letterSpacing: '0.07em', textTransform: 'uppercase', fontFamily: 'IBM Plex Mono, monospace' }}>
-                  Partial Route · Coverage Gap
+              <div style={{ background: partialWarning.lowBattery ? 'rgba(255,77,109,0.13)' : 'rgba(255,181,71,0.13)', borderBottom: `1px solid ${partialWarning.lowBattery ? 'rgba(255,77,109,0.22)' : 'rgba(255,181,71,0.22)'}`, padding: '9px 14px', display: 'flex', alignItems: 'center', gap: 8 }}>
+                <AlertTriangle style={{ width: 14, height: 14, color: partialWarning.lowBattery ? '#FF4D6D' : '#FFB547', flexShrink: 0 }} />
+                <span style={{ fontSize: 11, fontWeight: 800, color: partialWarning.lowBattery ? '#FF4D6D' : '#FFB547', letterSpacing: '0.07em', textTransform: 'uppercase', fontFamily: 'IBM Plex Mono, monospace' }}>
+                  {partialWarning.lowBattery ? 'Low Battery · Charge First' : 'Partial Route · Coverage Gap'}
                 </span>
               </div>
               {/* Body */}
@@ -1209,6 +1225,10 @@ export default function RoutePlanner() {
 
   return (
     <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', background: 'var(--bg)', overflow: 'hidden' }}>
+      <SEO 
+        title="Plan Route" 
+        description="Calculate the best and most optimal charging stops for your EV trip in India. Accurate to your car model, battery health, and driving conditions."
+      />
 
       {/* ── Leaflet popup overrides + pulse CTA ── */}
       <style>{`

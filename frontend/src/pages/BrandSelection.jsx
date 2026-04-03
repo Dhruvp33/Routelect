@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Search, ChevronRight, Car, Bike } from 'lucide-react'
 import { API_URL } from '../App'
+import SEO from '../components/SEO'
 
 /* ─── Mobile Detection ─── */
 function useIsMobile() {
@@ -246,6 +247,10 @@ export default function BrandSelection() {
       background: 'var(--bg)',
       padding: isMobile ? '92px 16px 80px' : '108px 20px 96px',
     }}>
+      <SEO 
+        title="Select Your EV Brand" 
+        description="Choose your electric vehicle brand from Tata Motors, MG, Hyundai, Kia, BYD, and more. Plan the perfect road trip for your specific EV." 
+      />
       <div style={{ maxWidth: 980, margin: '0 auto' }}>
 
         {/* ── Header ── */}

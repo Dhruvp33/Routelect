@@ -4,6 +4,7 @@ import { MapPin, Zap, Navigation, ChevronRight, Battery,
   Shield, Clock, TrendingUp, ArrowRight, Car
 } from 'lucide-react'
 import Footer from '../components/Footer'
+import SEO from '../components/SEO'
 
 /* ─── Mobile Detection ─────────────────────────────────── */
 function useIsMobile() {
@@ -21,7 +22,7 @@ const STATS = [
   { value: '1,200+', label: 'Charging Stations' },
   { value: '50+', label: 'EV Models' },
   { value: '28', label: 'States Covered' },
-  { value: '< 10s', label: 'Route Calculation' },
+  { value: '< 2 mins', label: 'Route Calculation' },
 ]
 
 const FEATURES = [
@@ -129,6 +130,11 @@ export default function HomePage() {
 
   return (
     <div style={{ background: 'var(--bg)', minHeight: '100vh', position: 'relative', overflow: 'hidden' }}>
+      <SEO
+        title="Smart EV Trip Planner for India"
+        description="Plan your EV road trip seamlessly across India. Find exactly where to charge your Tata Nexon EV, MG ZS EV, and more based on real-world battery conditions."
+        keywords="EV trip planner India, EV Route Planner, Charging Stations Map India, Tata Nexon EV Route, MG ZS EV"
+      />
 
       {/* ── Background atmosphere ── */}
       <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 0 }}>

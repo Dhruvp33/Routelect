@@ -3,6 +3,7 @@ import { MapContainer, TileLayer, Marker, Popup, useMapEvents } from 'react-leaf
 import { Zap, Search, MapPin, ExternalLink, Loader2, Filter, X, ChevronUp, AlertCircle } from 'lucide-react'
 import { useStore } from '../store/useStore'
 import Navbar from '../components/Navbar'
+import SEO from '../components/SEO'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 
@@ -120,6 +121,11 @@ export default function ChargersMap() {
 
     return (
         <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', background: 'var(--bg)', overflow: 'hidden' }}>
+            <SEO 
+              title="Charger Map" 
+              description="Explore over 1,200 EV charging stations across India. Real-time availability from Zeon, Tata Power, Statiq, ChargeZone, and others." 
+              keywords="EV Charging Stations India, EV Charger Near Me, Tata Power EZ Charge, Zeon Charging Map"
+            />
             <Navbar />
 
             <div className="map-layout-wrapper" style={{ flex: 1, display: 'flex', flexDirection: 'row', overflow: 'hidden', position: 'relative', marginTop: 64 }}>

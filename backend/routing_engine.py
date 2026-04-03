@@ -276,6 +276,10 @@ class EVRouter:
 
     def find_route_with_charging(self, start_lat: float, start_lng: float, end_lat: float, end_lng: float, battery_pct: float, specs: EVSpecs, db_chargers: Optional[List[Dict]] = None, user_waypoints: Optional[List[List[float]]] = None) -> Dict:
         try:
+            # 0. Sanity check — same location?
+            if self._haversine(start_lat, start_lng, end_lat, end_lng) < 0.5:
+                return {"error": "Start and destination are the same or too close together."}
+
             # Build ordered waypoint list for OSRM: start → user waypoints → end
             osrm_points = [[start_lng, start_lat]]
             for wp in (user_waypoints or []):
@@ -304,7 +308,12 @@ class EVRouter:
             real_world_range = specs.real_world_range_km
             
             if specs.range_from_kwh(current_kwh) >= total_dist_km:
-                arr_pct = round(((current_kwh - energy_needed) / specs.battery_capacity_kwh) * 100, 1)
+                kwh_at_arrival = current_kwh - energy_needed
+                arr_pct = round((kwh_at_arrival / specs.battery_capacity_kwh) * 100, 1)
+                # Warn if arriving below 20%
+                arrival_warning = None
+                if arr_pct < 20:
+                    arrival_warning = f"You will arrive with only {arr_pct}% battery. Consider charging en route."
                 return {
                     "route_coords": self._decode_geojson(direct),
                     "total_distance_km": round(total_dist_km, 2),
@@ -313,7 +322,8 @@ class EVRouter:
                     "charging_stops": [],
                     "energy_kwh_used": round(energy_needed, 2),
                     "estimated_charge_cost_inr": round(energy_needed * COST_PER_KWH_INR),
-                    "battery_at_arrival_pct": max(15.0, arr_pct),
+                    "battery_at_arrival_pct": arr_pct,
+                    "low_arrival_warning": arrival_warning,
                     "real_world_range_km": round(real_world_range),
                     "road_names": self._extract_road_names(direct),
                     "user_waypoints": [[wp[0], wp[1]] for wp in (user_waypoints or [])],
@@ -400,10 +410,61 @@ class EVRouter:
                     is_partial = True
                     break
                     
+            # Calculate real final battery at destination
+            remaining_dist_to_dest = total_dist_km - current_route_dist
+            energy_to_dest = specs.kwh_consumed_over(remaining_dist_to_dest)
+            final_kwh_at_dest = max(specs.safety_buffer_kwh, current_qty_kwh - energy_to_dest)
+            final_battery_pct = round((final_kwh_at_dest / specs.battery_capacity_kwh) * 100, 1)
+
             # 6. Build Final OSRM Route geometry with user waypoints + charging stops
             if not stops:
-                # If no stops were found at all, return the baseline raw direct route as an error state
-                return {"error": "No charging stations found along your route. Ensure the API key is active or try a shorter route."}
+                # Low battery mode — find the nearest charger to the user's current position
+                nearest = None
+                nearest_dist = float('inf')
+                for c in raw_pool:
+                    d = self._haversine(start_lat, start_lng, c["lat"], c["lng"])
+                    if d < nearest_dist:
+                        nearest_dist = d
+                        nearest = c
+
+                if nearest:
+                    return {
+                        "error": None,
+                        "partial_route": True,
+                        "low_battery_mode": True,
+                        "route_coords": [[start_lat, start_lng], [nearest["lat"], nearest["lng"]]],
+                        "total_distance_km": round(nearest_dist, 2),
+                        "estimated_total_time_minutes": round(nearest_dist * 1.5),
+                        "needs_charging": True,
+                        "charging_stops": [{
+                            **nearest,
+                            "station_name": nearest.get("name", "Nearest Charging Station"),
+                            "charge_added_kwh": round(specs.battery_capacity_kwh * 0.65, 2),
+                            "charging_time_minutes": round(self._charge_time(
+                                specs.battery_capacity_kwh * 0.65,
+                                float(nearest.get("power_kw", 50.0))
+                            )),
+                            "battery_at_arrival_pct": round((current_kwh / specs.battery_capacity_kwh) * 100, 1),
+                            "battery_at_departure_pct": round(self.CHARGE_TO * 100),
+                            "charger_power_kw": nearest.get("power_kw", 50.0),
+                        }],
+                        "battery_at_arrival_pct": round((current_kwh / specs.battery_capacity_kwh) * 100, 1),
+                        "real_world_range_km": round(specs.real_world_range_km),
+                        "road_names": [],
+                        "coverage_warning": None,
+                        "message": (
+                            f"⚠️ Battery too low to plan full route. "
+                            f"Nearest charger is {round(nearest_dist, 1)} km away — "
+                            f"charge up there first, then re-plan your trip."
+                        ),
+                    }
+                else:
+                    return {
+                        "error": (
+                            "Battery critically low and no nearby charging stations found. "
+                            "Please charge your vehicle before attempting this route."
+                        )
+                    }
             
             # Merge user waypoints and charging stops in route-distance order
             # so OSRM produces a single coherent polyline through everything.
@@ -456,7 +517,7 @@ class EVRouter:
                 "estimated_charge_cost_inr": cost,
                 "petrol_equivalent_cost_inr": round(final_dist_km * 7),
                 "savings_vs_petrol_inr": max(0, round((final_dist_km * 7) - cost)),
-                "battery_at_arrival_pct": 15.0 if not is_partial else "Low", 
+                "battery_at_arrival_pct": final_battery_pct if not is_partial else f"Low (~{final_battery_pct}%)", 
                 "real_world_range_km": round(real_world_range),
                 "road_names": self._extract_road_names(exact_route),
                 "user_waypoints": [[wp[0], wp[1]] for wp in (user_waypoints or [])],
