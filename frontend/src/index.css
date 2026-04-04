@@ -310,7 +310,7 @@ h5 {
   background: var(--surface-2);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  padding: 12px 14px 12px 44px;
+  padding: 10px 14px 10px 40px;
   color: var(--text-1);
   font-family: 'Outfit', sans-serif;
   font-size: 14px;

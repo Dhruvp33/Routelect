@@ -20,6 +20,8 @@ from typing import List, Optional, Dict, Set, Tuple
 REAL_WORLD_FACTOR = 0.78
 COST_PER_KWH_INR = 8.5
 LABEL_MIN_KM = 5.0
+ELEVATION_IMPACT_KWH_PER_1000M_ASCENT = 3.5
+ELEVATION_IMPACT_KWH_PER_1000M_DESCENT = 2.5
 _IGNORED_LABELS = frozenset({"", "unnamed road", "service road", "internal road", "private road"})
 
 # ════════════════════════════════════════════════════════════════════════
@@ -51,8 +53,92 @@ class EVSpecs:
         usable = max(0.0, current_kwh - self.safety_buffer_kwh)
         return usable / self.consumption_kwh_per_km if self.consumption_kwh_per_km > 0 else 0
 
-    def kwh_consumed_over(self, distance_km: float) -> float:
-        return distance_km * self.consumption_kwh_per_km
+    def kwh_consumed_over(self, distance_km: float, elevation_change_m: float = 0.0) -> float:
+        base_consumption = distance_km * self.consumption_kwh_per_km
+        if elevation_change_m > 0:
+            return base_consumption + (elevation_change_m / 1000.0) * ELEVATION_IMPACT_KWH_PER_1000M_ASCENT
+        elif elevation_change_m < 0:
+            return base_consumption - (abs(elevation_change_m) / 1000.0) * ELEVATION_IMPACT_KWH_PER_1000M_DESCENT
+        return base_consumption
+
+# ════════════════════════════════════════════════════════════════════════
+#  ElevationProfile
+# ════════════════════════════════════════════════════════════════════════
+
+class ElevationProfile:
+    def __init__(self, raw_coords: List[List[float]], cumulative_dist: List[float]):
+        self.raw_coords = raw_coords
+        self.cumulative_dist = cumulative_dist
+        self.total_dist = cumulative_dist[-1] if cumulative_dist else 0
+        self.sampled_distances = []
+        self.sampled_elevations = []
+        self.stats = {"ascent_m": 0, "descent_m": 0, "net_impact_kwh": 0.0}
+        self._fetch()
+
+    def _fetch(self):
+        if not self.raw_coords or self.total_dist == 0:
+            return
+            
+        # Target 99 samples so we always have room for the exact final destination coordinate
+        num_samples = min(99, len(self.raw_coords))
+        step = max(1, len(self.raw_coords) // num_samples)
+        
+        sample_lats = []
+        sample_lngs = []
+        
+        for i in range(0, len(self.raw_coords), step):
+            if len(sample_lats) >= 99:
+                break
+            lat, lng = self.raw_coords[i]
+            sample_lats.append(round(lat, 5))
+            sample_lngs.append(round(lng, 5))
+            self.sampled_distances.append(self.cumulative_dist[i])
+            
+        if self.sampled_distances[-1] != self.cumulative_dist[-1]:
+            sample_lats.append(round(self.raw_coords[-1][0], 5))
+            sample_lngs.append(round(self.raw_coords[-1][1], 5))
+            self.sampled_distances.append(self.cumulative_dist[-1])
+            
+        lats_str = ",".join(map(str, sample_lats))
+        lngs_str = ",".join(map(str, sample_lngs))
+        url = f"https://api.open-meteo.com/v1/elevation?latitude={lats_str}&longitude={lngs_str}"
+        
+        try:
+            r = requests.get(url, timeout=10)
+            r.raise_for_status()
+            data = r.json()
+            self.sampled_elevations = data.get("elevation", [0.0] * len(sample_lats))
+        except Exception as e:
+            print(f"⚠️ Open-Meteo elevation fetch failed: {e}")
+            self.sampled_elevations = [0.0] * len(sample_lats)
+
+        # Calculate total stats
+        ascent, descent = 0.0, 0.0
+        for i in range(1, len(self.sampled_elevations)):
+            diff = self.sampled_elevations[i] - self.sampled_elevations[i-1]
+            if diff > 0: ascent += diff
+            else: descent += abs(diff)
+        
+        self.stats["ascent_m"] = round(ascent)
+        self.stats["descent_m"] = round(descent)
+        # We will compute net_impact_kwh later dynamically based on actual usage, or provide a rough static estimate here:
+        uphill_penalty = (ascent / 1000.0) * ELEVATION_IMPACT_KWH_PER_1000M_ASCENT
+        downhill_regen = (descent / 1000.0) * ELEVATION_IMPACT_KWH_PER_1000M_DESCENT
+        self.stats["net_impact_kwh"] = round(uphill_penalty - downhill_regen, 2)
+
+    def get_elevation_at_dist(self, dist_km: float) -> float:
+        if not self.sampled_elevations: return 0.0
+        if dist_km <= 0: return self.sampled_elevations[0]
+        if dist_km >= self.total_dist: return self.sampled_elevations[-1]
+        
+        for i in range(len(self.sampled_distances) - 1):
+            d1, d2 = self.sampled_distances[i], self.sampled_distances[i+1]
+            if d1 <= dist_km <= d2:
+                e1, e2 = self.sampled_elevations[i], self.sampled_elevations[i+1]
+                if d2 == d1: return e1
+                ratio = (dist_km - d1) / (d2 - d1)
+                return e1 + ratio * (e2 - e1)
+        return self.sampled_elevations[-1]
 
 
 # ════════════════════════════════════════════════════════════════════════
@@ -113,28 +199,50 @@ class EVRouter:
             return None
 
     @staticmethod
-    def _extract_road_names(osrm_route: Dict) -> List[Dict]:
+    def _extract_road_names(osrm_route: Dict, elevation_profile: Optional['ElevationProfile'] = None) -> List[Dict]:
         seen:   Set[str]    = set()
         labels: List[Dict]  = []
+        # Fallback to empty if no profile
+        e_profile = elevation_profile
+        
+        # We need a way to estimate cumulative distance since start for tooltips
+        # We can approximate it by summing step distances
+        current_step_dist = 0.0
+        
         try:
             for leg in osrm_route.get("legs", []):
                 for step in leg.get("steps", []):
                     raw_ref  = (step.get("ref")  or "").strip()
                     raw_name = (step.get("name") or "").strip()
                     dist_km  = step.get("distance", 0) / 1000.0
-
+                    
                     ref   = raw_ref.split(";")[0].strip()
-                    label = ref or raw_name
+                    base_label = ref or raw_name
 
-                    if not label or label.lower() in _IGNORED_LABELS or dist_km < LABEL_MIN_KM or label in seen:
+                    if not base_label or base_label.lower() in _IGNORED_LABELS or dist_km < LABEL_MIN_KM or base_label in seen:
+                        current_step_dist += dist_km
                         continue
 
-                    seen.add(label)
+                    # Determine terrain status via elevation profile
+                    terrain_marker = ""
+                    if e_profile:
+                        start_elev = e_profile.get_elevation_at_dist(current_step_dist)
+                        end_elev = e_profile.get_elevation_at_dist(current_step_dist + dist_km)
+                        elev_diff = end_elev - start_elev
+                        if elev_diff > 100: terrain_marker = " (↗ Uphill)"
+                        elif elev_diff < -100: terrain_marker = " (↘ Downhill)"
+
+                    final_label = f"{base_label}{terrain_marker}"
+                    seen.add(base_label)
+                    
                     coords = step.get("geometry", {}).get("coordinates", [])
                     if coords:
                         mid = coords[len(coords) // 2]
-                        labels.append({"name": label, "lat": mid[1], "lng": mid[0]})
-        except Exception:
+                        labels.append({"name": final_label, "lat": mid[1], "lng": mid[0]})
+                        
+                    current_step_dist += dist_km
+        except Exception as e:
+            print(f"Error extracting road names: {e}")
             pass
         return labels
 
@@ -303,12 +411,18 @@ class EVRouter:
             total_drive_min = direct["duration"] / 60.0
 
             # 3. Quick check: Is a direct route possible?
+            elevation_profile = ElevationProfile(raw_coords, cumulative_dist)
+            
             current_kwh = (battery_pct / 100.0) * specs.battery_capacity_kwh
-            energy_needed = specs.kwh_consumed_over(total_dist_km)
+            total_elev_change = elevation_profile.get_elevation_at_dist(total_dist_km) - elevation_profile.get_elevation_at_dist(0.0)
+            energy_needed = specs.kwh_consumed_over(total_dist_km, total_elev_change)
             real_world_range = specs.real_world_range_km
             
-            if specs.range_from_kwh(current_kwh) >= total_dist_km:
-                kwh_at_arrival = current_kwh - energy_needed
+            # Use strict total simulation for direct reachability
+            direct_usable_energy = current_kwh - specs.safety_buffer_kwh
+            
+            if energy_needed <= direct_usable_energy:
+                kwh_at_arrival = min(specs.battery_capacity_kwh, current_kwh - energy_needed)
                 arr_pct = round((kwh_at_arrival / specs.battery_capacity_kwh) * 100, 1)
                 # Warn if arriving below 20%
                 arrival_warning = None
@@ -325,9 +439,10 @@ class EVRouter:
                     "battery_at_arrival_pct": arr_pct,
                     "low_arrival_warning": arrival_warning,
                     "real_world_range_km": round(real_world_range),
-                    "road_names": self._extract_road_names(direct),
+                    "road_names": self._extract_road_names(direct, elevation_profile),
                     "user_waypoints": [[wp[0], wp[1]] for wp in (user_waypoints or [])],
                     "message": "Direct trip possible — no charging needed 🎉",
+                    "elevation_stats": elevation_profile.stats
                 }
 
             # 4. Gather & Snap Chargers Corridor
@@ -343,10 +458,15 @@ class EVRouter:
             is_partial = False
 
             while True:
-                max_reach_km = current_route_dist + specs.range_from_kwh(current_qty_kwh)
+                # Calculate max absolute flat-reach for fallback loops
+                max_reach_flat_km = current_route_dist + specs.range_from_kwh(current_qty_kwh)
                 
-                # Check if we successfully reached the destination
-                if max_reach_km >= total_dist_km:
+                # Check if we successfully reached the destination considering altitude
+                remaining_dist = total_dist_km - current_route_dist
+                elev_to_dest = elevation_profile.get_elevation_at_dist(total_dist_km) - elevation_profile.get_elevation_at_dist(current_route_dist)
+                energy_to_dest = specs.kwh_consumed_over(remaining_dist, elev_to_dest)
+                
+                if energy_to_dest <= (current_qty_kwh - specs.safety_buffer_kwh):
                     break
                     
                 # Find valid, strictly forward chargers
@@ -355,7 +475,9 @@ class EVRouter:
                     req_dist_to_c = (c["route_dist"] - current_route_dist) + c["detour_dist"]
                     # Must be at least 2km ahead to prevent infinite loop on the exact same charger
                     if c["route_dist"] >= current_route_dist + 2.0:
-                        if req_dist_to_c <= specs.range_from_kwh(current_qty_kwh):
+                        elev_change = elevation_profile.get_elevation_at_dist(c["route_dist"]) - elevation_profile.get_elevation_at_dist(current_route_dist)
+                        energy_req = specs.kwh_consumed_over(req_dist_to_c, elev_change)
+                        if energy_req <= (current_qty_kwh - specs.safety_buffer_kwh):
                             reachable.append(c)
                             
                 if not reachable:
@@ -368,7 +490,7 @@ class EVRouter:
                 max_power = max([float(c.get("power_kw", 25.0)) for c in reachable] + [50.0])
                 
                 for c in reachable:
-                    progress_ratio = (c["route_dist"] - current_route_dist) / (max_reach_km - current_route_dist)
+                    progress_ratio = (c["route_dist"] - current_route_dist) / max(1.0, (max_reach_flat_km - current_route_dist))
                     detour_penalty = c["detour_dist"] / 30.0
                     power_score = min(float(c.get("power_kw", 25.0)) / max_power, 1.0)
                     
@@ -383,8 +505,9 @@ class EVRouter:
                     
                 # Simulate driving & charging
                 drive_dist = (best_charger["route_dist"] - current_route_dist) + best_charger["detour_dist"]
-                kwh_used = specs.kwh_consumed_over(drive_dist)
-                kwh_at_arrival = max(specs.safety_buffer_kwh, current_qty_kwh - kwh_used)
+                b_elev_change = elevation_profile.get_elevation_at_dist(best_charger["route_dist"]) - elevation_profile.get_elevation_at_dist(current_route_dist)
+                kwh_used = specs.kwh_consumed_over(drive_dist, b_elev_change)
+                kwh_at_arrival = min(specs.battery_capacity_kwh, max(specs.safety_buffer_kwh, current_qty_kwh - kwh_used))
                 
                 charge_needed = max(0.0, max_charge_kwh - kwh_at_arrival)
                 stop_min = self._charge_time(charge_needed, float(best_charger.get("power_kw", 50.0)))
@@ -402,8 +525,8 @@ class EVRouter:
                 total_stop_min += stop_min
                 current_route_dist = best_charger["route_dist"]
                 
-                # Exiting the detour back to the highway costs energy
-                current_qty_kwh = max_charge_kwh - specs.kwh_consumed_over(best_charger["detour_dist"])
+                # Exiting the detour back to the highway costs energy (assume 0 elevation change immediately at exit)
+                current_qty_kwh = min(specs.battery_capacity_kwh, max_charge_kwh - specs.kwh_consumed_over(best_charger["detour_dist"]))
                 
                 if len(stops) > 25: 
                     # Failsafe
@@ -412,8 +535,9 @@ class EVRouter:
                     
             # Calculate real final battery at destination
             remaining_dist_to_dest = total_dist_km - current_route_dist
-            energy_to_dest = specs.kwh_consumed_over(remaining_dist_to_dest)
-            final_kwh_at_dest = max(specs.safety_buffer_kwh, current_qty_kwh - energy_to_dest)
+            final_elev_change = elevation_profile.get_elevation_at_dist(total_dist_km) - elevation_profile.get_elevation_at_dist(current_route_dist)
+            energy_to_dest = specs.kwh_consumed_over(remaining_dist_to_dest, final_elev_change)
+            final_kwh_at_dest = min(specs.battery_capacity_kwh, max(specs.safety_buffer_kwh, current_qty_kwh - energy_to_dest))
             final_battery_pct = round((final_kwh_at_dest / specs.battery_capacity_kwh) * 100, 1)
 
             # 6. Build Final OSRM Route geometry with user waypoints + charging stops
@@ -452,6 +576,7 @@ class EVRouter:
                         "real_world_range_km": round(specs.real_world_range_km),
                         "road_names": [],
                         "coverage_warning": None,
+                        "elevation_stats": elevation_profile.stats,
                         "message": (
                             f"⚠️ Battery too low to plan full route. "
                             f"Nearest charger is {round(nearest_dist, 1)} km away — "
@@ -493,8 +618,9 @@ class EVRouter:
                 return {"error": "Successfully mapped charging stops but could not resolve final OSRM geometry."}
                 
             final_dist_km = exact_route["distance"] / 1000.0
-            final_kwh = specs.kwh_consumed_over(final_dist_km)
-            cost = round(final_kwh * COST_PER_KWH_INR)
+            final_elev_total = elevation_profile.get_elevation_at_dist(final_dist_km) - elevation_profile.get_elevation_at_dist(0.0)
+            final_kwh = specs.kwh_consumed_over(final_dist_km, final_elev_total)
+            cost = round(max(0, final_kwh) * COST_PER_KWH_INR)
             
             uncovered_km = 0
             warn = None
@@ -519,11 +645,12 @@ class EVRouter:
                 "savings_vs_petrol_inr": max(0, round((final_dist_km * 7) - cost)),
                 "battery_at_arrival_pct": final_battery_pct if not is_partial else f"Low (~{final_battery_pct}%)", 
                 "real_world_range_km": round(real_world_range),
-                "road_names": self._extract_road_names(exact_route),
+                "road_names": self._extract_road_names(exact_route, elevation_profile),
                 "user_waypoints": [[wp[0], wp[1]] for wp in (user_waypoints or [])],
                 "partial_route": is_partial,
                 "uncovered_km": uncovered_km,
                 "coverage_warning": warn,
+                "elevation_stats": elevation_profile.stats,
                 "message": (
                     f"Partial routing — {len(stops)} stops mapped, but the final ~{uncovered_km}km lacks coverage ⚠️"
                     if is_partial else

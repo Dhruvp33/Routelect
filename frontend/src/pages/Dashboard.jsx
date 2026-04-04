@@ -166,7 +166,7 @@ export default function Dashboard() {
                     </div>
                 ) : (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                        {trips.slice(0, 10).map((trip, i) => (
+                        {[...trips].reverse().slice(0, 10).map((trip, i) => (
                             <div
                                 key={trip.id || i}
                                 onClick={() => navigate('/plan-route', { state: { restoreTrip: trip } })}

@@ -161,12 +161,19 @@ function LocationInput({ value, onChange, onSelect, placeholder, accent = '#00D4
   const { suggestions, loading, clear } = usePhotonAutocomplete(value, touched && open)
   const showDrop = open && touched && (loading || suggestions.length > 0 || value.length >= 3)
 
-  // Position portal dropdown cleanly
+  // Position portal dropdown cleanly via requestAnimationFrame to track mobile sheet animations flawlessly
   useEffect(() => {
-    if (showDrop && wrapRef.current) {
-      const rect = wrapRef.current.getBoundingClientRect()
-      setCoords({ top: rect.bottom + 6, left: rect.left, width: rect.width })
+    if (!showDrop) return
+    let raf
+    const update = () => {
+      if (wrapRef.current) {
+        const rect = wrapRef.current.getBoundingClientRect()
+        setCoords({ top: rect.bottom + 6, left: rect.left, width: rect.width })
+      }
+      raf = requestAnimationFrame(update)
     }
+    update()
+    return () => cancelAnimationFrame(raf)
   }, [showDrop, suggestions, loading, value, open])
 
   // Close drop on scroll
@@ -398,31 +405,31 @@ function ChargerDetailModal({ stop, stopIndex, batteryAtArrival = 10, onClose })
    ═══════════════════════════════════════════════════════ */
 function BatteryGauge({ percent, maxRangeKm }) {
   const isDark = useStore((s) => s.theme) === 'dark'
-  const r = 34, circ = 2 * Math.PI * r, arc = 0.75
+  const r = 26, circ = 2 * Math.PI * r, arc = 0.75
   const fill = (percent / 100) * circ * arc
   const color = percent > 50 ? 'var(--accent)' : percent > 20 ? '#FBBF24' : '#FF4D6D'
   const estKm = Math.round(maxRangeKm * percent / 100 * 0.78)
 
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-      <div style={{ position: 'relative', width: 84, height: 84, flexShrink: 0 }}>
-        <svg width="84" height="84" viewBox="0 0 84 84" style={{ transform: 'rotate(135deg)' }}>
-          <circle cx="42" cy="42" r={r} fill="none" strokeWidth="5" stroke={isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.08)'} strokeDasharray={`${circ * arc} ${circ * (1 - arc)}`} strokeLinecap="round" />
-          <circle cx="42" cy="42" r={r} fill="none" strokeWidth="5" stroke={color} strokeDasharray={`${fill} ${circ - fill}`} strokeLinecap="round" style={{ transition: 'stroke-dasharray 0.45s ease, stroke 0.3s ease', filter: `drop-shadow(0 0 5px ${color})` }} />
+    <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+      <div style={{ position: 'relative', width: 64, height: 64, flexShrink: 0 }}>
+        <svg width="64" height="64" viewBox="0 0 64 64" style={{ transform: 'rotate(135deg)' }}>
+          <circle cx="32" cy="32" r={r} fill="none" strokeWidth="4" stroke={isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.08)'} strokeDasharray={`${circ * arc} ${circ * (1 - arc)}`} strokeLinecap="round" />
+          <circle cx="32" cy="32" r={r} fill="none" strokeWidth="4.5" stroke={color} strokeDasharray={`${fill} ${circ - fill}`} strokeLinecap="round" style={{ transition: 'stroke-dasharray 0.45s ease, stroke 0.3s ease', filter: `drop-shadow(0 0 4px ${color})` }} />
         </svg>
         <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-          <span className="mono" style={{ fontSize: 18, fontWeight: 700, color, lineHeight: 1 }}>{percent}</span>
-          <span style={{ fontSize: 9, color: 'var(--text-3)' }}>%</span>
+          <span className="mono" style={{ fontSize: 15, fontWeight: 700, color, lineHeight: 1 }}>{percent}</span>
+          <span style={{ fontSize: 8, color: 'var(--text-3)' }}>%</span>
         </div>
       </div>
       <div style={{ flex: 1 }}>
-        <p style={{ fontSize: 11, color: 'var(--text-2)', marginBottom: 3 }}>Real-world range</p>
-        <p className="mono" style={{ fontSize: 19, fontWeight: 700, lineHeight: 1 }}>
-          {estKm}<span style={{ fontSize: 12, fontWeight: 400, color: 'var(--text-2)', marginLeft: 3 }}>km</span>
+        <p style={{ fontSize: 10, color: 'var(--text-2)', marginBottom: 2 }}>Real-world range</p>
+        <p className="mono" style={{ fontSize: 17, fontWeight: 700, lineHeight: 1 }}>
+          {estKm}<span style={{ fontSize: 11, fontWeight: 400, color: 'var(--text-2)', marginLeft: 3 }}>km</span>
         </p>
-        <p style={{ fontSize: 10, color: 'var(--text-3)', marginTop: 3 }}>incl. 15% safety buffer</p>
+        <p style={{ fontSize: 9, color: 'var(--text-3)', marginTop: 2 }}>incl. 15% safety buffer</p>
         {percent < 20 && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 11, color: '#FF4D6D', marginTop: 6 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 10, color: '#FF4D6D', marginTop: 4 }}>
             <AlertTriangle className="w-3 h-3" />Charging stop likely
           </div>
         )}
@@ -488,6 +495,34 @@ function TripSummaryModal({ route, car, startLoc, endLoc, startBattery, onClose 
               <div className="mono" style={{ fontSize: 28, fontWeight: 800, color: '#34D399', textShadow: '0 0 20px rgba(52,211,153,0.4)' }}>{co2}kg</div>
             </div>
           </div>
+
+          {route.elevation_stats && (
+            <div style={{ background: isDark ? 'linear-gradient(145deg, rgba(255,255,255,0.04), rgba(255,255,255,0.01))' : 'linear-gradient(145deg, rgba(0,0,0,0.03), rgba(0,0,0,0.01))', border: `1px solid ${isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'}`, borderRadius: 16, padding: '16px 20px', marginBottom: 24 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-1)' }}>Topography Impact</div>
+                <div style={{ fontSize: 12, fontWeight: 600, color: route.elevation_stats.net_impact_kwh > 0 ? '#FFB547' : '#00D4AA', display: 'flex', alignItems: 'center', gap: 6 }}>
+                  {route.elevation_stats.net_impact_kwh > 0 ? <AlertTriangle className="w-3 h-3" /> : <Zap className="w-3 h-3" />}
+                  {route.elevation_stats.net_impact_kwh > 0 ? `⚠️ Hills used +${Math.abs(route.elevation_stats.net_impact_kwh)} kWh` : `✅ Downhills extended range!`}
+                </div>
+              </div>
+              <div style={{ display: 'flex', gap: 16 }}>
+                <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 8, background: 'rgba(255,77,109,0.06)', borderRadius: 10, padding: '8px 12px' }}>
+                  <ChevronUp style={{ width: 16, height: 16, color: '#FF4D6D' }} />
+                  <div>
+                    <div style={{ fontSize: 11, color: 'var(--text-2)' }}>Total Ascent</div>
+                    <div className="mono" style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-1)' }}>+{route.elevation_stats.ascent_m}m</div>
+                  </div>
+                </div>
+                <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 8, background: 'rgba(0,212,170,0.06)', borderRadius: 10, padding: '8px 12px' }}>
+                  <ChevronDown style={{ width: 16, height: 16, color: '#00D4AA' }} />
+                  <div>
+                    <div style={{ fontSize: 11, color: 'var(--text-2)' }}>Total Descent</div>
+                    <div className="mono" style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-1)' }}>-{route.elevation_stats.descent_m}m</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
 
           <p style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--text-3)', marginBottom: 16, fontFamily: 'IBM Plex Mono, monospace' }}>Journey Details</p>
           
@@ -731,6 +766,8 @@ export default function RoutePlanner() {
 
   useEffect(() => { if (!selectedCar) navigate('/select-brand') }, [selectedCar, navigate])
 
+  const [sharedRoutePending, setSharedRoutePending] = useState(false)
+
   /* ── Restore route from Dashboard (location.state) ── */
   useEffect(() => {
     if (hasRestoredRef.current) return
@@ -742,6 +779,7 @@ export default function RoutePlanner() {
       if (trip.endCoords) setEndCoords(trip.endCoords)
       if (trip.startLoc) setStartLoc(trip.startLoc)
       if (trip.endLoc) setEndLoc(trip.endLoc)
+      if (trip.waypoints) setWaypoints(trip.waypoints)
       if (trip.route) {
         setRoute(trip.route)
         setRouteKey(k => k + 1)
@@ -763,19 +801,31 @@ export default function RoutePlanner() {
     const toStr = params.get('to')
     const toName = params.get('toName')
 
+    const wpCoordsStr = params.get('wpCoords')
+    const wpLabelsStr = params.get('wpLabels')
+
     if (fromStr && fromName) {
       const [lat, lng] = fromStr.split(',').map(Number)
       if (!isNaN(lat) && !isNaN(lng)) {
         hasRestoredRef.current = true
         setStartLoc(fromName); setStartCoords([lat, lng]); setMapCenter([lat, lng])
+        
+        let initialWps = []
+        if (wpCoordsStr) {
+          const coordsArr = wpCoordsStr.split('|')
+          const labelsArr = wpLabelsStr ? wpLabelsStr.split('|') : []
+          initialWps = coordsArr.map((cStr, i) => {
+            const c = cStr.split(',').map(Number)
+            return { coords: c, label: labelsArr[i] || '' }
+          })
+          setWaypoints(initialWps)
+        }
+
         if (toStr && toName) {
           const [tlat, tlng] = toStr.split(',').map(Number)
           if (!isNaN(tlat) && !isNaN(tlng)) {
             setEndLoc(toName); setEndCoords([tlat, tlng])
-            // Auto-calculate after a short delay to let state settle
-            setTimeout(() => {
-              addToast('info', 'Shared route detected — calculating...')
-            }, 500)
+            setTimeout(() => setSharedRoutePending(true), 100)
           }
         }
         return
@@ -843,7 +893,14 @@ export default function RoutePlanner() {
       from: startCoords.join(','), fromName: startLoc,
       to: endCoords.join(','), toName: endLoc,
     })
-    const url = `${window.location.origin}/plan-route?${params}`
+    
+    const validWps = waypoints.filter(wp => wp.coords)
+    if (validWps.length > 0) {
+      params.append('wpCoords', validWps.map(wp => wp.coords.join(',')).join('|'))
+      params.append('wpLabels', validWps.map(wp => wp.label).join('|'))
+    }
+    
+    const url = `${window.location.origin}/plan-route?${params.toString()}`
     if (navigator.clipboard) {
       navigator.clipboard.writeText(url).then(() => addToast('success', 'Route link copied to clipboard!'))
     } else {
@@ -900,7 +957,7 @@ export default function RoutePlanner() {
 
       // Non-blocking background tasks
       try {
-        addToHistory({ car: selectedCar, route: data, date: new Date().toISOString(), startLoc, endLoc, startCoords, endCoords })
+        addToHistory({ car: selectedCar, route: data, date: new Date().toISOString(), startLoc, endLoc, startCoords, endCoords, waypoints })
         if (user) saveTrip(user.id, { startCoords, endCoords, route: data }).catch(() => { })
       } catch (e) {
         console.error('Background task failed', e)
@@ -915,6 +972,14 @@ export default function RoutePlanner() {
     }
   }
 
+  /* ── Effect to auto-calculate shared route once dependencies are met ── */
+  useEffect(() => {
+    if (sharedRoutePending && startCoords && endCoords && selectedCar) {
+      setSharedRoutePending(false)
+      handleCalculate()
+    }
+  }, [sharedRoutePending, startCoords, endCoords, selectedCar]) // eslint-disable-line react-hooks/exhaustive-deps
+
   if (!selectedCar) return null
 
   const recentRoutes = (tripHistory || []).filter(h => h.startLoc && h.endLoc).slice(-3).reverse()
@@ -926,11 +991,11 @@ export default function RoutePlanner() {
      SIDEBAR CONTENT
      ════════════════════════════════════════════════════ */
   const sidebarContent = (
-    <div className="no-scrollbar" style={{ flex: 1, overflowY: 'auto', padding: '16px', display: 'flex', flexDirection: 'column', gap: 16 }}>
+    <div className="no-scrollbar" style={{ flex: 1, overflowY: 'auto', padding: '12px', display: 'flex', flexDirection: 'column', gap: 12 }}>
 
       {/* ── Dashboard EV Gauge (Restored Premium Visualization) ── */}
-      <div style={{ background: 'var(--surface-2)', border: '1px solid var(--border)', borderRadius: 16, padding: '16px', position: 'relative' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+      <div style={{ background: 'var(--surface-2)', border: '1px solid var(--border)', borderRadius: 14, padding: '10px 12px', position: 'relative' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
           <p style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--text-3)', fontFamily: 'IBM Plex Mono, monospace' }}>Initial Charge</p>
         </div>
         
@@ -938,10 +1003,10 @@ export default function RoutePlanner() {
         <BatteryGauge percent={currentBatteryPercent} maxRangeKm={selectedCar.range_km || 300} />
         
         {/* Adjustment Slider */}
-        <div style={{ marginTop: 20, paddingTop: 16, borderTop: '1px solid var(--border)' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
-            <span style={{ fontSize: 12, color: 'var(--text-3)' }}>Adjust</span>
-            <span className="mono" style={{ fontSize: 13, fontWeight: 700, color: batteryColor }}>{currentBatteryPercent}%</span>
+        <div style={{ marginTop: 12, paddingTop: 10, borderTop: '1px solid var(--border)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
+            <span style={{ fontSize: 11, color: 'var(--text-3)' }}>Adjust</span>
+            <span className="mono" style={{ fontSize: 12, fontWeight: 700, color: batteryColor }}>{currentBatteryPercent}%</span>
           </div>
           <input type="range" min="5" max="100" value={currentBatteryPercent}
             onChange={e => setCurrentBatteryPercent(parseInt(e.target.value))}
@@ -952,14 +1017,14 @@ export default function RoutePlanner() {
       </div>
 
       {/* ── Unified Route Timeline ── */}
-      <div style={{ background: 'var(--surface-2)', border: '1px solid var(--border)', borderRadius: 16, padding: '16px', paddingLeft: 12, position: 'relative' }}>
-        <p style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--text-3)', fontFamily: 'IBM Plex Mono, monospace', marginBottom: 16, marginLeft: 4 }}>Trip Timeline</p>
+      <div style={{ background: 'var(--surface-2)', border: '1px solid var(--border)', borderRadius: 16, padding: '12px', paddingLeft: 10, position: 'relative' }}>
+        <p style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--text-3)', fontFamily: 'IBM Plex Mono, monospace', marginBottom: 12, marginLeft: 4 }}>Trip Timeline</p>
         
         {/* The glowing connecting vertical line */}
         <div className="timeline-glow" style={{ position: 'absolute', left: 32, top: 75, bottom: 45, width: 2, borderRadius: 2, zIndex: 1 }} />
         
         {/* Start input */}
-        <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 12, position: 'relative', zIndex: 2 }}>
+        <div style={{ display: 'flex', gap: 6, alignItems: 'center', marginBottom: 8, position: 'relative', zIndex: 2 }}>
           <div style={{ flex: 1 }}>
             <LocationInput value={startLoc} onChange={setStartLoc} onSelect={handleStartSelect} placeholder="Starting Point" accent="#00D4AA" />
           </div>
@@ -967,7 +1032,7 @@ export default function RoutePlanner() {
             onClick={handleLocateMe}
             disabled={locating}
             title="Use my location"
-            style={{ width: 42, height: 42, borderRadius: 12, flexShrink: 0, background: locating ? 'rgba(0,212,170,0.15)' : 'var(--surface-3)', border: '1px solid var(--border)', cursor: locating ? 'default' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.15s' }}
+            style={{ width: 38, height: 38, borderRadius: 10, flexShrink: 0, background: locating ? 'rgba(0,212,170,0.15)' : 'var(--surface-3)', border: '1px solid var(--border)', cursor: locating ? 'default' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.15s' }}
             onMouseEnter={e => { if (!locating) { e.currentTarget.style.borderColor = '#00D4AA'; e.currentTarget.style.background = 'rgba(0,212,170,0.08)' } }}
             onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.background = locating ? 'rgba(0,212,170,0.15)' : 'var(--surface-3)' }}
           >
@@ -980,7 +1045,7 @@ export default function RoutePlanner() {
 
         {/* Waypoints */}
         {waypoints.map((wp, idx) => (
-          <div key={idx} style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 12, position: 'relative', zIndex: 2 }}>
+          <div key={idx} style={{ display: 'flex', gap: 6, alignItems: 'center', marginBottom: 8, position: 'relative', zIndex: 2 }}>
             <div style={{ flex: 1 }}>
               <LocationInput
                 value={wp.label}
@@ -992,7 +1057,7 @@ export default function RoutePlanner() {
             </div>
             <button
               onClick={() => setWaypoints(w => w.filter((_, i) => i !== idx))}
-              style={{ width: 42, height: 42, borderRadius: 12, flexShrink: 0, background: 'rgba(255,77,109,0.06)', border: '1px solid rgba(255,77,109,0.2)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+              style={{ width: 38, height: 38, borderRadius: 10, flexShrink: 0, background: 'rgba(255,77,109,0.06)', border: '1px solid rgba(255,77,109,0.2)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
             >
               <Trash2 style={{ width: 14, height: 14, color: 'var(--error)' }} />
             </button>
@@ -1001,13 +1066,13 @@ export default function RoutePlanner() {
 
         {/* Add stop button along timeline */}
         {waypoints.length < 5 && (
-          <div style={{ paddingLeft: 46, marginBottom: 12, position: 'relative', zIndex: 2 }}>
+          <div style={{ paddingLeft: 46, marginBottom: 8, position: 'relative', zIndex: 2 }}>
             <button
               onClick={() => setWaypoints(w => [...w, { label: '', coords: null }])}
               style={{ border: 'none', background: 'none', color: '#FFB547', fontSize: 12, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 5, cursor: 'pointer', fontFamily: 'Outfit, sans-serif' }}
             >
-              <div style={{ width: 22, height: 22, borderRadius: '50%', background: 'rgba(255,181,71,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <Plus style={{ width: 12, height: 12 }} />
+              <div style={{ width: 20, height: 20, borderRadius: '50%', background: 'rgba(255,181,71,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <Plus style={{ width: 10, height: 10 }} />
               </div>
               Add Stop
             </button>
@@ -1015,14 +1080,14 @@ export default function RoutePlanner() {
         )}
 
         {/* Destination */}
-        <div style={{ display: 'flex', gap: 8, alignItems: 'center', position: 'relative', zIndex: 2 }}>
+        <div style={{ display: 'flex', gap: 6, alignItems: 'center', position: 'relative', zIndex: 2 }}>
           <div style={{ flex: 1 }}>
             <LocationInput value={endLoc} onChange={setEndLoc} onSelect={handleEndSelect} placeholder="Destination" accent="#FF4D6D" />
           </div>
           <button
             onClick={handleSwap}
             title="Swap start and destination"
-            style={{ width: 42, height: 42, borderRadius: 12, flexShrink: 0, background: 'var(--surface-3)', border: '1px solid var(--border)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.15s' }}
+            style={{ width: 38, height: 38, borderRadius: 10, flexShrink: 0, background: 'var(--surface-3)', border: '1px solid var(--border)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.15s' }}
             onMouseEnter={e => e.currentTarget.style.color = 'var(--text-1)'}
             onMouseLeave={e => e.currentTarget.style.color = 'var(--text-2)'}
           >
@@ -1133,27 +1198,75 @@ export default function RoutePlanner() {
 
   /* ── CTA footer ── */
   const footerCTA = (
-    <div style={{ padding: '20px 16px', background: isDark ? 'rgba(7,11,20,0.85)' : 'rgba(255,255,255,0.92)', backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)', borderTop: '1px solid var(--border)', flexShrink: 0, position: 'sticky', bottom: 0, zIndex: 10 }}>
+    <div style={{ padding: '12px 14px', background: isDark ? 'rgba(7,11,20,0.85)' : 'rgba(255,255,255,0.92)', backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)', borderTop: '1px solid var(--border)', flexShrink: 0, position: 'sticky', bottom: 0, zIndex: 10 }}>
       {route ? (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          <button
-            className="btn-primary"
-            style={{ width: '100%', padding: '16px', fontSize: 16, borderRadius: 16, boxShadow: '0 8px 30px rgba(0,212,170,0.3)' }}
-            onClick={() => {
-              const origin = `${startCoords[0]},${startCoords[1]}`;
-              const destination = `${endCoords[0]},${endCoords[1]}`;
-              const waypoints = route.charging_stops?.map(stop => `${stop.lat},${stop.lng}`).join('|');
-              let url = `https://www.google.com/maps/dir/?api=1&origin=${origin}&destination=${destination}`;
-              if (waypoints) url += `&waypoints=${waypoints}`;
-              url += '&travelmode=driving';
-              window.open(url, '_blank');
-            }}
-          >
-            <MapPinIcon className="w-5 h-5" style={{ marginRight: 8 }} /> Start Navigation in G-Maps
-          </button>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          {(() => {
+            const allStops = route.charging_stops || [];
+            if (allStops.length <= 8) {
+              return (
+                <button
+                  className="btn-primary"
+                  style={{ width: '100%', padding: '12px', fontSize: 14, borderRadius: 12, boxShadow: '0 4px 20px rgba(0,212,170,0.2)' }}
+                  onClick={() => {
+                    const origin = `${startCoords[0]},${startCoords[1]}`;
+                    const destination = `${endCoords[0]},${endCoords[1]}`;
+                    const wps = allStops.map(stop => `${stop.lat},${stop.lng}`).join('|');
+                    let url = `https://www.google.com/maps/dir/?api=1&origin=${origin}&destination=${destination}`;
+                    if (wps) url += `&waypoints=${wps}`;
+                    url += '&travelmode=driving';
+                    window.open(url, '_blank');
+                  }}
+                >
+                  <MapPinIcon className="w-5 h-5" style={{ marginRight: 8 }} /> Start Navigation in G-Maps
+                </button>
+              );
+            } else {
+              const chunks = [];
+              for (let i = 0; i < allStops.length; i += 8) {
+                chunks.push(allStops.slice(i, i + 8));
+              }
+              return (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 10, background: 'rgba(0,0,0,0.2)', padding: 16, borderRadius: 18, border: '1px solid rgba(255,255,255,0.05)' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'center', marginBottom: 4 }}>
+                    <MapPinIcon style={{ width: 16, height: 16, color: 'var(--text-3)' }} />
+                    <span style={{ fontSize: 13, color: 'var(--text-2)', fontWeight: 600 }}>Route too long for one map. Pick a leg:</span>
+                  </div>
+                  {chunks.map((chunk, idx) => {
+                    const isLast = idx === chunks.length - 1;
+                    return (
+                      <button
+                        key={idx}
+                        className="btn-primary"
+                        style={{ width: '100%', padding: '10px', fontSize: 13, borderRadius: 10, boxShadow: '0 4px 15px rgba(0,212,170,0.1)' }}
+                        onClick={() => {
+                          const legOrigin = idx === 0 
+                            ? `${startCoords[0]},${startCoords[1]}` 
+                            : `${chunks[idx-1][chunks[idx-1].length-1].lat},${chunks[idx-1][chunks[idx-1].length-1].lng}`;
+                            
+                          const legDest = isLast 
+                            ? `${endCoords[0]},${endCoords[1]}` 
+                            : `${chunk[chunk.length-1].lat},${chunk[chunk.length-1].lng}`;
+                          
+                          const wpArr = isLast ? chunk : chunk.slice(0, -1);
+                          const wps = wpArr.map(stop => `${stop.lat},${stop.lng}`).join('|');
+                            
+                          let url = `https://www.google.com/maps/dir/?api=1&origin=${legOrigin}&destination=${legDest}&travelmode=driving`;
+                          if (wps) url += `&waypoints=${wps}`;
+                          window.open(url, '_blank');
+                        }}
+                      >
+                        Navigate Leg {idx + 1} <span style={{ opacity: 0.7, marginLeft: 6, fontSize: 12 }}>({chunk.length} stops)</span>
+                      </button>
+                    )
+                  })}
+                </div>
+              );
+            }
+          })()}
           <button
             className="btn-secondary"
-            style={{ width: '100%', padding: '14px', fontSize: 14, borderRadius: 14, background: 'var(--surface-3)', border: '1px solid var(--border)' }}
+            style={{ width: '100%', padding: '11px', fontSize: 13, borderRadius: 12, background: 'var(--surface-3)', border: '1px solid var(--border)' }}
             onClick={handleCalculate}
             disabled={loading || !startCoords || !endCoords}
           >
@@ -1169,7 +1282,7 @@ export default function RoutePlanner() {
       ) : (
         <button
           className="btn-primary pulse-cta"
-          style={{ width: '100%', padding: '16px', fontSize: 16, borderRadius: 16, background: 'linear-gradient(135deg, #00D4AA 0%, #00a887 100%)', boxShadow: '0 8px 30px rgba(0,212,170,0.3)' }}
+          style={{ width: '100%', padding: '12px', fontSize: 15, borderRadius: 12, background: 'linear-gradient(135deg, #00D4AA 0%, #00a887 100%)', boxShadow: '0 8px 24px rgba(0,212,170,0.25)' }}
           onClick={handleCalculate}
           disabled={loading || !startCoords || !endCoords}
         >
@@ -1325,15 +1438,15 @@ export default function RoutePlanner() {
         {/* ═══ DESKTOP SIDEBAR ═══ */}
         {!isMobile && (
           <div className="glass-sidebar no-scrollbar" style={{ width: 370, height: '100%', position: 'relative', zIndex: 100, flexShrink: 0, display: 'flex', flexDirection: 'column' }}>
-            <div style={{ padding: '16px 18px 14px', borderBottom: '1px solid var(--border)', flexShrink: 0 }}>
-              <div style={{ display: 'flex', alignItems: 'center', marginBottom: 10 }}>
+            <div style={{ padding: '8px 14px 6px', borderBottom: '1px solid var(--border)', flexShrink: 0 }}>
+              <div style={{ display: 'flex', alignItems: 'center', marginBottom: 2 }}>
                 <button className="btn-ghost" style={{ marginLeft: -8 }} onClick={() => navigate('/select-brand')}>
                   <ChevronLeft className="w-3.5 h-3.5" />Change vehicle
                 </button>
               </div>
               {/* Car name prominent, "Route Planner" as small label */}
-              <p style={{ fontSize: 10, fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--text-3)', marginBottom: 3 }}>Route Planner</p>
-              <h1 style={{ fontSize: 17, fontWeight: 800, letterSpacing: '-0.02em', marginBottom: 0 }}>
+              <p style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--text-3)', marginBottom: 1 }}>Route Planner</p>
+              <h1 style={{ fontSize: 15, fontWeight: 800, letterSpacing: '-0.02em', marginBottom: 0 }}>
                 {selectedCar.brand} {selectedCar.name || selectedCar.model}
               </h1>
             </div>
