@@ -6,6 +6,7 @@ import ModelSelection from './pages/ModelSelection'
 import RoutePlanner from './pages/RoutePlanner'
 import Dashboard from './pages/Dashboard'
 import ChargersMap from './pages/ChargersMap'
+import NotFound from './pages/NotFound'
 import Navbar from './components/Navbar'
 import { ToastContainer } from './components/Toast'
 import { useStore } from './store/useStore'
@@ -203,6 +204,7 @@ export default function App() {
           <Route path="/plan-route" element={<RoutePlanner />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/chargers-map" element={<ChargersMap />} />
+          <Route path="*" element={<NotFound />} />
         </Routes>
       </div>
 
