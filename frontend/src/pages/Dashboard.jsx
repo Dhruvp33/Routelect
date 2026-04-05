@@ -195,17 +195,17 @@ export default function Dashboard() {
                                     <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-1)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                                         {trip.startLoc?.split(',')[0] || 'Start'} → {trip.endLoc?.split(',')[0] || 'End'}
                                     </div>
-                                    <div style={{ display: 'flex', gap: 12, marginTop: 4, fontSize: 12, color: 'var(--text-2)' }}>
-                                        <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                                    <div style={{ display: 'flex', gap: 12, marginTop: 4, fontSize: 12, color: 'var(--text-2)', flexWrap: 'wrap' }}>
+                                        <span style={{ display: 'flex', alignItems: 'center', gap: 4, whiteSpace: 'nowrap' }}>
                                             <MapPin style={{ width: 11, height: 11 }} />
                                             {trip.route?.total_distance_km || '?'} km
                                         </span>
-                                        <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                                        <span style={{ display: 'flex', alignItems: 'center', gap: 4, whiteSpace: 'nowrap' }}>
                                             <Zap style={{ width: 11, height: 11 }} />
                                             {trip.route?.charging_stops?.length || 0} stop{(trip.route?.charging_stops?.length || 0) !== 1 ? 's' : ''}
                                         </span>
                                         {trip.date && (
-                                            <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                                            <span style={{ display: 'flex', alignItems: 'center', gap: 4, whiteSpace: 'nowrap' }}>
                                                 <Clock style={{ width: 11, height: 11 }} />
                                                 {new Date(trip.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
                                             </span>

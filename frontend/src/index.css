@@ -682,10 +682,13 @@ h5 {
   -webkit-appearance: none;
   appearance: none;
   width: 100%;
-  height: 4px;
+  height: 4px !important;
+  padding: 0 !important;
+  margin: 10px 0 !important;
   background: var(--surface-3);
   border-radius: 10px;
   outline: none;
+  border: none;
   cursor: pointer;
   transition: background var(--transition);
 }
@@ -932,7 +935,7 @@ h5 {
   button,
   a,
   [role="button"],
-  input,
+  input:not([type="range"]),
   select,
   textarea {
     min-height: 44px;
@@ -983,14 +986,10 @@ h5 {
     font-size: 14px;
   }
 
-  /* Slider thumb bigger for touch */
+  /* Slider thumb touch area */
   .range-slider::-webkit-slider-thumb {
-    width: 28px;
-    height: 28px;
-  }
-
-  .range-slider {
-    height: 6px;
+    width: 24px;
+    height: 24px;
   }
 
   /* Toast: bottom-center, full-width on mobile */

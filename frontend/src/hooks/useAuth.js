@@ -65,7 +65,7 @@ export function useAuth() {
       password,
       options: {
         data: { full_name: fullName },
-        emailRedirectTo: window.location.origin,
+        emailRedirectTo: `${window.location.origin}/plan-route`,
       },
     })
     if (error) {
@@ -80,7 +80,7 @@ export function useAuth() {
     if (!supabase) return
     await supabase.auth.signInWithOAuth({
       provider: 'google',
-      options: { redirectTo: window.location.origin },
+      options: { redirectTo: `${window.location.origin}/plan-route` },
     })
   }
 

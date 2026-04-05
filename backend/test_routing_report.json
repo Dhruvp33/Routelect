@@ -1,0 +1,1414 @@
+{
+  "timestamp": "2026-04-05T15:50:43.094257",
+  "total_scenarios": 64,
+  "passed": 42,
+  "warnings": 13,
+  "failed": 9,
+  "errors": 0,
+  "pass_rate_pct": 65.6,
+  "category_stats": {
+    "basic": {
+      "pass": 19,
+      "warn": 6,
+      "fail": 0,
+      "error": 0
+    },
+    "worst_ev": {
+      "pass": 4,
+      "warn": 0,
+      "fail": 0,
+      "error": 0
+    },
+    "low_battery": {
+      "pass": 0,
+      "warn": 4,
+      "fail": 8,
+      "error": 0
+    },
+    "full_battery": {
+      "pass": 2,
+      "warn": 0,
+      "fail": 0,
+      "error": 0
+    },
+    "mountain": {
+      "pass": 4,
+      "warn": 0,
+      "fail": 0,
+      "error": 0
+    },
+    "sparse": {
+      "pass": 4,
+      "warn": 0,
+      "fail": 0,
+      "error": 0
+    },
+    "extreme": {
+      "pass": 0,
+      "warn": 2,
+      "fail": 0,
+      "error": 0
+    },
+    "edge": {
+      "pass": 6,
+      "warn": 0,
+      "fail": 1,
+      "error": 0
+    },
+    "waypoint": {
+      "pass": 2,
+      "warn": 0,
+      "fail": 0,
+      "error": 0
+    },
+    "slow_charger": {
+      "pass": 1,
+      "warn": 1,
+      "fail": 0,
+      "error": 0
+    }
+  },
+  "all_results": {
+    "passed": [
+      {
+        "name": "[BASIC] Delhi \u2192 Gurgaon | Nexon EV @ 85%",
+        "category": "basic",
+        "status_code": 200,
+        "elapsed_ms": 3145.9479331970215,
+        "issues": [],
+        "response_summary": {
+          "distance_km": 29.5,
+          "time_min": 31,
+          "needs_charging": false,
+          "num_stops": 0,
+          "battery_arrival": 76.2,
+          "partial_route": null,
+          "low_battery_mode": null,
+          "error": null,
+          "message": "Direct trip possible \u2014 no charging needed \ud83c\udf89",
+          "elevation_ascent": 101,
+          "elevation_descent": 87
+        }
+      },
+      {
+        "name": "[BASIC] Mumbai \u2192 Lonavala | Nexon EV @ 85%",
+        "category": "basic",
+        "status_code": 200,
+        "elapsed_ms": 2695.7263946533203,
+        "issues": [],
+        "response_summary": {
+          "distance_km": 82.23,
+          "time_min": 65,
+          "needs_charging": false,
+          "num_stops": 0,
+          "battery_arrival": 55.5,
+          "partial_route": null,
+          "low_battery_mode": null,
+          "error": null,
+          "message": "Direct trip possible \u2014 no charging needed \ud83c\udf89",
+          "elevation_ascent": 855,
+          "elevation_descent": 229
+        }
+      },
+      {
+        "name": "[BASIC] Bangalore MG Rd \u2192 Whitefield | Nexon EV @ 85%",
+        "category": "basic",
+        "status_code": 200,
+        "elapsed_ms": 2994.293689727783,
+        "issues": [],
+        "response_summary": {
+          "distance_km": 19.78,
+          "time_min": 22,
+          "needs_charging": false,
+          "num_stops": 0,
+          "battery_arrival": 79.3,
+          "partial_route": null,
+          "low_battery_mode": null,
+          "error": null,
+          "message": "Direct trip possible \u2014 no charging needed \ud83c\udf89",
+          "elevation_ascent": 165,
+          "elevation_descent": 186
+        }
+      },
+      {
+        "name": "[BASIC] Delhi \u2192 Agra | Nexon EV @ 85%",
+        "category": "basic",
+        "status_code": 200,
+        "elapsed_ms": 3722.5639820098877,
+        "issues": [],
+        "response_summary": {
+          "distance_km": 202.19,
+          "time_min": 148,
+          "needs_charging": false,
+          "num_stops": 0,
+          "battery_arrival": 26.0,
+          "partial_route": null,
+          "low_battery_mode": null,
+          "error": null,
+          "message": "Direct trip possible \u2014 no charging needed \ud83c\udf89",
+          "elevation_ascent": 75,
+          "elevation_descent": 119
+        }
+      },
+      {
+        "name": "[BASIC] Mumbai \u2192 Pune | Nexon EV @ 85%",
+        "category": "basic",
+        "status_code": 200,
+        "elapsed_ms": 2176.9893169403076,
+        "issues": [],
+        "response_summary": {
+          "distance_km": 144.32,
+          "time_min": 115,
+          "needs_charging": false,
+          "num_stops": 0,
+          "battery_arrival": 37.9,
+          "partial_route": null,
+          "low_battery_mode": null,
+          "error": null,
+          "message": "Direct trip possible \u2014 no charging needed \ud83c\udf89",
+          "elevation_ascent": 845,
+          "elevation_descent": 293
+        }
+      },
+      {
+        "name": "[BASIC] Chennai \u2192 Bangalore | Nexon EV @ 85%",
+        "category": "basic",
+        "status_code": 200,
+        "elapsed_ms": 11531.62169456482,
+        "issues": [],
+        "response_summary": {
+          "distance_km": 357.59,
+          "time_min": 288,
+          "needs_charging": true,
+          "num_stops": 1,
+          "battery_arrival": 26.7,
+          "partial_route": false,
+          "low_battery_mode": null,
+          "error": null,
+          "message": "Optimised ABRP-level route via 1 charging stop(s) \u2014 ready to go \u26a1",
+          "elevation_ascent": 1070,
+          "elevation_descent": 174
+        }
+      },
+      {
+        "name": "[BASIC] Hyderabad \u2192 Bangalore | Nexon EV @ 85%",
+        "category": "basic",
+        "status_code": 200,
+        "elapsed_ms": 14392.00234413147,
+        "issues": [],
+        "response_summary": {
+          "distance_km": 592.42,
+          "time_min": 496,
+          "needs_charging": true,
+          "num_stops": 3,
+          "battery_arrival": 39.1,
+          "partial_route": false,
+          "low_battery_mode": null,
+          "error": null,
+          "message": "Optimised ABRP-level route via 3 charging stop(s) \u2014 ready to go \u26a1",
+          "elevation_ascent": 0,
+          "elevation_descent": 0
+        }
+      },
+      {
+        "name": "[BASIC] Jaipur \u2192 Delhi | Nexon EV @ 85%",
+        "category": "basic",
+        "status_code": 200,
+        "elapsed_ms": 5451.057434082031,
+        "issues": [],
+        "response_summary": {
+          "distance_km": 278.36,
+          "time_min": 233,
+          "needs_charging": true,
+          "num_stops": 1,
+          "battery_arrival": 51.8,
+          "partial_route": false,
+          "low_battery_mode": null,
+          "error": null,
+          "message": "Optimised ABRP-level route via 1 charging stop(s) \u2014 ready to go \u26a1",
+          "elevation_ascent": 175,
+          "elevation_descent": 392
+        }
+      },
+      {
+        "name": "[BASIC] Ahmedabad \u2192 Mumbai | Nexon EV @ 85%",
+        "category": "basic",
+        "status_code": 200,
+        "elapsed_ms": 13546.387434005737,
+        "issues": [],
+        "response_summary": {
+          "distance_km": 525.32,
+          "time_min": 415,
+          "needs_charging": true,
+          "num_stops": 2,
+          "battery_arrival": 31.1,
+          "partial_route": false,
+          "low_battery_mode": null,
+          "error": null,
+          "message": "Optimised ABRP-level route via 2 charging stop(s) \u2014 ready to go \u26a1",
+          "elevation_ascent": 394,
+          "elevation_descent": 441
+        }
+      },
+      {
+        "name": "[BASIC] Mumbai \u2192 Kolkata | Nexon EV @ 85%",
+        "category": "basic",
+        "status_code": 200,
+        "elapsed_ms": 25878.73387336731,
+        "issues": [],
+        "response_summary": {
+          "distance_km": 1912.9,
+          "time_min": 1417,
+          "needs_charging": true,
+          "num_stops": 2,
+          "battery_arrival": "Low (~15.0%)",
+          "partial_route": true,
+          "low_battery_mode": null,
+          "error": null,
+          "message": "Partial routing \u2014 2 stops mapped, but the final ~1345km lacks coverage \u26a0\ufe0f",
+          "elevation_ascent": 1844,
+          "elevation_descent": 1838
+        }
+      },
+      {
+        "name": "[BASIC] Mumbai \u2192 Lonavala (Ghats) | Nexon EV @ 85%",
+        "category": "basic",
+        "status_code": 200,
+        "elapsed_ms": 2375.422716140747,
+        "issues": [],
+        "response_summary": {
+          "distance_km": 82.23,
+          "time_min": 65,
+          "needs_charging": false,
+          "num_stops": 0,
+          "battery_arrival": 55.5,
+          "partial_route": null,
+          "low_battery_mode": null,
+          "error": null,
+          "message": "Direct trip possible \u2014 no charging needed \ud83c\udf89",
+          "elevation_ascent": 855,
+          "elevation_descent": 229
+        }
+      },
+      {
+        "name": "[BASIC] Bangalore \u2192 Ooty (Nilgiris) | Nexon EV @ 85%",
+        "category": "basic",
+        "status_code": 200,
+        "elapsed_ms": 6804.672718048096,
+        "issues": [],
+        "response_summary": {
+          "distance_km": 295.54,
+          "time_min": 250,
+          "needs_charging": true,
+          "num_stops": 1,
+          "battery_arrival": 44.1,
+          "partial_route": false,
+          "low_battery_mode": null,
+          "error": null,
+          "message": "Optimised ABRP-level route via 1 charging stop(s) \u2014 ready to go \u26a1",
+          "elevation_ascent": 2137,
+          "elevation_descent": 810
+        }
+      },
+      {
+        "name": "[BASIC] Delhi \u2192 Manali (Himalayas) | Nexon EV @ 85%",
+        "category": "basic",
+        "status_code": 200,
+        "elapsed_ms": 15649.512767791748,
+        "issues": [],
+        "response_summary": {
+          "distance_km": 524.01,
+          "time_min": 495,
+          "needs_charging": true,
+          "num_stops": 3,
+          "battery_arrival": "Low (~15.0%)",
+          "partial_route": true,
+          "low_battery_mode": null,
+          "error": null,
+          "message": "Partial routing \u2014 3 stops mapped, but the final ~47km lacks coverage \u26a0\ufe0f",
+          "elevation_ascent": 3571,
+          "elevation_descent": 1907
+        }
+      },
+      {
+        "name": "[BASIC] Siliguri \u2192 Gangtok | Nexon EV @ 85%",
+        "category": "basic",
+        "status_code": 200,
+        "elapsed_ms": 3882.7481269836426,
+        "issues": [],
+        "response_summary": {
+          "distance_km": 114.53,
+          "time_min": 88,
+          "needs_charging": false,
+          "num_stops": 0,
+          "battery_arrival": 39.6,
+          "partial_route": null,
+          "low_battery_mode": null,
+          "error": null,
+          "message": "Direct trip possible \u2014 no charging needed \ud83c\udf89",
+          "elevation_ascent": 2805,
+          "elevation_descent": 1444
+        }
+      },
+      {
+        "name": "[BASIC] Pune \u2192 Mahabaleshwar | Nexon EV @ 85%",
+        "category": "basic",
+        "status_code": 200,
+        "elapsed_ms": 2567.336082458496,
+        "issues": [],
+        "response_summary": {
+          "distance_km": 120.57,
+          "time_min": 124,
+          "needs_charging": false,
+          "num_stops": 0,
+          "battery_arrival": 42.7,
+          "partial_route": null,
+          "low_battery_mode": null,
+          "error": null,
+          "message": "Direct trip possible \u2014 no charging needed \ud83c\udf89",
+          "elevation_ascent": 1807,
+          "elevation_descent": 1000
+        }
+      },
+      {
+        "name": "[BASIC] Guwahati \u2192 Shillong (NE) | Nexon EV @ 85%",
+        "category": "basic",
+        "status_code": 200,
+        "elapsed_ms": 5916.347503662109,
+        "issues": [],
+        "response_summary": {
+          "distance_km": 98.96,
+          "time_min": 76,
+          "needs_charging": false,
+          "num_stops": 0,
+          "battery_arrival": 44.0,
+          "partial_route": null,
+          "low_battery_mode": null,
+          "error": null,
+          "message": "Direct trip possible \u2014 no charging needed \ud83c\udf89",
+          "elevation_ascent": 1798,
+          "elevation_descent": 414
+        }
+      },
+      {
+        "name": "[BASIC] Guwahati \u2192 Tezpur (NE) | Nexon EV @ 85%",
+        "category": "basic",
+        "status_code": 200,
+        "elapsed_ms": 2214.8568630218506,
+        "issues": [],
+        "response_summary": {
+          "distance_km": 169.06,
+          "time_min": 130,
+          "needs_charging": false,
+          "num_stops": 0,
+          "battery_arrival": 35.4,
+          "partial_route": null,
+          "low_battery_mode": null,
+          "error": null,
+          "message": "Direct trip possible \u2014 no charging needed \ud83c\udf89",
+          "elevation_ascent": 0,
+          "elevation_descent": 0
+        }
+      },
+      {
+        "name": "[BASIC] Jaisalmer \u2192 Jodhpur (Desert) | Nexon EV @ 85%",
+        "category": "basic",
+        "status_code": 200,
+        "elapsed_ms": 5178.214550018311,
+        "issues": [],
+        "response_summary": {
+          "distance_km": 205.9,
+          "time_min": 309,
+          "needs_charging": true,
+          "num_stops": 1,
+          "battery_arrival": 85.0,
+          "partial_route": true,
+          "low_battery_mode": true,
+          "error": null,
+          "message": "\u26a0\ufe0f Battery too low to plan full route. Nearest charger is 205.9 km away \u2014 charge up there first, then re-plan your trip.",
+          "elevation_ascent": 0,
+          "elevation_descent": 0
+        }
+      },
+      {
+        "name": "[BASIC] Raipur \u2192 Jagdalpur (Tribal) | Nexon EV @ 85%",
+        "category": "basic",
+        "status_code": 200,
+        "elapsed_ms": 6223.0658531188965,
+        "issues": [],
+        "response_summary": {
+          "distance_km": 301.7,
+          "time_min": 231,
+          "needs_charging": true,
+          "num_stops": 1,
+          "battery_arrival": "Low (~15.0%)",
+          "partial_route": true,
+          "low_battery_mode": null,
+          "error": null,
+          "message": "Partial routing \u2014 1 stops mapped, but the final ~7km lacks coverage \u26a0\ufe0f",
+          "elevation_ascent": 654,
+          "elevation_descent": 390
+        }
+      },
+      {
+        "name": "[WORST-EV] Delhi \u2192 Agra | MG Comet EV @ 80%",
+        "category": "worst_ev",
+        "status_code": 200,
+        "elapsed_ms": 10896.202325820923,
+        "issues": [],
+        "response_summary": {
+          "distance_km": 201.82,
+          "time_min": 158,
+          "needs_charging": true,
+          "num_stops": 1,
+          "battery_arrival": 21.8,
+          "partial_route": false,
+          "low_battery_mode": null,
+          "error": null,
+          "message": "Optimised ABRP-level route via 1 charging stop(s) \u2014 ready to go \u26a1",
+          "elevation_ascent": 75,
+          "elevation_descent": 119
+        }
+      },
+      {
+        "name": "[WORST-EV] Mumbai \u2192 Pune | MG Comet EV @ 80%",
+        "category": "worst_ev",
+        "status_code": 200,
+        "elapsed_ms": 11429.821014404297,
+        "issues": [],
+        "response_summary": {
+          "distance_km": 188.73,
+          "time_min": 229,
+          "needs_charging": true,
+          "num_stops": 2,
+          "battery_arrival": "Low (~15.0%)",
+          "partial_route": true,
+          "low_battery_mode": null,
+          "error": null,
+          "message": "Partial routing \u2014 2 stops mapped, but the final ~34km lacks coverage \u26a0\ufe0f",
+          "elevation_ascent": 845,
+          "elevation_descent": 293
+        }
+      },
+      {
+        "name": "[WORST-EV] Chennai \u2192 Bangalore | MG Comet EV @ 80%",
+        "category": "worst_ev",
+        "status_code": 200,
+        "elapsed_ms": 6700.204610824585,
+        "issues": [],
+        "response_summary": {
+          "distance_km": 354.58,
+          "time_min": 319,
+          "needs_charging": true,
+          "num_stops": 4,
+          "battery_arrival": "Low (~15.0%)",
+          "partial_route": true,
+          "low_battery_mode": null,
+          "error": null,
+          "message": "Partial routing \u2014 4 stops mapped, but the final ~48km lacks coverage \u26a0\ufe0f",
+          "elevation_ascent": 1070,
+          "elevation_descent": 174
+        }
+      },
+      {
+        "name": "[WORST-EV] Delhi \u2192 Mumbai | MG Comet EV @ 80%",
+        "category": "worst_ev",
+        "status_code": 200,
+        "elapsed_ms": 17739.293575286865,
+        "issues": [],
+        "response_summary": {
+          "distance_km": 1381.1,
+          "time_min": 1074,
+          "needs_charging": true,
+          "num_stops": 3,
+          "battery_arrival": "Low (~15.0%)",
+          "partial_route": true,
+          "low_battery_mode": null,
+          "error": null,
+          "message": "Partial routing \u2014 3 stops mapped, but the final ~1050km lacks coverage \u26a0\ufe0f",
+          "elevation_ascent": 1820,
+          "elevation_descent": 2028
+        }
+      },
+      {
+        "name": "[FULL-BATT] Delhi \u2192 Gurgaon | Nexon EV @ 100%",
+        "category": "full_battery",
+        "status_code": 200,
+        "elapsed_ms": 1776.7431735992432,
+        "issues": [],
+        "response_summary": {
+          "distance_km": 29.5,
+          "time_min": 31,
+          "needs_charging": false,
+          "num_stops": 0,
+          "battery_arrival": 91.2,
+          "partial_route": null,
+          "low_battery_mode": null,
+          "error": null,
+          "message": "Direct trip possible \u2014 no charging needed \ud83c\udf89",
+          "elevation_ascent": 101,
+          "elevation_descent": 87
+        }
+      },
+      {
+        "name": "[FULL-BATT] Bangalore MG Rd \u2192 Whitefield | Nexon EV @ 100%",
+        "category": "full_battery",
+        "status_code": 200,
+        "elapsed_ms": 1748.2175827026367,
+        "issues": [],
+        "response_summary": {
+          "distance_km": 19.78,
+          "time_min": 22,
+          "needs_charging": false,
+          "num_stops": 0,
+          "battery_arrival": 94.3,
+          "partial_route": null,
+          "low_battery_mode": null,
+          "error": null,
+          "message": "Direct trip possible \u2014 no charging needed \ud83c\udf89",
+          "elevation_ascent": 165,
+          "elevation_descent": 186
+        }
+      },
+      {
+        "name": "[MOUNTAIN] Delhi \u2192 Manali (Himalayas) | Curvv EV @ 70%",
+        "category": "mountain",
+        "status_code": 200,
+        "elapsed_ms": 13296.11849784851,
+        "issues": [],
+        "response_summary": {
+          "distance_km": 523.86,
+          "time_min": 486,
+          "needs_charging": true,
+          "num_stops": 3,
+          "battery_arrival": "Low (~15.0%)",
+          "partial_route": true,
+          "low_battery_mode": null,
+          "error": null,
+          "message": "Partial routing \u2014 3 stops mapped, but the final ~14km lacks coverage \u26a0\ufe0f",
+          "elevation_ascent": 3571,
+          "elevation_descent": 1907
+        }
+      },
+      {
+        "name": "[MOUNTAIN] Bangalore \u2192 Ooty (Nilgiris) | Curvv EV @ 70%",
+        "category": "mountain",
+        "status_code": 200,
+        "elapsed_ms": 6719.139099121094,
+        "issues": [],
+        "response_summary": {
+          "distance_km": 295.54,
+          "time_min": 262,
+          "needs_charging": true,
+          "num_stops": 1,
+          "battery_arrival": 58.6,
+          "partial_route": false,
+          "low_battery_mode": null,
+          "error": null,
+          "message": "Optimised ABRP-level route via 1 charging stop(s) \u2014 ready to go \u26a1",
+          "elevation_ascent": 0,
+          "elevation_descent": 0
+        }
+      },
+      {
+        "name": "[MOUNTAIN] Siliguri \u2192 Gangtok | Curvv EV @ 70%",
+        "category": "mountain",
+        "status_code": 200,
+        "elapsed_ms": 2416.584014892578,
+        "issues": [],
+        "response_summary": {
+          "distance_km": 114.53,
+          "time_min": 88,
+          "needs_charging": false,
+          "num_stops": 0,
+          "battery_arrival": 40.8,
+          "partial_route": null,
+          "low_battery_mode": null,
+          "error": null,
+          "message": "Direct trip possible \u2014 no charging needed \ud83c\udf89",
+          "elevation_ascent": 0,
+          "elevation_descent": 0
+        }
+      },
+      {
+        "name": "[MOUNTAIN] Pune \u2192 Mahabaleshwar | Curvv EV @ 70%",
+        "category": "mountain",
+        "status_code": 200,
+        "elapsed_ms": 2197.176694869995,
+        "issues": [],
+        "response_summary": {
+          "distance_km": 120.57,
+          "time_min": 124,
+          "needs_charging": false,
+          "num_stops": 0,
+          "battery_arrival": 39.2,
+          "partial_route": null,
+          "low_battery_mode": null,
+          "error": null,
+          "message": "Direct trip possible \u2014 no charging needed \ud83c\udf89",
+          "elevation_ascent": 0,
+          "elevation_descent": 0
+        }
+      },
+      {
+        "name": "[SPARSE] Guwahati \u2192 Shillong (NE) | Nexon EV @ 85%",
+        "category": "sparse",
+        "status_code": 200,
+        "elapsed_ms": 3774.7604846954346,
+        "issues": [],
+        "response_summary": {
+          "distance_km": 98.96,
+          "time_min": 76,
+          "needs_charging": false,
+          "num_stops": 0,
+          "battery_arrival": 56.0,
+          "partial_route": null,
+          "low_battery_mode": null,
+          "error": null,
+          "message": "Direct trip possible \u2014 no charging needed \ud83c\udf89",
+          "elevation_ascent": 0,
+          "elevation_descent": 0
+        }
+      },
+      {
+        "name": "[SPARSE] Guwahati \u2192 Tezpur (NE) | Nexon EV @ 85%",
+        "category": "sparse",
+        "status_code": 200,
+        "elapsed_ms": 2784.823417663574,
+        "issues": [],
+        "response_summary": {
+          "distance_km": 169.06,
+          "time_min": 130,
+          "needs_charging": false,
+          "num_stops": 0,
+          "battery_arrival": 35.4,
+          "partial_route": null,
+          "low_battery_mode": null,
+          "error": null,
+          "message": "Direct trip possible \u2014 no charging needed \ud83c\udf89",
+          "elevation_ascent": 0,
+          "elevation_descent": 0
+        }
+      },
+      {
+        "name": "[SPARSE] Jaisalmer \u2192 Jodhpur (Desert) | Nexon EV @ 85%",
+        "category": "sparse",
+        "status_code": 200,
+        "elapsed_ms": 4069.005250930786,
+        "issues": [],
+        "response_summary": {
+          "distance_km": 205.9,
+          "time_min": 309,
+          "needs_charging": true,
+          "num_stops": 1,
+          "battery_arrival": 85.0,
+          "partial_route": true,
+          "low_battery_mode": true,
+          "error": null,
+          "message": "\u26a0\ufe0f Battery too low to plan full route. Nearest charger is 205.9 km away \u2014 charge up there first, then re-plan your trip.",
+          "elevation_ascent": 0,
+          "elevation_descent": 0
+        }
+      },
+      {
+        "name": "[SPARSE] Raipur \u2192 Jagdalpur (Tribal) | Nexon EV @ 85%",
+        "category": "sparse",
+        "status_code": 200,
+        "elapsed_ms": 4654.296398162842,
+        "issues": [],
+        "response_summary": {
+          "distance_km": 301.7,
+          "time_min": 231,
+          "needs_charging": true,
+          "num_stops": 1,
+          "battery_arrival": "Low (~15.0%)",
+          "partial_route": true,
+          "low_battery_mode": null,
+          "error": null,
+          "message": "Partial routing \u2014 1 stops mapped, but the final ~7km lacks coverage \u26a0\ufe0f",
+          "elevation_ascent": 654,
+          "elevation_descent": 390
+        }
+      },
+      {
+        "name": "[EDGE] Same start & end (Delhi \u2192 Delhi)",
+        "category": "edge",
+        "status_code": 400,
+        "elapsed_ms": 782.4141979217529,
+        "issues": [],
+        "response_summary": {
+          "distance_km": null,
+          "time_min": null,
+          "needs_charging": null,
+          "num_stops": 0,
+          "battery_arrival": null,
+          "partial_route": null,
+          "low_battery_mode": null,
+          "error": "Start and destination are the same or too close together.",
+          "message": null,
+          "elevation_ascent": null,
+          "elevation_descent": null
+        }
+      },
+      {
+        "name": "[EDGE] Very close locations (< 1 km apart)",
+        "category": "edge",
+        "status_code": 400,
+        "elapsed_ms": 515.9614086151123,
+        "issues": [],
+        "response_summary": {
+          "distance_km": null,
+          "time_min": null,
+          "needs_charging": null,
+          "num_stops": 0,
+          "battery_arrival": null,
+          "partial_route": null,
+          "low_battery_mode": null,
+          "error": "Start and destination are the same or too close together.",
+          "message": null,
+          "elevation_ascent": null,
+          "elevation_descent": null
+        }
+      },
+      {
+        "name": "[EDGE] Battery at 100% \u2014 Delhi \u2192 Agra | Kia EV6",
+        "category": "edge",
+        "status_code": 200,
+        "elapsed_ms": 2039.4532680511475,
+        "issues": [],
+        "response_summary": {
+          "distance_km": 202.19,
+          "time_min": 148,
+          "needs_charging": false,
+          "num_stops": 0,
+          "battery_arrival": 57.9,
+          "partial_route": null,
+          "low_battery_mode": null,
+          "error": null,
+          "message": "Direct trip possible \u2014 no charging needed \ud83c\udf89",
+          "elevation_ascent": 75,
+          "elevation_descent": 119
+        }
+      },
+      {
+        "name": "[EDGE] Invalid car model ID (99999)",
+        "category": "edge",
+        "status_code": 404,
+        "elapsed_ms": 204.0402889251709,
+        "issues": [],
+        "response_summary": {
+          "distance_km": null,
+          "time_min": null,
+          "needs_charging": null,
+          "num_stops": 0,
+          "battery_arrival": null,
+          "partial_route": null,
+          "low_battery_mode": null,
+          "error": "Car model 99999 not found",
+          "message": null,
+          "elevation_ascent": null,
+          "elevation_descent": null
+        }
+      },
+      {
+        "name": "[EDGE] Battery below minimum (3%)",
+        "category": "edge",
+        "status_code": 400,
+        "elapsed_ms": 5.860567092895508,
+        "issues": [],
+        "response_summary": {
+          "distance_km": null,
+          "time_min": null,
+          "needs_charging": null,
+          "num_stops": 0,
+          "battery_arrival": null,
+          "partial_route": null,
+          "low_battery_mode": null,
+          "error": "Battery percent must be 5\u2013100",
+          "message": null,
+          "elevation_ascent": null,
+          "elevation_descent": null
+        }
+      },
+      {
+        "name": "[EDGE] Battery above 100% (150%)",
+        "category": "edge",
+        "status_code": 400,
+        "elapsed_ms": 4.935264587402344,
+        "issues": [],
+        "response_summary": {
+          "distance_km": null,
+          "time_min": null,
+          "needs_charging": null,
+          "num_stops": 0,
+          "battery_arrival": null,
+          "partial_route": null,
+          "low_battery_mode": null,
+          "error": "Battery percent must be 5\u2013100",
+          "message": null,
+          "elevation_ascent": null,
+          "elevation_descent": null
+        }
+      },
+      {
+        "name": "[WAYPOINT] Delhi \u2192 Jaipur \u2192 Udaipur | Nexon EV @ 85%",
+        "category": "waypoint",
+        "status_code": 200,
+        "elapsed_ms": 20524.327754974365,
+        "issues": [],
+        "response_summary": {
+          "distance_km": 670.4,
+          "time_min": 548,
+          "needs_charging": true,
+          "num_stops": 3,
+          "battery_arrival": "Low (~15.0%)",
+          "partial_route": true,
+          "low_battery_mode": null,
+          "error": null,
+          "message": "Partial routing \u2014 3 stops mapped, but the final ~41km lacks coverage \u26a0\ufe0f",
+          "elevation_ascent": 1043,
+          "elevation_descent": 691
+        }
+      },
+      {
+        "name": "[WAYPOINT] Mumbai \u2192 Pune \u2192 Kolhapur \u2192 Goa | Nexon EV @ 90%",
+        "category": "waypoint",
+        "status_code": 200,
+        "elapsed_ms": 11995.585441589355,
+        "issues": [],
+        "response_summary": {
+          "distance_km": 585.26,
+          "time_min": 526,
+          "needs_charging": true,
+          "num_stops": 2,
+          "battery_arrival": 31.3,
+          "partial_route": false,
+          "low_battery_mode": null,
+          "error": null,
+          "message": "Optimised ABRP-level route via 2 charging stop(s) \u2014 ready to go \u26a1",
+          "elevation_ascent": 2046,
+          "elevation_descent": 1987
+        }
+      },
+      {
+        "name": "[SLOW-CHARGER] Citroen eC3 (22kW) Delhi \u2192 Agra @ 80%",
+        "category": "slow_charger",
+        "status_code": 200,
+        "elapsed_ms": 11219.377756118774,
+        "issues": [],
+        "response_summary": {
+          "distance_km": 212.22,
+          "time_min": 179,
+          "needs_charging": true,
+          "num_stops": 1,
+          "battery_arrival": 51.2,
+          "partial_route": false,
+          "low_battery_mode": null,
+          "error": null,
+          "message": "Optimised ABRP-level route via 1 charging stop(s) \u2014 ready to go \u26a1",
+          "elevation_ascent": 75,
+          "elevation_descent": 119
+        }
+      }
+    ],
+    "warnings": [
+      {
+        "name": "[BASIC] Delhi \u2192 Mumbai | Nexon EV @ 85%",
+        "category": "basic",
+        "status_code": 200,
+        "elapsed_ms": 34176.265716552734,
+        "issues": [
+          "Response took 34.2s \u2014 slow (>30s)"
+        ],
+        "response_summary": {
+          "distance_km": 1337.75,
+          "time_min": 1052,
+          "needs_charging": true,
+          "num_stops": 3,
+          "battery_arrival": "Low (~15.0%)",
+          "partial_route": true,
+          "low_battery_mode": null,
+          "error": null,
+          "message": "Partial routing \u2014 3 stops mapped, but the final ~636km lacks coverage \u26a0\ufe0f",
+          "elevation_ascent": 1820,
+          "elevation_descent": 2028
+        }
+      },
+      {
+        "name": "[BASIC] Delhi \u2192 Bangalore | Nexon EV @ 85%",
+        "category": "basic",
+        "status_code": 200,
+        "elapsed_ms": 50541.75329208374,
+        "issues": [
+          "Response took 50.5s \u2014 slow (>30s)"
+        ],
+        "response_summary": {
+          "distance_km": 2060.55,
+          "time_min": 1577,
+          "needs_charging": true,
+          "num_stops": 3,
+          "battery_arrival": "Low (~15.0%)",
+          "partial_route": true,
+          "low_battery_mode": null,
+          "error": null,
+          "message": "Partial routing \u2014 3 stops mapped, but the final ~1361km lacks coverage \u26a0\ufe0f",
+          "elevation_ascent": 2557,
+          "elevation_descent": 1863
+        }
+      },
+      {
+        "name": "[BASIC] Chennai \u2192 Delhi | Nexon EV @ 85%",
+        "category": "basic",
+        "status_code": 200,
+        "elapsed_ms": 53901.702880859375,
+        "issues": [
+          "Response took 53.9s \u2014 slow (>30s)"
+        ],
+        "response_summary": {
+          "distance_km": 2148.6,
+          "time_min": 1649,
+          "needs_charging": true,
+          "num_stops": 2,
+          "battery_arrival": "Low (~15.0%)",
+          "partial_route": true,
+          "low_battery_mode": null,
+          "error": null,
+          "message": "Partial routing \u2014 2 stops mapped, but the final ~1904km lacks coverage \u26a0\ufe0f",
+          "elevation_ascent": 1432,
+          "elevation_descent": 1230
+        }
+      },
+      {
+        "name": "[BASIC] Delhi \u2192 Kochi | Nexon EV @ 85%",
+        "category": "basic",
+        "status_code": 200,
+        "elapsed_ms": 63097.4006652832,
+        "issues": [
+          "Response took 63.1s \u2014 very slow (>60s)"
+        ],
+        "response_summary": {
+          "distance_km": 2460.81,
+          "time_min": 1941,
+          "needs_charging": true,
+          "num_stops": 3,
+          "battery_arrival": "Low (~15.0%)",
+          "partial_route": true,
+          "low_battery_mode": null,
+          "error": null,
+          "message": "Partial routing \u2014 3 stops mapped, but the final ~1763km lacks coverage \u26a0\ufe0f",
+          "elevation_ascent": 2594,
+          "elevation_descent": 2802
+        }
+      },
+      {
+        "name": "[BASIC] Srinagar \u2192 Kanyakumari | Nexon EV @ 85%",
+        "category": "basic",
+        "status_code": 200,
+        "elapsed_ms": 53335.710763931274,
+        "issues": [
+          "Distance 151 km outside expected range [2660, 6840]",
+          "Response took 53.3s \u2014 slow (>30s)"
+        ],
+        "response_summary": {
+          "distance_km": 151.0,
+          "time_min": 227,
+          "needs_charging": true,
+          "num_stops": 1,
+          "battery_arrival": 85.0,
+          "partial_route": true,
+          "low_battery_mode": true,
+          "error": null,
+          "message": "\u26a0\ufe0f Battery too low to plan full route. Nearest charger is 151.0 km away \u2014 charge up there first, then re-plan your trip.",
+          "elevation_ascent": 4529,
+          "elevation_descent": 6085
+        }
+      },
+      {
+        "name": "[BASIC] Jaisalmer \u2192 Dibrugarh | Nexon EV @ 85%",
+        "category": "basic",
+        "status_code": 200,
+        "elapsed_ms": 29607.632875442505,
+        "issues": [
+          "Distance 206 km outside expected range [1960, 5040]"
+        ],
+        "response_summary": {
+          "distance_km": 205.9,
+          "time_min": 309,
+          "needs_charging": true,
+          "num_stops": 1,
+          "battery_arrival": 85.0,
+          "partial_route": true,
+          "low_battery_mode": true,
+          "error": null,
+          "message": "\u26a0\ufe0f Battery too low to plan full route. Nearest charger is 205.9 km away \u2014 charge up there first, then re-plan your trip.",
+          "elevation_ascent": 679,
+          "elevation_descent": 811
+        }
+      },
+      {
+        "name": "[LOW-BATT] Delhi \u2192 Agra | Nexon EV @ 15%",
+        "category": "low_battery",
+        "status_code": 200,
+        "elapsed_ms": 3801.152229309082,
+        "issues": [
+          "Distance 1 km outside expected range [115, 460]"
+        ],
+        "response_summary": {
+          "distance_km": 0.55,
+          "time_min": 1,
+          "needs_charging": true,
+          "num_stops": 1,
+          "battery_arrival": 15.0,
+          "partial_route": true,
+          "low_battery_mode": true,
+          "error": null,
+          "message": "\u26a0\ufe0f Battery too low to plan full route. Nearest charger is 0.5 km away \u2014 charge up there first, then re-plan your trip.",
+          "elevation_ascent": 75,
+          "elevation_descent": 119
+        }
+      },
+      {
+        "name": "[LOW-BATT] Mumbai \u2192 Pune | Nexon EV @ 15%",
+        "category": "low_battery",
+        "status_code": 200,
+        "elapsed_ms": 3860.060930252075,
+        "issues": [
+          "Distance 2 km outside expected range [75, 300]"
+        ],
+        "response_summary": {
+          "distance_km": 2.22,
+          "time_min": 3,
+          "needs_charging": true,
+          "num_stops": 1,
+          "battery_arrival": 15.0,
+          "partial_route": true,
+          "low_battery_mode": true,
+          "error": null,
+          "message": "\u26a0\ufe0f Battery too low to plan full route. Nearest charger is 2.2 km away \u2014 charge up there first, then re-plan your trip.",
+          "elevation_ascent": 0,
+          "elevation_descent": 0
+        }
+      },
+      {
+        "name": "[LOW-BATT] Delhi \u2192 Gurgaon | Nexon EV @ 15%",
+        "category": "low_battery",
+        "status_code": 200,
+        "elapsed_ms": 3144.1025733947754,
+        "issues": [
+          "Distance 1 km outside expected range [18, 70]"
+        ],
+        "response_summary": {
+          "distance_km": 0.55,
+          "time_min": 1,
+          "needs_charging": true,
+          "num_stops": 1,
+          "battery_arrival": 15.0,
+          "partial_route": true,
+          "low_battery_mode": true,
+          "error": null,
+          "message": "\u26a0\ufe0f Battery too low to plan full route. Nearest charger is 0.5 km away \u2014 charge up there first, then re-plan your trip.",
+          "elevation_ascent": 0,
+          "elevation_descent": 0
+        }
+      },
+      {
+        "name": "[LOW-BATT] Bangalore MG Rd \u2192 Whitefield | Nexon EV @ 15%",
+        "category": "low_battery",
+        "status_code": 200,
+        "elapsed_ms": 4027.536630630493,
+        "issues": [
+          "Distance 0 km outside expected range [10, 40]"
+        ],
+        "response_summary": {
+          "distance_km": 0.08,
+          "time_min": 0,
+          "needs_charging": true,
+          "num_stops": 1,
+          "battery_arrival": 15.0,
+          "partial_route": true,
+          "low_battery_mode": true,
+          "error": null,
+          "message": "\u26a0\ufe0f Battery too low to plan full route. Nearest charger is 0.1 km away \u2014 charge up there first, then re-plan your trip.",
+          "elevation_ascent": 165,
+          "elevation_descent": 186
+        }
+      },
+      {
+        "name": "[EXTREME] Srinagar \u2192 Kanyakumari | Kia EV6 @ 90%",
+        "category": "extreme",
+        "status_code": 200,
+        "elapsed_ms": 119490.70358276367,
+        "issues": [
+          "Response took 119.5s \u2014 very slow (>60s)"
+        ],
+        "response_summary": {
+          "distance_km": 3635.18,
+          "time_min": 2789,
+          "needs_charging": true,
+          "num_stops": 1,
+          "battery_arrival": "Low (~15.0%)",
+          "partial_route": true,
+          "low_battery_mode": null,
+          "error": null,
+          "message": "Partial routing \u2014 1 stops mapped, but the final ~3007km lacks coverage \u26a0\ufe0f",
+          "elevation_ascent": 4529,
+          "elevation_descent": 6085
+        }
+      },
+      {
+        "name": "[EXTREME] Jaisalmer \u2192 Dibrugarh | Kia EV6 @ 90%",
+        "category": "extreme",
+        "status_code": 200,
+        "elapsed_ms": 51529.72865104675,
+        "issues": [
+          "Response took 51.5s \u2014 slow (>30s)"
+        ],
+        "response_summary": {
+          "distance_km": 2882.39,
+          "time_min": 2282,
+          "needs_charging": true,
+          "num_stops": 3,
+          "battery_arrival": "Low (~15.0%)",
+          "partial_route": true,
+          "low_battery_mode": null,
+          "error": null,
+          "message": "Partial routing \u2014 3 stops mapped, but the final ~1728km lacks coverage \u26a0\ufe0f",
+          "elevation_ascent": 679,
+          "elevation_descent": 811
+        }
+      },
+      {
+        "name": "[SLOW-CHARGER] Citroen eC3 (22kW) Delhi \u2192 Mumbai @ 80%",
+        "category": "slow_charger",
+        "status_code": 200,
+        "elapsed_ms": 30168.335914611816,
+        "issues": [
+          "Response took 30.2s \u2014 slow (>30s)"
+        ],
+        "response_summary": {
+          "distance_km": 1371.89,
+          "time_min": 1059,
+          "needs_charging": true,
+          "num_stops": 3,
+          "battery_arrival": "Low (~15.0%)",
+          "partial_route": true,
+          "low_battery_mode": null,
+          "error": null,
+          "message": "Partial routing \u2014 3 stops mapped, but the final ~898km lacks coverage \u26a0\ufe0f",
+          "elevation_ascent": 1820,
+          "elevation_descent": 2028
+        }
+      }
+    ],
+    "failures": [
+      {
+        "name": "[LOW-BATT] Delhi \u2192 Agra | Nexon EV @ 5%",
+        "category": "low_battery",
+        "status_code": 200,
+        "elapsed_ms": 4087.9857540130615,
+        "issues": [
+          "Distance 1 km outside expected range [115, 460]",
+          "Stop #1 battery at arrival 5.0% BELOW 15% safety buffer!"
+        ],
+        "response_summary": {
+          "distance_km": 0.55,
+          "time_min": 1,
+          "needs_charging": true,
+          "num_stops": 1,
+          "battery_arrival": 5.0,
+          "partial_route": true,
+          "low_battery_mode": true,
+          "error": null,
+          "message": "\u26a0\ufe0f Battery too low to plan full route. Nearest charger is 0.5 km away \u2014 charge up there first, then re-plan your trip.",
+          "elevation_ascent": 75,
+          "elevation_descent": 119
+        }
+      },
+      {
+        "name": "[LOW-BATT] Delhi \u2192 Agra | Nexon EV @ 10%",
+        "category": "low_battery",
+        "status_code": 200,
+        "elapsed_ms": 3997.596263885498,
+        "issues": [
+          "Distance 1 km outside expected range [115, 460]",
+          "Stop #1 battery at arrival 10.0% BELOW 15% safety buffer!"
+        ],
+        "response_summary": {
+          "distance_km": 0.55,
+          "time_min": 1,
+          "needs_charging": true,
+          "num_stops": 1,
+          "battery_arrival": 10.0,
+          "partial_route": true,
+          "low_battery_mode": true,
+          "error": null,
+          "message": "\u26a0\ufe0f Battery too low to plan full route. Nearest charger is 0.5 km away \u2014 charge up there first, then re-plan your trip.",
+          "elevation_ascent": 75,
+          "elevation_descent": 119
+        }
+      },
+      {
+        "name": "[LOW-BATT] Mumbai \u2192 Pune | Nexon EV @ 5%",
+        "category": "low_battery",
+        "status_code": 200,
+        "elapsed_ms": 4325.963258743286,
+        "issues": [
+          "Distance 2 km outside expected range [75, 300]",
+          "Stop #1 battery at arrival 5.0% BELOW 15% safety buffer!"
+        ],
+        "response_summary": {
+          "distance_km": 2.22,
+          "time_min": 3,
+          "needs_charging": true,
+          "num_stops": 1,
+          "battery_arrival": 5.0,
+          "partial_route": true,
+          "low_battery_mode": true,
+          "error": null,
+          "message": "\u26a0\ufe0f Battery too low to plan full route. Nearest charger is 2.2 km away \u2014 charge up there first, then re-plan your trip.",
+          "elevation_ascent": 845,
+          "elevation_descent": 293
+        }
+      },
+      {
+        "name": "[LOW-BATT] Mumbai \u2192 Pune | Nexon EV @ 10%",
+        "category": "low_battery",
+        "status_code": 200,
+        "elapsed_ms": 4124.273777008057,
+        "issues": [
+          "Distance 2 km outside expected range [75, 300]",
+          "Stop #1 battery at arrival 10.0% BELOW 15% safety buffer!"
+        ],
+        "response_summary": {
+          "distance_km": 2.22,
+          "time_min": 3,
+          "needs_charging": true,
+          "num_stops": 1,
+          "battery_arrival": 10.0,
+          "partial_route": true,
+          "low_battery_mode": true,
+          "error": null,
+          "message": "\u26a0\ufe0f Battery too low to plan full route. Nearest charger is 2.2 km away \u2014 charge up there first, then re-plan your trip.",
+          "elevation_ascent": 845,
+          "elevation_descent": 293
+        }
+      },
+      {
+        "name": "[LOW-BATT] Delhi \u2192 Gurgaon | Nexon EV @ 5%",
+        "category": "low_battery",
+        "status_code": 200,
+        "elapsed_ms": 2969.712495803833,
+        "issues": [
+          "Distance 1 km outside expected range [18, 70]",
+          "Stop #1 battery at arrival 5.0% BELOW 15% safety buffer!"
+        ],
+        "response_summary": {
+          "distance_km": 0.55,
+          "time_min": 1,
+          "needs_charging": true,
+          "num_stops": 1,
+          "battery_arrival": 5.0,
+          "partial_route": true,
+          "low_battery_mode": true,
+          "error": null,
+          "message": "\u26a0\ufe0f Battery too low to plan full route. Nearest charger is 0.5 km away \u2014 charge up there first, then re-plan your trip.",
+          "elevation_ascent": 0,
+          "elevation_descent": 0
+        }
+      },
+      {
+        "name": "[LOW-BATT] Delhi \u2192 Gurgaon | Nexon EV @ 10%",
+        "category": "low_battery",
+        "status_code": 200,
+        "elapsed_ms": 3427.9401302337646,
+        "issues": [
+          "Distance 1 km outside expected range [18, 70]",
+          "Stop #1 battery at arrival 10.0% BELOW 15% safety buffer!"
+        ],
+        "response_summary": {
+          "distance_km": 0.55,
+          "time_min": 1,
+          "needs_charging": true,
+          "num_stops": 1,
+          "battery_arrival": 10.0,
+          "partial_route": true,
+          "low_battery_mode": true,
+          "error": null,
+          "message": "\u26a0\ufe0f Battery too low to plan full route. Nearest charger is 0.5 km away \u2014 charge up there first, then re-plan your trip.",
+          "elevation_ascent": 0,
+          "elevation_descent": 0
+        }
+      },
+      {
+        "name": "[LOW-BATT] Bangalore MG Rd \u2192 Whitefield | Nexon EV @ 5%",
+        "category": "low_battery",
+        "status_code": 200,
+        "elapsed_ms": 5648.632049560547,
+        "issues": [
+          "Distance 0 km outside expected range [10, 40]",
+          "Stop #1 battery at arrival 5.0% BELOW 15% safety buffer!"
+        ],
+        "response_summary": {
+          "distance_km": 0.08,
+          "time_min": 0,
+          "needs_charging": true,
+          "num_stops": 1,
+          "battery_arrival": 5.0,
+          "partial_route": true,
+          "low_battery_mode": true,
+          "error": null,
+          "message": "\u26a0\ufe0f Battery too low to plan full route. Nearest charger is 0.1 km away \u2014 charge up there first, then re-plan your trip.",
+          "elevation_ascent": 165,
+          "elevation_descent": 186
+        }
+      },
+      {
+        "name": "[LOW-BATT] Bangalore MG Rd \u2192 Whitefield | Nexon EV @ 10%",
+        "category": "low_battery",
+        "status_code": 200,
+        "elapsed_ms": 3631.070613861084,
+        "issues": [
+          "Distance 0 km outside expected range [10, 40]",
+          "Stop #1 battery at arrival 10.0% BELOW 15% safety buffer!"
+        ],
+        "response_summary": {
+          "distance_km": 0.08,
+          "time_min": 0,
+          "needs_charging": true,
+          "num_stops": 1,
+          "battery_arrival": 10.0,
+          "partial_route": true,
+          "low_battery_mode": true,
+          "error": null,
+          "message": "\u26a0\ufe0f Battery too low to plan full route. Nearest charger is 0.1 km away \u2014 charge up there first, then re-plan your trip.",
+          "elevation_ascent": 165,
+          "elevation_descent": 186
+        }
+      },
+      {
+        "name": "[EDGE] Battery at exact 5% (minimum) \u2014 Delhi \u2192 Mumbai",
+        "category": "edge",
+        "status_code": 200,
+        "elapsed_ms": 17590.155363082886,
+        "issues": [
+          "Distance 1 km outside expected range [1000, 2500]",
+          "Stop #1 battery at arrival 5.0% BELOW 15% safety buffer!"
+        ],
+        "response_summary": {
+          "distance_km": 0.55,
+          "time_min": 1,
+          "needs_charging": true,
+          "num_stops": 1,
+          "battery_arrival": 5.0,
+          "partial_route": true,
+          "low_battery_mode": true,
+          "error": null,
+          "message": "\u26a0\ufe0f Battery too low to plan full route. Nearest charger is 0.5 km away \u2014 charge up there first, then re-plan your trip.",
+          "elevation_ascent": 1820,
+          "elevation_descent": 2028
+        }
+      }
+    ],
+    "errors": []
+  }
+}

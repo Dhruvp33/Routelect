@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { Routes, Route, useLocation } from 'react-router-dom'
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import HomePage from './pages/HomePage'
 import BrandSelection from './pages/BrandSelection'
 import ModelSelection from './pages/ModelSelection'
@@ -10,8 +10,22 @@ import NotFound from './pages/NotFound'
 import Navbar from './components/Navbar'
 import { ToastContainer } from './components/Toast'
 import { useStore } from './store/useStore'
+import { useAuth } from './hooks/useAuth'
 
 export const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000'
+
+/* ── Home gate: logged-in → /plan-route on first load, guest → landing ── */
+function HomeGate() {
+  const { user, authLoading } = useAuth()
+  const location = useLocation()
+
+  // If user navigated here intentionally (e.g. logo click), always show landing
+  const isIntentional = location.state?.fromNav
+
+  if (authLoading) return null
+  if (user && !isIntentional) return <Navigate to="/plan-route" replace />
+  return <HomePage />
+}
 
 /* ── Loading screen ── */
 function LoadingScreen() {
@@ -198,7 +212,7 @@ export default function App() {
 
       <div key={location.pathname} className="animate-fade-up">
         <Routes>
-          <Route path="/" element={<HomePage />} />
+          <Route path="/" element={<HomeGate />} />
           <Route path="/select-brand" element={<BrandSelection />} />
           <Route path="/select-model/:brandId" element={<ModelSelection />} />
           <Route path="/plan-route" element={<RoutePlanner />} />

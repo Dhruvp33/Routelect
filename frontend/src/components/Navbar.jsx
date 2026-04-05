@@ -1,4 +1,4 @@
-import { Link, useLocation } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { Navigation, Car, MapPin, Menu, X, LogOut, User, ChevronDown, Zap, LayoutDashboard, Sun, Moon } from 'lucide-react'
 import { useStore } from '../store/useStore'
 import { useAuth } from '../hooks/useAuth'
@@ -17,8 +17,14 @@ const RoutelectMark = () => (
 ───────────────────────────────────────────── */
 export default function Navbar() {
   const location = useLocation()
+  const navigate = useNavigate()
   const { selectedCar, backendStatus, theme, toggleTheme } = useStore()
   const { user, signOut } = useAuth()
+
+  const handleSignOut = async () => {
+    await signOut()
+    navigate('/')
+  }
 
   const [mobileOpen, setMobileOpen] = useState(false)
   const [showAuth, setShowAuth] = useState(false)
@@ -660,7 +666,7 @@ export default function Navbar() {
           <div className="rl-inner">
 
             {/* Logo */}
-            <Link to="/" className="rl-logo">
+            <Link to="/" state={{ fromNav: true }} className="rl-logo">
               <div className="rl-logo-mark">
                 <RoutelectMark />
               </div>
@@ -743,7 +749,7 @@ export default function Navbar() {
                       )}
                       <button
                         className="rl-dropdown-signout"
-                        onClick={() => { signOut(); setProfileOpen(false) }}
+                        onClick={() => { handleSignOut(); setProfileOpen(false) }}
                       >
                         <LogOut size={13} />
                         Sign out
@@ -836,9 +842,22 @@ export default function Navbar() {
                     </div>
                   </div>
                 </div>
+                {selectedCar && (
+                  <div style={{
+                    display: 'flex', alignItems: 'center', gap: 8,
+                    padding: '10px 16px', borderRadius: 12,
+                    background: 'rgba(0,212,170,0.06)',
+                    border: '1px solid rgba(0,212,170,0.12)',
+                    fontSize: 12, color: 'var(--text-2)',
+                    animation: 'link-stagger 0.3s ease 0.13s both',
+                  }}>
+                    <Car size={13} color="#00D4AA" />
+                    {selectedCar.brand} {selectedCar.name}
+                  </div>
+                )}
                 <button
                   className="rl-drawer-signout"
-                  onClick={() => { signOut(); setMobileOpen(false) }}
+                  onClick={() => { handleSignOut(); setMobileOpen(false) }}
                 >
                   <LogOut size={15} />
                   Sign out

@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
-import { createPortal } from 'react-dom'
 import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from 'react-leaflet'
 import {
   Navigation, Battery, MapPin, Zap, Clock, ChevronLeft,
@@ -99,7 +98,7 @@ function usePhotonAutocomplete(query, active) {
       ctrl.current = new AbortController()
       try {
         const params = new URLSearchParams({
-          q: query.trim(), limit: 8,
+          q: query.trim(), limit: 4,
           bbox: '68.7,6.5,97.25,35.5', lang: 'en',
         })
         const res = await fetch(`https://photon.komoot.io/api/?${params}`, { signal: ctrl.current.signal })
@@ -148,11 +147,10 @@ function Highlight({ text, q }) {
 /* ═══════════════════════════════════════════════════════
    LOCATION INPUT
    ═══════════════════════════════════════════════════════ */
-function LocationInput({ value, onChange, onSelect, placeholder, accent = '#00D4AA', onInputFocus }) {
+function LocationInput({ value, onChange, onSelect, placeholder, accent = '#00D4AA', onInputFocus, onInputBlur }) {
   const [open, setOpen] = useState(false)
   const [cursor, setCursor] = useState(-1)
   const [touched, setTouched] = useState(false)
-  const [coords, setCoords] = useState(null)
   const isDark = useStore((s) => s.theme) === 'dark'
   const wrapRef = useRef(null)
   const inputRef = useRef(null)
@@ -161,22 +159,7 @@ function LocationInput({ value, onChange, onSelect, placeholder, accent = '#00D4
   const { suggestions, loading, clear } = usePhotonAutocomplete(value, touched && open)
   const showDrop = open && touched && (loading || suggestions.length > 0 || value.length >= 3)
 
-  // Position portal dropdown cleanly via requestAnimationFrame to track mobile sheet animations flawlessly
-  useEffect(() => {
-    if (!showDrop) return
-    let raf
-    const update = () => {
-      if (wrapRef.current) {
-        const rect = wrapRef.current.getBoundingClientRect()
-        setCoords({ top: rect.bottom + 6, left: rect.left, width: rect.width })
-      }
-      raf = requestAnimationFrame(update)
-    }
-    update()
-    return () => cancelAnimationFrame(raf)
-  }, [showDrop, suggestions, loading, value, open])
-
-  // Close drop on scroll
+  // Close drop on outside click (no more scroll/resize close — inline dropdown scrolls naturally)
   useEffect(() => {
     if (!open) return
     const h = (e) => {
@@ -184,13 +167,11 @@ function LocationInput({ value, onChange, onSelect, placeholder, accent = '#00D4
       if (wrapRef.current && wrapRef.current.contains(e.target)) return
       setOpen(false)
     }
-    window.addEventListener('scroll', h, true)
-    window.addEventListener('resize', h)
     document.addEventListener('mousedown', h)
+    document.addEventListener('touchstart', h)
     return () => {
-      window.removeEventListener('scroll', h, true)
-      window.removeEventListener('resize', h)
       document.removeEventListener('mousedown', h)
+      document.removeEventListener('touchstart', h)
     }
   }, [open])
 
@@ -224,12 +205,15 @@ function LocationInput({ value, onChange, onSelect, placeholder, accent = '#00D4
           type="text"
           placeholder={placeholder}
           className="input-field"
-          style={{ paddingLeft: 38, paddingRight: 34, borderRadius: 12, borderColor: open && suggestions.length ? accent : 'var(--border)', boxShadow: open && suggestions.length ? `0 0 0 3px ${accent}18` : undefined, background: 'var(--surface)', borderBottomWidth: 1 }}
+          style={{ paddingLeft: 38, paddingRight: 34, borderRadius: showDrop ? '12px 12px 0 0' : 12, borderColor: open && suggestions.length ? accent : 'var(--border)', boxShadow: open && suggestions.length ? `0 0 0 3px ${accent}18` : undefined, background: 'var(--surface)', borderBottomWidth: showDrop ? 0 : 1 }}
           value={value}
           onChange={e => { onChange(e.target.value); setTouched(true); setOpen(true); setCursor(-1) }}
           onFocus={(e) => { 
             if (onInputFocus) onInputFocus(e)
             if (value.length >= 3) setOpen(true) 
+          }}
+          onBlur={() => {
+            if (onInputBlur) setTimeout(() => onInputBlur(), 200)
           }}
           onKeyDown={onKeyDown}
           autoComplete="off"
@@ -251,9 +235,10 @@ function LocationInput({ value, onChange, onSelect, placeholder, accent = '#00D4
         </div>
       </div>
 
-      {showDrop && coords && createPortal(
-        <div ref={listRef} role="listbox" className="no-scrollbar animate-fade-up"
-          style={{ position: 'fixed', top: coords.top, left: coords.left, width: coords.width, zIndex: 999999, background: isDark ? 'rgba(7,11,20,0.85)' : 'rgba(255,255,255,0.97)', backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)', border: isDark ? `1px solid ${accent}40` : '1px solid rgba(0,0,0,0.12)', borderRadius: 16, overflow: 'hidden', boxShadow: isDark ? '0 20px 50px rgba(0,0,0,0.8), 0 4px 14px rgba(0,0,0,0.5)' : '0 20px 50px rgba(0,0,0,0.12), 0 4px 14px rgba(0,0,0,0.06)', maxHeight: 300, overflowY: 'auto' }}>
+      {/* Inline dropdown — anchored directly below the input, no portal */}
+      {showDrop && (
+        <div ref={listRef} role="listbox" className="no-scrollbar"
+          style={{ position: 'absolute', top: '100%', left: 0, width: '100%', zIndex: 1000, background: isDark ? 'rgba(7,11,20,0.95)' : 'rgba(255,255,255,0.97)', border: isDark ? `1px solid ${accent}40` : '1px solid rgba(0,0,0,0.12)', borderTop: 'none', borderRadius: '0 0 12px 12px', overflow: 'hidden', boxShadow: isDark ? '0 8px 24px rgba(0,0,0,0.6)' : '0 8px 24px rgba(0,0,0,0.08)', maxHeight: 280, overflowY: 'auto' }}>
           {loading && !suggestions.length && (
             <div style={{ padding: '8px 10px 6px', display: 'flex', flexDirection: 'column', gap: 5 }}>
               {[0, 1, 2].map(i => <div key={i} className="skeleton" style={{ height: 38, borderRadius: 8 }} />)}
@@ -277,18 +262,12 @@ function LocationInput({ value, onChange, onSelect, placeholder, accent = '#00D4
             </button>
           ))}
           {!loading && !suggestions.length && value.length >= 3 && (
-            <div style={{ padding: '20px 16px', textAlign: 'center', fontSize: 13, color: 'var(--text-2)' }}>
+            <div style={{ padding: '14px 16px', textAlign: 'center', fontSize: 13, color: 'var(--text-2)' }}>
               No results for "<strong style={{ color: 'var(--text-1)' }}>{value}</strong>"
               <div style={{ fontSize: 11, color: 'var(--text-3)', marginTop: 5 }}>Try adding area, city, or pincode</div>
             </div>
           )}
-          {(loading || suggestions.length > 0) && (
-            <div style={{ padding: '8px 14px', borderTop: '1px solid var(--border)', fontSize: 9, textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 600, color: 'var(--text-3)', display: 'flex', alignItems: 'center', gap: 5, background: 'rgba(255,255,255,0.02)' }}>
-              <MapPin style={{ width: 9, height: 9 }} />Powered by Photon
-            </div>
-          )}
-        </div>,
-        document.body
+        </div>
       )}
     </div>
   )
@@ -766,6 +745,7 @@ export default function RoutePlanner() {
   const [gaugeExpanded, setGaugeExpanded] = useState(true)
   const [locating, setLocating] = useState(false)
   const [waypoints, setWaypoints] = useState([])
+  const [isTyping, setIsTyping] = useState(false)
 
   useEffect(() => { if (!selectedCar) navigate('/select-brand') }, [selectedCar, navigate])
 
@@ -914,7 +894,6 @@ export default function RoutePlanner() {
   /* ── Calculate route ── */
   const handleCalculate = async () => {
     if (!startCoords || !endCoords) { addToast('warning', 'Pick both locations from the dropdown'); return }
-    if (isMobile) setSheetOpen(false)
     setLoading(true); setPartialWarning(null)
     try {
       const res = await fetch(`${API_URL}/api/route/calculate`, {
@@ -986,12 +965,19 @@ export default function RoutePlanner() {
   const handleInputFocus = (e) => {
     if (isMobile) {
       setSheetOpen('full')
+      setIsTyping(true)
       const target = e.target
       setTimeout(() => {
         if (target) {
-          target.scrollIntoView({ behavior: 'smooth', block: 'center' })
+          target.scrollIntoView({ behavior: 'smooth', block: 'start' })
         }
       }, 350)
+    }
+  }
+
+  const handleInputBlur = () => {
+    if (isMobile) {
+      setIsTyping(false)
     }
   }
 
@@ -1039,9 +1025,9 @@ export default function RoutePlanner() {
         <div className="timeline-glow" style={{ position: 'absolute', left: 32, top: 75, bottom: 45, width: 2, borderRadius: 2, zIndex: 1 }} />
         
         {/* Start input */}
-        <div style={{ display: 'flex', gap: 6, alignItems: 'center', marginBottom: 8, position: 'relative', zIndex: 2 }}>
+        <div style={{ display: 'flex', gap: 6, alignItems: 'center', marginBottom: 8, position: 'relative', zIndex: 10 }}>
           <div style={{ flex: 1 }}>
-            <LocationInput value={startLoc} onChange={setStartLoc} onSelect={handleStartSelect} placeholder="Starting Point" accent="#00D4AA" onInputFocus={handleInputFocus} />
+            <LocationInput value={startLoc} onChange={setStartLoc} onSelect={handleStartSelect} placeholder="Starting Point" accent="#00D4AA" onInputFocus={handleInputFocus} onInputBlur={handleInputBlur} />
           </div>
           <button
             onClick={handleLocateMe}
@@ -1060,7 +1046,7 @@ export default function RoutePlanner() {
 
         {/* Waypoints */}
         {waypoints.map((wp, idx) => (
-          <div key={idx} style={{ display: 'flex', gap: 6, alignItems: 'center', marginBottom: 8, position: 'relative', zIndex: 2 }}>
+          <div key={idx} style={{ display: 'flex', gap: 6, alignItems: 'center', marginBottom: 8, position: 'relative', zIndex: 9 - idx }}>
             <div style={{ flex: 1 }}>
               <LocationInput
                 value={wp.label}
@@ -1069,6 +1055,7 @@ export default function RoutePlanner() {
                 placeholder={`Stop ${idx + 1}`}
                 accent="#FFB547"
                 onInputFocus={handleInputFocus}
+                onInputBlur={handleInputBlur}
               />
             </div>
             <button
@@ -1082,7 +1069,7 @@ export default function RoutePlanner() {
 
         {/* Add stop button along timeline */}
         {waypoints.length < 5 && (
-          <div style={{ paddingLeft: 46, marginBottom: 8, position: 'relative', zIndex: 2 }}>
+          <div style={{ paddingLeft: 46, marginBottom: 8, position: 'relative', zIndex: 4 }}>
             <button
               onClick={() => setWaypoints(w => [...w, { label: '', coords: null }])}
               style={{ border: 'none', background: 'none', color: '#FFB547', fontSize: 12, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 5, cursor: 'pointer', fontFamily: 'Outfit, sans-serif' }}
@@ -1096,9 +1083,9 @@ export default function RoutePlanner() {
         )}
 
         {/* Destination */}
-        <div style={{ display: 'flex', gap: 6, alignItems: 'center', position: 'relative', zIndex: 2 }}>
+        <div style={{ display: 'flex', gap: 6, alignItems: 'center', position: 'relative', zIndex: 3 }}>
           <div style={{ flex: 1 }}>
-            <LocationInput value={endLoc} onChange={setEndLoc} onSelect={handleEndSelect} placeholder="Destination" accent="#FF4D6D" onInputFocus={handleInputFocus} />
+            <LocationInput value={endLoc} onChange={setEndLoc} onSelect={handleEndSelect} placeholder="Destination" accent="#FF4D6D" onInputFocus={handleInputFocus} onInputBlur={handleInputBlur} />
           </div>
           <button
             onClick={handleSwap}
@@ -1703,6 +1690,7 @@ export default function RoutePlanner() {
               opacity: sheetOpen !== 'peek' ? 1 : 0,
               transition: 'opacity 0.2s',
               visibility: sheetOpen !== 'peek' ? 'visible' : 'hidden',
+              paddingBottom: isTyping ? '55dvh' : undefined,
             }}>
               {sidebarContent}
             </div>
