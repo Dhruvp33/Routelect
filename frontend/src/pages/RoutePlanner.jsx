@@ -148,7 +148,7 @@ function Highlight({ text, q }) {
 /* ═══════════════════════════════════════════════════════
    LOCATION INPUT
    ═══════════════════════════════════════════════════════ */
-function LocationInput({ value, onChange, onSelect, placeholder, accent = '#00D4AA' }) {
+function LocationInput({ value, onChange, onSelect, placeholder, accent = '#00D4AA', onInputFocus }) {
   const [open, setOpen] = useState(false)
   const [cursor, setCursor] = useState(-1)
   const [touched, setTouched] = useState(false)
@@ -227,7 +227,10 @@ function LocationInput({ value, onChange, onSelect, placeholder, accent = '#00D4
           style={{ paddingLeft: 38, paddingRight: 34, borderRadius: 12, borderColor: open && suggestions.length ? accent : 'var(--border)', boxShadow: open && suggestions.length ? `0 0 0 3px ${accent}18` : undefined, background: 'var(--surface)', borderBottomWidth: 1 }}
           value={value}
           onChange={e => { onChange(e.target.value); setTouched(true); setOpen(true); setCursor(-1) }}
-          onFocus={() => { if (value.length >= 3) setOpen(true) }}
+          onFocus={(e) => { 
+            if (onInputFocus) onInputFocus(e)
+            if (value.length >= 3) setOpen(true) 
+          }}
           onKeyDown={onKeyDown}
           autoComplete="off"
           spellCheck={false}
@@ -314,7 +317,7 @@ function ChargerDetailModal({ stop, stopIndex, batteryAtArrival = 10, onClose })
         boxShadow: '-10px 0 30px rgba(0,0,0,0.5)',
         display: 'flex', flexDirection: 'column'
       }}>
-        <div style={{ display: 'flex', justifyContent: 'center', padding: '12px 0 0', display: window.innerWidth > 768 ? 'none' : 'flex' }}>
+        <div style={{ justifyContent: 'center', padding: '12px 0 0', display: window.innerWidth > 768 ? 'none' : 'flex' }}>
           <div style={{ width: 36, height: 4, borderRadius: 10, background: 'var(--border)' }} />
         </div>
         <div style={{ padding: '20px 24px 0', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
@@ -980,6 +983,18 @@ export default function RoutePlanner() {
     }
   }, [sharedRoutePending, startCoords, endCoords, selectedCar]) // eslint-disable-line react-hooks/exhaustive-deps
 
+  const handleInputFocus = (e) => {
+    if (isMobile) {
+      setSheetOpen('full')
+      const target = e.target
+      setTimeout(() => {
+        if (target) {
+          target.scrollIntoView({ behavior: 'smooth', block: 'center' })
+        }
+      }, 350)
+    }
+  }
+
   if (!selectedCar) return null
 
   const recentRoutes = (tripHistory || []).filter(h => h.startLoc && h.endLoc).slice(-3).reverse()
@@ -1026,7 +1041,7 @@ export default function RoutePlanner() {
         {/* Start input */}
         <div style={{ display: 'flex', gap: 6, alignItems: 'center', marginBottom: 8, position: 'relative', zIndex: 2 }}>
           <div style={{ flex: 1 }}>
-            <LocationInput value={startLoc} onChange={setStartLoc} onSelect={handleStartSelect} placeholder="Starting Point" accent="#00D4AA" />
+            <LocationInput value={startLoc} onChange={setStartLoc} onSelect={handleStartSelect} placeholder="Starting Point" accent="#00D4AA" onInputFocus={handleInputFocus} />
           </div>
           <button
             onClick={handleLocateMe}
@@ -1053,6 +1068,7 @@ export default function RoutePlanner() {
                 onSelect={(coords) => setWaypoints(w => w.map((item, i) => i === idx ? { ...item, coords } : item))}
                 placeholder={`Stop ${idx + 1}`}
                 accent="#FFB547"
+                onInputFocus={handleInputFocus}
               />
             </div>
             <button
@@ -1082,7 +1098,7 @@ export default function RoutePlanner() {
         {/* Destination */}
         <div style={{ display: 'flex', gap: 6, alignItems: 'center', position: 'relative', zIndex: 2 }}>
           <div style={{ flex: 1 }}>
-            <LocationInput value={endLoc} onChange={setEndLoc} onSelect={handleEndSelect} placeholder="Destination" accent="#FF4D6D" />
+            <LocationInput value={endLoc} onChange={setEndLoc} onSelect={handleEndSelect} placeholder="Destination" accent="#FF4D6D" onInputFocus={handleInputFocus} />
           </div>
           <button
             onClick={handleSwap}
@@ -1207,7 +1223,7 @@ export default function RoutePlanner() {
               return (
                 <button
                   className="btn-primary"
-                  style={{ width: '100%', padding: '12px', fontSize: 14, borderRadius: 12, boxShadow: '0 4px 20px rgba(0,212,170,0.2)' }}
+                  style={{ width: '100%', padding: isMobile ? '8px 12px' : '12px', fontSize: isMobile ? 12 : 14, borderRadius: 12, boxShadow: '0 4px 20px rgba(0,212,170,0.2)', minHeight: isMobile ? 40 : 44 }}
                   onClick={() => {
                     const origin = `${startCoords[0]},${startCoords[1]}`;
                     const destination = `${endCoords[0]},${endCoords[1]}`;
@@ -1238,7 +1254,7 @@ export default function RoutePlanner() {
                       <button
                         key={idx}
                         className="btn-primary"
-                        style={{ width: '100%', padding: '10px', fontSize: 13, borderRadius: 10, boxShadow: '0 4px 15px rgba(0,212,170,0.1)' }}
+                        style={{ width: '100%', padding: isMobile ? '7px 10px' : '10px', fontSize: isMobile ? 11 : 13, borderRadius: 10, boxShadow: '0 4px 15px rgba(0,212,170,0.1)', minHeight: isMobile ? 36 : 40 }}
                         onClick={() => {
                           const legOrigin = idx === 0 
                             ? `${startCoords[0]},${startCoords[1]}` 
@@ -1266,7 +1282,7 @@ export default function RoutePlanner() {
           })()}
           <button
             className="btn-secondary"
-            style={{ width: '100%', padding: '11px', fontSize: 13, borderRadius: 12, background: 'var(--surface-3)', border: '1px solid var(--border)' }}
+            style={{ width: '100%', padding: isMobile ? '8px 12px' : '11px', fontSize: isMobile ? 12 : 13, borderRadius: 12, background: 'var(--surface-3)', border: '1px solid var(--border)', minHeight: isMobile ? 40 : 44 }}
             onClick={handleCalculate}
             disabled={loading || !startCoords || !endCoords}
           >
@@ -1282,7 +1298,7 @@ export default function RoutePlanner() {
       ) : (
         <button
           className="btn-primary pulse-cta"
-          style={{ width: '100%', padding: '12px', fontSize: 15, borderRadius: 12, background: 'linear-gradient(135deg, #00D4AA 0%, #00a887 100%)', boxShadow: '0 8px 24px rgba(0,212,170,0.25)' }}
+          style={{ width: '100%', padding: isMobile ? '8px 12px' : '12px', fontSize: isMobile ? 13 : 15, borderRadius: 12, background: 'linear-gradient(135deg, #00D4AA 0%, #00a887 100%)', boxShadow: '0 8px 24px rgba(0,212,170,0.25)', minHeight: isMobile ? 40 : 48 }}
           onClick={handleCalculate}
           disabled={loading || !startCoords || !endCoords}
         >

@@ -150,6 +150,11 @@ function ModelImage({ name, color }) {
         alt={name}
         onLoad={() => setStatus('ok')}
         onError={() => setStatus('missing')}
+        ref={img => {
+          if (img && img.complete && img.naturalWidth > 0 && status === 'loading') {
+            setStatus('ok')
+          }
+        }}
         style={{
           width: '100%', height: '100%',
           objectFit: 'contain',
@@ -191,7 +196,7 @@ function SkeletonCard() {
 ═══════════════════════════════════════════════════════════ */
 const CARD_BODY_H = 150
 
-function ModelCard({ model, onClick, index }) {
+function ModelCard({ model, onClick, index, isMobile }) {
   const [hovered, setHovered] = useState(false)
 
   const color = SEGMENT_COLORS[model.segment] || '#00D4AA'
@@ -218,10 +223,16 @@ function ModelCard({ model, onClick, index }) {
     },
   ]
 
-  const handleInteraction = () => {
-    if (window.matchMedia('(hover: none)').matches) {
-      if (!hovered) setHovered(true)
-      else onClick()
+  const handleInteraction = (e) => {
+    e.preventDefault()
+    if (isMobile) {
+      if (!hovered) {
+        // First tap: show details (trigger 'hover' state)
+        setHovered(true)
+      } else {
+        // Second tap: actually select
+        onClick()
+      }
     } else {
       onClick()
     }
@@ -581,8 +592,8 @@ export default function ModelSelection() {
             </div>
 
             {segments.length > 2 && (
-              <div style={{
-                display: 'flex', gap: 8,
+              <div className="no-scrollbar" style={{
+                display: 'flex', gap: 8, width: '100%', maxWidth: '100vw',
                 flexWrap: isMobile ? 'nowrap' : 'wrap', justifyContent: isMobile ? 'flex-start' : 'center',
                 overflowX: isMobile ? 'auto' : 'visible',
                 WebkitOverflowScrolling: 'touch',
@@ -618,6 +629,7 @@ export default function ModelSelection() {
                 key={m.id}
                 model={m}
                 index={i}
+                isMobile={isMobile}
                 onClick={() => handleSelect(m)}
               />
             ))
