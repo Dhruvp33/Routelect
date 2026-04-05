@@ -1667,7 +1667,12 @@ export default function RoutePlanner() {
                   <button
                     onClick={e => {
                       e.stopPropagation()
-                      setSheetOpen(prev => prev === 'peek' ? 'half' : 'peek')
+                      setSheetOpen(prev => {
+                        if (prev === 'peek') {
+                          return route ? 'full' : 'half'
+                        }
+                        return 'peek'
+                      })
                     }}
                     style={{
                       width: 40, height: 40, borderRadius: 12,
